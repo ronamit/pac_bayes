@@ -104,14 +104,17 @@ def run_train_epoch(i_epoch):
         # Take gradient step:
         optimizer.zero_grad()
         outputs = model(inputs, eps_std)
-        loss = criterion(outputs, targets)
-        loss.backward()
+        empirical_loss = criterion(outputs, targets)
+
+        objective = empirical_loss # TODO: add prior term
+
+        objective.backward()
         optimizer.step()
 
         # Print status:
         if batch_idx % log_interval == 0:
             batch_acc = count_correct(outputs, targets) / prm.batch_size
-            print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss.data[0]) +
+            print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]) +
                   '\t eps-std: {:.4}'.format(eps_std))
 
 
