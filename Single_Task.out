@@ -1,0 +1,418 @@
+----------Standard_2017-09-21 21:10:03----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.44%	 Runtime: 32.9 [sec]
+----------Standard_2017-09-21 21:11:30----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.44%	 Runtime: 32.3 [sec]
+----------Standard 2017-09-21 21:15:12----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.44%	 Runtime: 31.8 [sec]
+----------Standard 2017-09-21 21:35:46----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.5%	 Runtime: 31.9 [sec]
+----------Standard 2017-09-21 21:46:21----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.49%	 Runtime: 33.4 [sec]
+----------Standard 2017-09-21 21:50:50----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.44%	 Runtime: 31.8 [sec]
+----------Standard 2017-09-21 21:52:43----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-21 21:53:09----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=1000, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-21 21:56:40----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', no_cuda=False, num_epochs=1000, seed=1, test_batch_size=1000)
+Test Error: 5.56%	 Runtime: 4.87e+04 [sec]
+----------Bayes 2017-09-22 11:35:20----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:36:02----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:36:32----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:37:10----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:37:20----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:38:19----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 11:38:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+Test Error: 18.2%	 Runtime: 1.22e+02 [sec]
+----------Bayes 2017-09-22 11:43:01----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+Test Error: 14.5%	 Runtime: 1.24e+02 [sec]
+----------Bayes 2017-09-22 11:46:29----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:37:31----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:41:40----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:41:41----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:42:05----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:42:25----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:42:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:43:10----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:43:30----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:43:54----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:44:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:45:50----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:46:47----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:49:35----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:49:49----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:52:48----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 12:53:23----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:54:11----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 12:54:46----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:11:11----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:11:58----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:12:21----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:12:49----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:14:43----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:15:25----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:16:53----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:18:45----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:19:13----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:19:38----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=20, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:21:38----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=60, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 13:24:45----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+Test Error: 5.32%	 Runtime: 1.26e+03 [sec]
+----------Standard 2017-09-22 13:49:42----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Test Error: 3.44%	 Runtime: 31.8 [sec]
+----------Bayes 2017-09-22 13:51:47----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 14:00:07----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 14:00:28----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+Test Error: 4.91%	 Runtime: 1261.7714169 [sec]
+----------Bayes 2017-09-22 14:46:14----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 14:51:53----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+Test Error: 4.69%	 Runtime: 807.23053503 [sec]
+----------Bayes 2017-09-22 16:39:48----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:40:46----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:44:49----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:45:00----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', no_cuda=False, num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:45:41----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:45:51----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:46:12----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:48:22----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:48:51----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:49:14----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:50:01----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:50:41----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:51:35----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:51:57----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:55:05----------
+Namespace(batch_size=256, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 16:55:14----------
+Namespace(batch_size=256, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+Test Error: 5.54%	 Runtime: 656.230251074 [sec]
+----------Bayes 2017-09-22 19:02:03----------
+Namespace(batch_size=256, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 19:02:27----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=1, test_batch_size=100)
+----------Bayes 2017-09-22 19:02:52----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=100)
+----------Bayes 2017-09-22 19:03:50----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=100, seed=12, test_batch_size=1000)
+----------Bayes 2017-09-22 19:04:24----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+Test Error: 3.74%	 Runtime: 793.338434935 [sec]
+----------Standard 2017-09-22 20:12:57----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Bayes 2017-09-22 20:14:13----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:15:55----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:16:13----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Standard 2017-09-22 20:16:24----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+ConvNet (
+  (conv1): Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))
+  (conv2): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+  (conv2_drop): Dropout2d (p=0.5)
+  (fc1): Linear (320 -> 50)
+  (fc_out): Linear (50 -> 10)
+)
+----------Standard 2017-09-22 20:20:32----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+ConvNet (
+  (conv1): Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))
+  (conv2): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+  (conv2_drop): Dropout2d (p=0.5)
+  (fc1): Linear (320 -> 50)
+  (fc_out): Linear (50 -> 10)
+)
+----------Bayes 2017-09-22 20:20:42----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:21:04----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:21:21----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:22:16----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:23:28----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:25:34----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Standard 2017-09-22 20:37:04----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+ConvNet (
+  (conv1): Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))
+  (conv2): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+  (conv2_drop): Dropout2d (p=0.5)
+  (fc1): Linear (320 -> 50)
+  (fc_out): Linear (50 -> 10)
+)
+Test Error: 4.59%	 Runtime: 28.3 [sec]
+----------Bayes 2017-09-22 20:40:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Bayes 2017-09-22 20:46:17----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Standard 2017-09-22 20:56:50----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+ConvNet (
+  (conv1): Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))
+  (conv2): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+  (conv2_drop): Dropout2d (p=0.5)
+  (fc1): Linear (320 -> 50)
+  (fc_out): Linear (50 -> 10)
+)
+----------Standard 2017-09-22 21:00:01----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+ConvNet (
+  (conv1): Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))
+  (conv2): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+  (conv2_drop): Dropout2d (p=0.5)
+  (fc1): Linear (320 -> 50)
+  (fc_out): Linear (50 -> 10)
+)
+----------Bayes 2017-09-22 21:00:14----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+BayesNN (
+  (fc1): StochasticLinear (
+  )
+  (fc2): StochasticLinear (
+  )
+  (fc_out): StochasticLinear (
+  )
+)
+----------Standard 2017-09-22 21:07:04----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+None
+----------Standard 2017-09-22 21:07:17----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+None
+----------Standard 2017-09-22 21:07:35----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+None
+----------Standard 2017-09-22 21:08:39----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+----------Standard 2017-09-22 21:09:10----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))-> Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))-> Dropout2d (p=0.5)-> Linear (320 -> 50)-> Linear (50 -> 10)
+----------Bayes 2017-09-22 21:09:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 21:11:28----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 21:16:25----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Test Error: 7.23%	 Runtime: 1187.13443494 [sec]
+----------Bayes 2017-09-22 22:23:45----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:24:23----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', num_epochs=200, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:24:47----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', num_epochs=300, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:26:29----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', num_epochs=100, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:27:47----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', num_epochs=100, seed=12, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:29:17----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='L2_SVM', lr=0.0001, model_type='BigBayesNN', num_epochs=1000, seed=4324, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-22 22:30:04----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BigBayesNN', num_epochs=1000, seed=4324, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Test Error: 1.45%	 Runtime: 8729.06260204 [sec]
+----------Standard 2017-09-23 09:53:07----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))-> Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))-> Dropout2d (p=0.5)-> Linear (320 -> 50)-> Linear (50 -> 10)
+Test Error: 4.6%	 Runtime: 3e+01 [sec]
+----------Standard 2017-09-23 09:53:57----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, no_cuda=False, num_epochs=10, seed=1, test_batch_size=1000)
+Conv2d(1, 10, kernel_size=(5, 5), stride=(1, 1))-> Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))-> Dropout2d (p=0.5)-> Linear (320 -> 50)-> Linear (50 -> 10)
+----------Bayes 2017-09-23 09:59:09----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+----------Bayes 2017-09-23 10:00:58----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Total number of steps: 1876000
+----------Bayes 2017-09-23 10:01:45----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=1000)
+StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Total number of steps: 1876000
+Test Error: 1.32%	 Runtime: 2.45e+04 [sec]
+----------Bayes 2017-09-23 16:51:18----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+----------Bayes 2017-09-23 16:51:37----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+----------Bayes 2017-09-23 16:54:22----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+----------Bayes 2017-09-23 16:54:56----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+<class 'models_Bayes.BayesNN'>: StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Total number of steps: 1876000
+----------Bayes 2017-09-23 16:55:17----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+<class 'models_Bayes.BayesNN'>
+ StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Total number of steps: 1876000
+----------Bayes 2017-09-23 16:56:05----------
+Namespace(batch_size=128, cuda=True, data_source='MNIST', loss_type='CrossEntropy', lr=0.0001, model_type='BayesNN', num_epochs=4000, seed=4324, test_batch_size=200)
+<class 'models_Bayes.BayesNN'>
+ StochasticLinear(784 -> 800)-> StochasticLinear(800 -> 800)-> StochasticLinear(800 -> 10)
+Total number of steps: 1876000
