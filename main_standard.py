@@ -19,22 +19,28 @@ import common as cmn
 parser = argparse.ArgumentParser()
 
 
-parser.add_argument('--data-source', type=str, default='MNIST', help="Data: 'MNIST'")
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
+                    default='MNIST')
 
-parser.add_argument('--loss-type', type=str, default='CrossEntropy', help="Data: 'CrossEntropy' / 'L2_SVM'")
+parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
+                    default='CrossEntropy')
 
-parser.add_argument('--batch-size', type=int, default=128, help='input batch size for training')
+parser.add_argument('--batch-size', type=int, help='input batch size for training',
+                    default=128)
 
-parser.add_argument('--test-batch-size', type=int, default=1000, help='input batch size for testing')
+parser.add_argument('--test-batch-size', help='input batch size for testing',
+                    type=int, default=1000)
 
-parser.add_argument('--num-epochs', type=int, default=10, help='number of epochs to train')
+parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
+                    default=10)
 
-parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
+parser.add_argument('--lr', type=float, help='learning rate',
+                    default=1e-4)
+
+parser.add_argument('--seed', type=int,  help='random seed',
+                    default=1)
 
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-
-parser.add_argument('--seed', type=int, default=1,  help='random seed')
-
 prm = parser.parse_args()
 prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 

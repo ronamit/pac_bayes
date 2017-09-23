@@ -40,6 +40,7 @@ for i_task in range(n_tasks):
 
 def standard_learn():
 
+    # Init weights:
     w = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
 
     learning_rate = 1e-1
@@ -90,6 +91,11 @@ def standard_learn():
 
 def bayes_learn():
 
+    # Define prior:
+    w_P_mu = torch.zeros(n_dim).cuda()
+    w_P_log_sigma = torch.zeros(n_dim).cuda()
+
+    # Init posteriors:
     w_mu = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
     w_log_sigma = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
 
@@ -115,16 +121,19 @@ def bayes_learn():
         epsilon = Variable(torch.randn(n_dim).cuda(), requires_grad=False)
         w = w_mu[i_task] + w_sigma * epsilon
 
-        # Loss:
-        loss = (w - task_data).pow(2).mean()
+        # Empirical Loss:
+        empirical_loss = (w - task_data).pow(2).mean()
+
+        # Total objective:
+        objective =  empirical_loss
 
         # Gradient step:
         optimizer.zero_grad()  # zero the gradient buffers
-        loss.backward()
+        objective.backward()
         optimizer.step()  # Does the update
 
         if i_epoch % 100 == 0:
-            print('Step: {0}, loss: {1}'.format(i_epoch, loss.data[0]))
+            print('Step: {0}, objective: {1}'.format(i_epoch, objective.data[0]))
 
     # Switch learned parameters back to numpy:
     w_mu = w_mu.data.cpu().numpy()
