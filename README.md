@@ -7,5 +7,5 @@ Run files:
 
 
 Requirements:
-* Python 2.7+ (recomended package manager: Anaconda)
+* Python 2.7+ (recomended package manager: Anaconda python)
 * PyTorch 0.2+
