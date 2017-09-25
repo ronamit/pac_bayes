@@ -10,6 +10,7 @@ import argparse
 import data_gen
 import models_standard
 import common as cmn
+torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -127,8 +128,5 @@ for i_epoch in range(prm.num_epochs):
 test_acc = run_test()
 
 stopRuntime = timeit.default_timer()
-
-cmn.write_result('Test Error: {:.3}%\t Runtime: {:.3} [sec]'
-             .format(100*(1-test_acc), stopRuntime - startRuntime), setting_name)
-
+cmn.write_final_result(test_acc, stopRuntime - startRuntime, setting_name)
 cmn.save_code(setting_name, run_name)

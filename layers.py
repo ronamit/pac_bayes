@@ -9,20 +9,21 @@ import torch.nn.functional as F
 class StochasticLinear(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(self.__class__, self).__init__()
+        random_init_std = 0.1
 
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.w_mu = nn.Parameter(torch.randn(in_dim, out_dim))
-        self.w_log_sigma = nn.Parameter(torch.randn(in_dim, out_dim))
-        self.b_mu = nn.Parameter(torch.randn(out_dim))
-        self.b_log_sigma = nn.Parameter(torch.randn(out_dim))
+        self.w_mu = nn.Parameter(torch.randn(in_dim, out_dim) * random_init_std)
+        self.w_log_sigma = nn.Parameter(torch.randn(in_dim, out_dim) * random_init_std)
+        self.b_mu = nn.Parameter(torch.randn(out_dim) * random_init_std)
+        self.b_log_sigma = nn.Parameter(torch.randn(out_dim) *random_init_std)
 
         # Weights initial values:
-        random_init_std = 0.1
-        nn.init.normal(self.w_mu, 0, random_init_std)
-        nn.init.normal(self.w_log_sigma, 0, random_init_std)
-        nn.init.normal(self.b_mu, 0, random_init_std)
-        nn.init.normal(self.b_log_sigma, 0, random_init_std)
+        # random_init_std = 0.1
+        # nn.init.normal(self.w_mu, 0, random_init_std)
+        # nn.init.normal(self.w_log_sigma, 0, random_init_std)
+        # nn.init.normal(self.b_mu, 0, random_init_std)
+        # nn.init.normal(self.b_log_sigma, 0, random_init_std)
 
     def __str__(self):
         return 'StochasticLinear({0} -> {1})'.format(self.in_dim, self.out_dim)

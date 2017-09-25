@@ -10,7 +10,7 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 
-def learn(data_set):
+def learn(data_set, complexity_type):
 
     n_tasks = len(data_set)
     n_dim = data_set[0].shape[1]
@@ -30,7 +30,7 @@ def learn(data_set):
     # create your optimizer
     optimizer = optim.Adam([w_mu, w_log_sigma, w_P_mu, w_P_log_sigma], lr=learning_rate)
 
-    n_epochs = 500
+    n_epochs = 800
     batch_size = 128
 
     for i_epoch in range(n_epochs):
@@ -60,15 +60,21 @@ def learn(data_set):
                                      ((w_mu[i_task] - w_P_mu).pow(2) + sigma_sqr_post) / (2 * sigma_sqr_prior + small_num) - 0.5)
             n_samples = n_samples_list[i_task]
 
-            ## Complexity by 'PAC_Bayes_McAllaster':
-            delta = 0.95
-            complex_term_sum += torch.sqrt((1 / (2 * n_samples)) *
-                                       (kl_dist + np.log(2 * np.sqrt(n_samples) / delta)))
-            ## Variational Bayes:
-            # complex_term += (1 / n_samples) * kl_dist
+            if complexity_type == 'PAC_Bayes_McAllaster':
+                delta = 0.95
+                complex_term_sum += torch.sqrt((1 / (2 * n_samples)) *
+                                           (kl_dist + np.log(2 * np.sqrt(n_samples) / delta)))
+
+            elif complexity_type == 'Variational_Bayes':
+                complex_term_sum += (1 / n_samples) * kl_dist
+
+            elif complexity_type == 'KL':
+                complex_term_sum += kl_dist
+            else:
+                raise ValueError('Invalid complexity_type')
 
 
-        hyper_prior_factor =  0.001 * np.sqrt(1 / n_samples)
+        hyper_prior_factor =  0.0001 * np.sqrt(1 / n_samples)
         hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2))  * hyper_prior_factor
 
         # Total objective:

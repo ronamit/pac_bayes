@@ -67,3 +67,9 @@ def save_code(setting_name, run_name):
     for filename in glob.glob(os.path.join(source_dir, '*.*')):
         shutil.copy(filename, dest_dir)
 
+
+def write_final_result(test_acc,run_time, setting_name):
+    write_result('-'*5 + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), setting_name)
+    write_result('Test Error: {:.3}%\t Runtime: {} [sec]'
+                     .format(100 * (1 - test_acc), run_time, setting_name), setting_name)
+

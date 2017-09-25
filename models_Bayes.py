@@ -42,9 +42,9 @@ def get_model(model_type, prm):
     class BigBayesNN(nn.Module):
         def __init__(self):
             super(self.__class__, self).__init__()
-            n_hidden1 = 800
-            n_hidden2 = 800
-            n_hidden3 = 800
+            n_hidden1 = 1200
+            n_hidden2 = 1200
+            n_hidden3 = 1200
             self.fc1 = StochasticLinear(input_size, n_hidden1)
             self.fc2 = StochasticLinear(n_hidden1, n_hidden2)
             self.fc3 = StochasticLinear(n_hidden2, n_hidden3)

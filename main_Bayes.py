@@ -9,6 +9,7 @@ import argparse
 import data_gen
 import common as cmn
 import models_Bayes
+torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 def count_correct(outputs, targets):
     pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
@@ -35,7 +36,7 @@ parser.add_argument('--test-batch-size', type=int, help='input batch size for te
                     default=1000)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
+                    default=800)
 
 parser.add_argument('--lr', type=float, help='learning rate',
                     default=1e-4)
@@ -54,7 +55,7 @@ train_loader, test_loader = data_gen.init_data_gen(prm)
 n_batches = len(train_loader)
 
 #  Get model:
-model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
+model_type = 'BigBayesNN' # 'BayesNN' \ 'BigBayesNN'
 prm.model_type = model_type
 model = models_Bayes.get_model(model_type, prm)
 
@@ -164,8 +165,5 @@ for i_epoch in range(prm.num_epochs):
 test_acc = run_test()
 
 stopRuntime = timeit.default_timer()
-
-cmn.write_result('Test Error: {:.3}%\t Runtime: {:.3} [sec]'
-             .format(100*(1-test_acc), stopRuntime - startRuntime), setting_name)
-
+cmn.write_final_result(test_acc, stopRuntime - startRuntime, setting_name)
 cmn.save_code(setting_name, run_name)
