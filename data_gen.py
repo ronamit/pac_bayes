@@ -6,12 +6,12 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 
 
-test_batch_size = 1000
-
 
 def init_data_gen(prm):
 
-    kwargs = {'num_workers': 1, 'pin_memory': True} if prm.cuda else {}
+    import multiprocessing
+    cpu_count = multiprocessing.cpu_count()
+    kwargs = {'num_workers': cpu_count, 'pin_memory': True} if prm.cuda else {}
 
     if prm.data_source == 'MNIST':
         # MNIST_MEAN =  (0.1307,) # (0.5,)
@@ -29,7 +29,7 @@ def init_data_gen(prm):
                                transforms.ToTensor(),
                                # transforms.Normalize(MNIST_MEAN, MNIST_STD)
                            ])),
-            batch_size=test_batch_size, shuffle=True, **kwargs)
+            batch_size=prm.test_batch_size, shuffle=True, **kwargs)
 
     else:
         raise ValueError('Invalid data_source')
@@ -37,11 +37,11 @@ def init_data_gen(prm):
     return train_loader, test_loader
 
 
-def get_batch_vars(batch_data, args):
+def get_batch_vars(batch_data, args, is_test=False):
     inputs, targets = batch_data
     if args.cuda:
-        inputs, targets = inputs.cuda(), targets.cuda()
-    inputs, targets = Variable(inputs), Variable(targets)
+        inputs, targets = inputs.cuda(), targets.cuda(async=True)
+    inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
     return inputs, targets
 
 

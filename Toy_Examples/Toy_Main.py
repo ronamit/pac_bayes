@@ -40,7 +40,7 @@ if data_type == 0:
 elif data_type == 1:
     n_tasks = 2
     # number of samples in each task:
-    n_samples_list =[10, 100]
+    n_samples_list =[100, 100]
     # True means vector for each task [n_dim x n_tasks]:
     true_mu = [[4, 2], [8, 2]]
     # True sigma vector for each task [n_dim x n_tasks]:
@@ -65,7 +65,7 @@ for i_task in range(n_tasks):
 # -------------------------------------------------------------------------------------------
 #  Learning
 # -------------------------------------------------------------------------------------------
-learning_type = 'Bayes_FixedPrior' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearn'
+learning_type = 'MetaLearn' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearn'
 # 'Standard' = Learn optimal weights in each task separately
 # 'Bayes_FixedPrior' = Learn posteriors for each task, assuming a fixed shared prior
 # 'MetaLearn' = Learn posteriors for each task and the shared prior jointly

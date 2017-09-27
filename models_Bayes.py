@@ -15,7 +15,7 @@ def get_model(model_type, prm):
 
     info = data_gen.get_info(prm)
     color_channels = info['color_channels']
-    im_size =info['im_size']
+    im_size = info['im_size']
     n_classes = info['n_classes']
     input_size = info['input_size']
 
@@ -27,9 +27,9 @@ def get_model(model_type, prm):
             super(self.__class__, self).__init__()
             n_hidden1 = 800
             n_hidden2 = 800
-            self.fc1 = StochasticLinear(input_size, n_hidden1)
-            self.fc2 = StochasticLinear(n_hidden1, n_hidden2)
-            self.fc_out = StochasticLinear(n_hidden2, n_classes)
+            self.fc1 = StochasticLinear(input_size, n_hidden1, prm)
+            self.fc2 = StochasticLinear(n_hidden1, n_hidden2, prm)
+            self.fc_out = StochasticLinear(n_hidden2, n_classes, prm)
 
         def forward(self, x, eps_std):
             x = x.view(-1, input_size)  # flatten image
@@ -45,10 +45,10 @@ def get_model(model_type, prm):
             n_hidden1 = 1200
             n_hidden2 = 1200
             n_hidden3 = 1200
-            self.fc1 = StochasticLinear(input_size, n_hidden1)
-            self.fc2 = StochasticLinear(n_hidden1, n_hidden2)
-            self.fc3 = StochasticLinear(n_hidden2, n_hidden3)
-            self.fc_out = StochasticLinear(n_hidden3, n_classes)
+            self.fc1 = StochasticLinear(input_size, n_hidden1, prm)
+            self.fc2 = StochasticLinear(n_hidden1, n_hidden2, prm)
+            self.fc3 = StochasticLinear(n_hidden2, n_hidden3, prm)
+            self.fc_out = StochasticLinear(n_hidden3, n_classes, prm)
 
         def forward(self, x, eps_std):
             x = x.view(-1, input_size)  # flatten image
@@ -63,12 +63,8 @@ def get_model(model_type, prm):
     #  Return net
     # -------------------------------------------------------------------------------------------
 
-    if model_type == 'BayesNN':
-        model = BayesNN()
-    elif model_type == 'BigBayesNN':
-        model = BigBayesNN()
-    else:
-        raise ValueError('Invalid model_type')
+    models_dict = {'BayesNN':BayesNN(), 'BigBayesNN':BigBayesNN()}
+    model = models_dict[model_type]
 
     if prm.cuda:
         model.cuda()

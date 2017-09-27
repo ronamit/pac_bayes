@@ -74,7 +74,7 @@ def learn(data_set, complexity_type):
                 raise ValueError('Invalid complexity_type')
 
 
-        hyper_prior_factor =  0.0001 * np.sqrt(1 / n_samples)
+        hyper_prior_factor =  0.000001 * np.sqrt(1 / n_samples)
         hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2))  * hyper_prior_factor
 
         # Total objective:

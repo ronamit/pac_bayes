@@ -11,8 +11,60 @@ import shutil
 
 import torch.nn as nn
 
+
+
+# -----------------------------------------------------------------------------------------------------------#
+# Data manipulation
+# -----------------------------------------------------------------------------------------------------------#
+
 # torch.nn.PixelShuffle(upscale_factor)
 
+# -----------------------------------------------------------------------------------------------------------#
+# Optimizer
+# -----------------------------------------------------------------------------------------------------------#
+
+def adjust_learning_rate_interval(optimizer, epoch, prm, gamma, decay_interval):
+    """Sets the learning rate to the initial LR decayed by gamma every decay_interval epochs"""
+    lr = prm.lr * (gamma ** (epoch // decay_interval))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+def adjust_learning_rate_schedule(optimizer, epoch, prm, decay_factor, decay_epochs):
+    """The learning rate is decayed by decay_factor at each interval start """
+
+    # Find the index of the current interval:
+    interval_index = len([mark for mark in decay_epochs if mark < epoch])
+
+    lr = prm.lr * (decay_factor ** interval_index)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+# -----------------------------------------------------------------------------------------------------------#
+#  Configuration
+# -----------------------------------------------------------------------------------------------------------#
+
+def get_loss_criterion(loss_type):
+# Note: the loss use the un-normalized net outputs (scores, not probabilities)
+
+    criterion_dict = {'CrossEntropy':nn.CrossEntropyLoss(size_average=True),
+                 'L2_SVM':nn.MultiMarginLoss(p=2, margin=1, weight=None, size_average=True)}
+
+    return criterion_dict[loss_type]
+
+
+# -----------------------------------------------------------------------------------------------------------#
+# Evaluation
+# -----------------------------------------------------------------------------------------------------------#
+def count_correct(outputs, targets):
+    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
+    return pred.eq(targets.data.view_as(pred)).cpu().sum()
+
+
+# -----------------------------------------------------------------------------------------------------------#
+# Prints
+# -----------------------------------------------------------------------------------------------------------#
 
 def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
 
@@ -20,27 +72,8 @@ def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
     return ('({:2.1f}%) \t Train Epoch: {:3} \t Batch: {:4} \t Loss: {:.4} \t  Acc: {:1.3}\t'.format(
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
-
-def get_loss_criterion(loss_type):
-# Note: the loss use the un-normalized net outputs (scores, not probabilities)
-
-    if loss_type == 'CrossEntropy':
-        criterion = nn.CrossEntropyLoss(size_average=True)
-
-    elif loss_type == 'L2_SVM':
-        criterion = nn.MultiMarginLoss(p=2, margin=1, weight=None, size_average=True)
-    else:
-        raise  ValueError('Invalid loss_type')
-    return criterion
-
-
-def count_correct(outputs, targets):
-    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
-    return pred.eq(targets.data.view_as(pred)).cpu().sum()
-
 def get_model_string(model):
     return str(model.__class__)+ '\n ' + '-> '.join([m.__str__() for m in model._modules.values()])
-
 
 # -----------------------------------------------------------------------------------------------------------#
 # Result saving
@@ -72,4 +105,5 @@ def write_final_result(test_acc,run_time, setting_name):
     write_result('-'*5 + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), setting_name)
     write_result('Test Error: {:.3}%\t Runtime: {} [sec]'
                      .format(100 * (1 - test_acc), run_time, setting_name), setting_name)
+
 

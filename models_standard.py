@@ -75,15 +75,9 @@ def get_model(model_type, prm):
             x = self.fc_out(x)
             return x
 
+    models_dict = {'FcNet':FcNet(), 'ConvNet':ConvNet()}
+    model = models_dict[model_type]
 
-    if model_type == 'FcNet':
-        model = FcNet()
-
-    elif model_type == 'ConvNet':
-        model = ConvNet()
-
-    else:
-        raise ValueError('Invalid model_type')
 
     if prm.cuda:
         model.cuda()
