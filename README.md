@@ -9,4 +9,5 @@ Requirements:
 Run files:
 * main_standard.py         - Learn standard neural network.
 * main_Bayes.py            - Learn stochastic neural network.
+* main_Meta.py             - Learns a prior from training tasks and use it to learn test tasks.
 * Toy_Examples\Toy_Main.py -  Unsupervised 2D  regression.
