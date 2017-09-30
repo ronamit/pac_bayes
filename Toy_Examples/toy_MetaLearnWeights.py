@@ -17,18 +17,16 @@ def learn(data_set, complexity_type):
     n_samples_list = [task_data.shape[0] for task_data in data_set]
 
     # Define prior:
-    learn_prior_flag = True
     w_P_mu = Variable(torch.randn(n_dim).cuda(), requires_grad=True)
-    w_P_log_sigma = Variable(torch.randn(n_dim).cuda(), requires_grad=True)
+    w_P_log_var = Variable(torch.randn(n_dim).cuda(), requires_grad=True)
 
     # Init posteriors:
-    w_mu = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
-    w_log_sigma = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
+    w_post = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
 
     learning_rate = 1e-1
 
     # create your optimizer
-    optimizer = optim.Adam([w_mu, w_log_sigma, w_P_mu, w_P_log_sigma], lr=learning_rate)
+    optimizer = optim.Adam([w_post, w_P_mu, w_P_log_var], lr=learning_rate)
 
     n_epochs = 800
     batch_size = 128
@@ -42,60 +40,44 @@ def learn(data_set, complexity_type):
         task_data = torch.from_numpy(data_set[b_task][batch_inds])
         task_data = Variable(task_data.cuda(), requires_grad=False)
 
-        # Re-Parametrization:
-        w_sigma = torch.exp(w_log_sigma[b_task])
-        epsilon = Variable(torch.randn(n_dim).cuda(), requires_grad=False)
-        w = w_mu[b_task] + w_sigma * epsilon
-
         # Empirical Loss:
-        empirical_loss = (w - task_data).pow(2).mean()
+        w_task = w_post[b_task] # The posterior corresponding to the task in the batch
+        empirical_loss = (w_task - task_data).pow(2).mean()
 
         # Complexity terms:
-        sigma_sqr_prior = torch.exp(2 * w_P_log_sigma)
+        sigma_sqr_prior = torch.exp(w_P_log_var)
         complex_term_sum = 0
         for i_task in range(n_tasks):
             small_num = 1e-9  # add small positive number to avoid division by zero due to numerical errors
-            sigma_sqr_post = torch.exp(2 * w_log_sigma[i_task])
-            kl_dist = torch.sum(w_P_log_sigma - w_log_sigma[i_task] +
-                                     ((w_mu[i_task] - w_P_mu).pow(2) + sigma_sqr_post) / (2 * sigma_sqr_prior + small_num) - 0.5)
+            kl_dist = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
             n_samples = n_samples_list[i_task]
 
-            if complexity_type == 'PAC_Bayes_McAllaster':
-                delta = 0.95
-                complex_term_sum += torch.sqrt((1 / (2 * n_samples)) *
-                                           (kl_dist + np.log(2 * np.sqrt(n_samples) / delta)))
-
-            elif complexity_type == 'Variational_Bayes':
+            if complexity_type == 'Variational_Bayes':
                 complex_term_sum += (1 / n_samples) * kl_dist
-
-            elif complexity_type == 'KL':
-                complex_term_sum += kl_dist
             else:
                 raise ValueError('Invalid complexity_type')
 
 
-        hyper_prior_factor =  0.000001 * np.sqrt(1 / n_samples)
-        hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2))  * hyper_prior_factor
+        hyper_prior_factor =  1e-6 * np.sqrt(1 / n_tasks)
+        hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2)) * hyper_prior_factor
 
         # Total objective:
-        complex_term = (1 / n_samples) * complex_term_sum
-        objective = empirical_loss + complex_term + hyper_prior
+        complex_term = (1 / n_tasks) * complex_term_sum
+        total_objective = empirical_loss + complex_term + hyper_prior
 
         # Gradient step:
         optimizer.zero_grad()  # zero the gradient buffers
-        objective.backward()
+        total_objective.backward()
         optimizer.step()  # Does the update
 
         if i_epoch % 100 == 0:
-            print('Step: {0}, objective: {1}'.format(i_epoch, objective.data[0]))
+            print('Step: {0}, objective: {1}'.format(i_epoch, total_objective.data[0]))
 
     # Switch  back to numpy:
-    w_mu = w_mu.data.cpu().numpy()
-    w_log_sigma = w_log_sigma.data.cpu().numpy()
-    w_sigma = np.exp(w_log_sigma)
+    w_post = w_post.data.cpu().numpy()
     w_P_mu = w_P_mu.data.cpu().numpy()
-    w_P_log_sigma = w_P_log_sigma.data.cpu().numpy()
-    w_P_sigma = np.exp(w_P_log_sigma)
+    w_P_log_var = w_P_log_var.data.cpu().numpy()
+    w_P_sigma = np.exp(0.5 * w_P_log_var)
 
     #  Plots:
     fig1 = plt.figure()
@@ -112,12 +94,7 @@ def learn(data_set, complexity_type):
         plt.plot(data_set[i_task][:, 0], data_set[i_task][:, 1], '.',
                  label='Task {0}'.format(i_task))
         # plot posterior:
-        plt.plot(w_mu[i_task][0], w_mu[i_task][1], 'o', label='posterior mean {0}'.format(i_task))
-        ell = Ellipse(xy=(w_mu[i_task][0], w_mu[i_task][1]),
-                      width=w_sigma[i_task][0], height=w_sigma[i_task][1],
-                      angle=0, color='black')
-        ell.set_facecolor('none')
-        ax.add_artist(ell)
+        plt.plot(w_post[i_task][0], w_post[i_task][1], 'o', label='posterior weights {0}'.format(i_task))
 
     plt.plot(0, 0, 'x', label='hyper-prior ')
 

@@ -2,7 +2,7 @@
 
 
 from __future__ import absolute_import, division, print_function
-
+from six.moves import xrange
 
 from datetime import datetime
 import glob
@@ -10,33 +10,69 @@ import os
 import shutil
 
 import torch.nn as nn
-
-
+import torch
 
 # -----------------------------------------------------------------------------------------------------------#
-# Data manipulation
+# General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
 
-# torch.nn.PixelShuffle(upscale_factor)
+# Get the parameters from a model:
+def get_param_from_model(model, param_name):
+    return [param for (name, param) in model.named_parameters() if name == param_name][0]
+
+def zeros_gpu(shape):
+    return torch.cuda.FloatTensor(*shape).fill_(0)
+
+
+def count_correct(outputs, targets):
+    ''' Deterimne the class prediction by the max output and compare to ground truth'''
+    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
+    return pred.eq(targets.data.view_as(pred)).cpu().sum()
+
+
+def save_models_dict(models_dict, dir_path):
+    ''' Save the models '''
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    for name in models_dict:
+        f_path = dir_path + '/' + name + '.pt'
+        with open(f_path, 'wb') as f_pointer:
+            torch.save(models_dict[name].state_dict(), f_pointer)
+
+def load_models_dict(models_dict, dir_path):
+    ''' Load models '''
+    for name in models_dict:
+        f_path = dir_path + '/' + name + '.pt'
+        with open(f_path, 'r') as f_pointer:
+            models_dict[name].load_state_dict(torch.load(f_pointer))
 
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer
 # -----------------------------------------------------------------------------------------------------------#
+# Gradient step function:
+def grad_step(objective, optimizer, lr_schedule=None, initial_lr=None, i_epoch=None):
+    if lr_schedule:
+        adjust_learning_rate_schedule(optimizer, i_epoch, initial_lr, **lr_schedule)
+    optimizer.zero_grad()
+    objective.backward()
+    # clip_grad_norm(***.parameters(), 5.)
+    optimizer.step()
 
-def adjust_learning_rate_interval(optimizer, epoch, prm, gamma, decay_interval):
+
+def adjust_learning_rate_interval(optimizer, epoch, initial_lr, gamma, decay_interval):
     """Sets the learning rate to the initial LR decayed by gamma every decay_interval epochs"""
-    lr = prm.lr * (gamma ** (epoch // decay_interval))
+    lr = initial_lr * (gamma ** (epoch // decay_interval))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
 
-def adjust_learning_rate_schedule(optimizer, epoch, prm, decay_factor, decay_epochs):
+def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, decay_epochs):
     """The learning rate is decayed by decay_factor at each interval start """
 
     # Find the index of the current interval:
     interval_index = len([mark for mark in decay_epochs if mark < epoch])
 
-    lr = prm.lr * (decay_factor ** interval_index)
+    lr = initial_lr * (decay_factor ** interval_index)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -55,21 +91,13 @@ def get_loss_criterion(loss_type):
 
 
 # -----------------------------------------------------------------------------------------------------------#
-# Evaluation
-# -----------------------------------------------------------------------------------------------------------#
-def count_correct(outputs, targets):
-    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
-    return pred.eq(targets.data.view_as(pred)).cpu().sum()
-
-
-# -----------------------------------------------------------------------------------------------------------#
 # Prints
 # -----------------------------------------------------------------------------------------------------------#
 
 def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
 
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * prm.num_epochs)
-    return ('({:2.1f}%) \t Train Epoch: {:3} \t Batch: {:4} \t Loss: {:.4} \t  Acc: {:1.3}\t'.format(
+    return ('({:2.1f}%) \t Train Epoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
 def get_model_string(model):
@@ -79,11 +107,12 @@ def get_model_string(model):
 # Result saving
 # -----------------------------------------------------------------------------------------------------------#
 
-def write_result(str, setting_name):
+def write_result(str, log_file_name):
 
     print(str)
-    with open(setting_name + '.out', 'a') as f:
-        print(str, file=f)
+    if log_file_name:
+        with open(log_file_name + '.out', 'a') as f:
+            print(str, file=f)
 
 
 def gen_run_name(name_prefix):
@@ -101,9 +130,9 @@ def save_code(setting_name, run_name):
         shutil.copy(filename, dest_dir)
 
 
-def write_final_result(test_acc,run_time, setting_name):
-    write_result('-'*5 + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), setting_name)
-    write_result('Test Error: {:.3}%\t Runtime: {} [sec]'
-                     .format(100 * (1 - test_acc), run_time, setting_name), setting_name)
+def write_final_result(test_acc,run_time, log_file_name):
+    write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
+    write_result('Average Test Error: {:.3}%\t Runtime: {} [sec]'
+                     .format(100 * (1 - test_acc), run_time), log_file_name)
 
 

@@ -30,7 +30,6 @@ class StochasticLinear(nn.Module):
         # Layer computations (based on "Variational Dropout and the Local
         # Reparameterization Trick", Kingma et.al 2015)
 
-        # out_mean = torch.mm(x, self.w_mu) + self.b_mu
         out_mean = F.linear(x, self.w_mu, bias=self.b_mu)
 
         if eps_std == 0.0:
@@ -45,8 +44,6 @@ class StochasticLinear(nn.Module):
             # layer output:
             noise = out_mean.data.new(out_mean.size()).normal_(0, eps_std)
             ksi = Variable(noise, requires_grad=False)
-            # ksi = Variable(torch.randn(out_mean.size()).cuda(),
-                        #    requires_grad=False)
 
             layer_out = out_mean + eps_std * ksi * torch.sqrt(out_var)
 

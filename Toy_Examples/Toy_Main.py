@@ -65,10 +65,11 @@ for i_task in range(n_tasks):
 # -------------------------------------------------------------------------------------------
 #  Learning
 # -------------------------------------------------------------------------------------------
-learning_type = 'MetaLearn' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearn'
+learning_type = 'MetaLearnWeights' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearnPosteriors' \ MetaLearnWeights
 # 'Standard' = Learn optimal weights in each task separately
 # 'Bayes_FixedPrior' = Learn posteriors for each task, assuming a fixed shared prior
-# 'MetaLearn' = Learn posteriors for each task and the shared prior jointly
+# 'MetaLearnPosteriors' = Learn weights for each task and the shared prior jointly
+#
 
 if learning_type == 'Standard':
     import toy_standard
@@ -78,9 +79,14 @@ if learning_type == 'Bayes_FixedPrior':
     import toy_Bayes_FixedPrior
     toy_Bayes_FixedPrior.learn(data_set)
 
-if learning_type == 'MetaLearn':
-    import toy_MetaLearn
+if learning_type == 'MetaLearnPosteriors':
+    import toy_MetaLearnPosteriors
     complexity_type = 'PAC_Bayes_McAllaster' # 'PAC_Bayes_McAllaster' \ 'Variational_Bayes' \ 'KL'
-    toy_MetaLearn.learn(data_set, complexity_type)
+    toy_MetaLearnPosteriors.learn(data_set, complexity_type)
+
+if learning_type == 'MetaLearnWeights':
+    import toy_MetaLearnWeights
+    complexity_type = 'Variational_Bayes'
+    toy_MetaLearnWeights.learn(data_set, complexity_type)
 
 plt.show()
