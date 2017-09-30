@@ -73,6 +73,7 @@ lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
 complexity_type = 'Variational_Bayes'
 prm.prior_update_interval = 3
 
+init_from_prior = True # In meta-testing -  init posterior from learned prior
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
@@ -108,7 +109,7 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 10
+n_test_tasks = 1
 limit_train_samples = 1000
 test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in xrange(n_test_tasks)]
 
@@ -122,7 +123,8 @@ test_err_avg = 0
 for i_task in xrange(n_test_tasks):
     task_data = test_tasks_data[i_task]
     test_err = MetaTesting.run_learning(task_data, prior_dict, prm,
-                                        model_type, optim_func, optim_args, loss_criterion, lr_schedule, complexity_type)
+                                        model_type, optim_func, optim_args, loss_criterion,
+                                        lr_schedule, complexity_type, init_from_prior)
     test_err_avg += test_err / n_test_tasks
 
 

@@ -13,18 +13,21 @@ from models_standard import get_model
 from bayes_func import get_intra_task_complexity
 
 
-def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, complexity_type):
+def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, complexity_type, init_from_prior):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
 
-    # Create posterior model for the new task:
-    post_model = get_model(model_type, prm)
-
     # The pre-learned prior parameters are contained in these models:
     prior_means_model = prior_dict['means_model']
     prior_log_vars_model = prior_dict['log_var_model']
+
+    # Create posterior model for the new task:
+    post_model = get_model(model_type, prm)
+
+    if init_from_prior:
+        post_model.load_state_dict(prior_means_model.state_dict())
 
     # The data-sets of the new task:
     train_loader = task_data['train']
@@ -90,7 +93,7 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
-    run_name = cmn.gen_run_name('Standard')
+    run_name = cmn.gen_run_name('Meta-Testing')
     cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
     cmn.write_result(str(prm), prm.log_file)
     cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
