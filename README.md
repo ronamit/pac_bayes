@@ -3,7 +3,7 @@
 
 
 Requirements:
-* Python 2.7+ (recomended package manager: Anaconda python)
+* Python 2.7+ or 3.6+ (recomended package manager: Anaconda python)
 * PyTorch 0.2+
 
 Run files:
