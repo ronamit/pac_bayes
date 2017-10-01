@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import argparse
 
 import torch
@@ -24,17 +24,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
-                    default='None')
+parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=64)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=20)
+                    default=30)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -56,13 +56,13 @@ prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 torch.manual_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-model_type = 'FcNet' # 'FcNet' \ 'ConvNet'
+model_type = 'FcNet3' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
 
 # Loss criterion
 loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 
 #  Define optimizer:
-optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
+optim_func, optim_args = optim.Adam,  {'lr': prm.lr, 'weight_decay': 1e-4} # '}
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
@@ -70,21 +70,21 @@ lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
 # lr_schedule = {} # No decay
 
 # Meta-alg params:
-complexity_type = 'Variational_Bayes'
-prm.prior_update_interval = 3
+complexity_type = 'PAC_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes' /
 
-init_from_prior = True # In meta-testing -  init posterior from learned prior
+init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 10
-train_tasks_data = [data_gen.get_data_loader(prm) for i_task in xrange(n_train_tasks)]
+n_train_tasks = 12
+train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
+
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-load_pretrained_prior = True # False \ True
+load_pretrained_prior = False  # False \ True
 dir_path = './tmp'
 
 if load_pretrained_prior:
@@ -111,16 +111,15 @@ else:
 
 n_test_tasks = 1
 limit_train_samples = 1000
-test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in xrange(n_test_tasks)]
+test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
-# ------------
 # -------------------------------------------------------------------------------
-prm.log_file = None
 
 test_err_avg = 0
-for i_task in xrange(n_test_tasks):
+for i_task in range(n_test_tasks):
+    print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err = MetaTesting.run_learning(task_data, prior_dict, prm,
                                         model_type, optim_func, optim_args, loss_criterion,
@@ -133,7 +132,8 @@ for i_task in xrange(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 
 test_err_avg2 = 0
-for i_task in xrange(n_test_tasks):
+for i_task in range(n_test_tasks):
+    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err = learn_standard.run_learning(task_data, prm, model_type,
                                            optim_func, optim_args, loss_criterion, lr_schedule)
@@ -143,8 +143,6 @@ for i_task in xrange(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
-print('-'*5 + ' Final Results: '+'-'*5 )
-
-print('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg))
-
-print('Standard - Avg test err: {0}%'.format(100 * test_err_avg2))
+cmn.write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+cmn.write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
+cmn.write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)

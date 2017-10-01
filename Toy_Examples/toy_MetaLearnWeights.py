@@ -42,18 +42,20 @@ def learn(data_set, complexity_type):
 
         # Empirical Loss:
         w_task = w_post[b_task] # The posterior corresponding to the task in the batch
-        empirical_loss = (w_task - task_data).pow(2).mean()
+        empirical_loss = (w_task - task_data).pow(2).mean() # mean over samples and over dimensions
 
         # Complexity terms:
         sigma_sqr_prior = torch.exp(w_P_log_var)
         complex_term_sum = 0
         for i_task in range(n_tasks):
-            small_num = 1e-9  # add small positive number to avoid division by zero due to numerical errors
-            kl_dist = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
+            small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
+            neg_log_pdf = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
             n_samples = n_samples_list[i_task]
 
             if complexity_type == 'Variational_Bayes':
-                complex_term_sum += (1 / n_samples) * kl_dist
+                complex_term_sum += (1 / n_samples) * neg_log_pdf
+            elif complexity_type == 'PAC_Bayes':
+                complex_term_sum += torch.sqrt((1 / n_samples) * (neg_log_pdf + 100))
             else:
                 raise ValueError('Invalid complexity_type')
 

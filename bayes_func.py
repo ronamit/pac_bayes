@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import timeit
 import data_gen
 
@@ -16,25 +16,30 @@ from models_standard import get_model
 # -------------------------------------------------------------------------------------------
 def get_intra_task_complexity(complexity_type, prior_means_model, prior_log_vars_model, task_post_model, n_samples_task):
 
-    log_prob = calc_log_prob(prior_means_model, prior_log_vars_model, task_post_model)
+    neg_log_pdf = calc_neg_log_pdf(prior_means_model, prior_log_vars_model, task_post_model)
 
     if complexity_type == 'Variational_Bayes':
-        complex_term = (1 / n_samples_task) * log_prob
+        complex_term = (1 / n_samples_task) * neg_log_pdf
+
+    elif complexity_type == 'PAC_Bayes':
+        complex_term = torch.sqrt((1 / n_samples_task) * (neg_log_pdf + 10))
+
     else:
+
         raise ValueError('Invalid complexity_type')
 
     return complex_term
 
 
 
-def calc_log_prob(prior_means_model, prior_log_vars_model, task_post_model):
+def calc_neg_log_pdf(prior_means_model, prior_log_vars_model, task_post_model):
     # Calculate the log-probability of the posterior weights vector given a factorized Gaussian distribution
     # (the prior) with a given mean and log-variance vectors
 
     param_names_list = [param_name for param_name, param in prior_means_model.named_parameters()]
 
-    small_num = 1e-9  # add small positive number to avoid division by zero due to numerical errors
-    log_prob = 0
+    small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
+    neg_log_pdf = 0
 
     # Since the distribution is factorized, we sum the log-prob over all elements:
     for i_param, param_name in enumerate(param_names_list):
@@ -47,10 +52,10 @@ def calc_log_prob(prior_means_model, prior_log_vars_model, task_post_model):
 
         sigma_sqr_prior = torch.exp(w_P_log_var)
 
-        log_prob_curr = 0.5 * torch.sum(
-            w_P_log_var + (w_post - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
+        neg_log_pdf_curr = 0.5 * torch.sum(w_P_log_var + np.log(2*np.pi) +
+                                           (w_post - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
 
         # Sum the contribution to the total log-probability
-        log_prob += log_prob_curr
+        neg_log_pdf += neg_log_pdf_curr
 
-    return log_prob
+    return neg_log_pdf

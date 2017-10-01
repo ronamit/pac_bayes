@@ -86,7 +86,7 @@ if learning_type == 'MetaLearnPosteriors':
 
 if learning_type == 'MetaLearnWeights':
     import toy_MetaLearnWeights
-    complexity_type = 'Variational_Bayes'
+    complexity_type = 'PAC_Bayes'  # 'Variational_Bayes' / 'PAC_Bayes' /
     toy_MetaLearnWeights.learn(data_set, complexity_type)
 
 plt.show()

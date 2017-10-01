@@ -1,7 +1,6 @@
 
-
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import torch
 from torchvision import datasets, transforms
 import torch.utils.data as data_utils
@@ -16,11 +15,16 @@ import multiprocessing
 def get_data_loader(prm, limit_train_samples = None):
 
     # Set data transformation function:
+    input_trans = None
+    target_trans = None
+
     if prm.data_transform == 'Permute_Pixels':
         # Create a fixed random pixels permutation, applied to all images
-        transform_func = create_pixel_permute_trans(prm)
-    else:
-        transform_func = None
+        input_trans = create_pixel_permute_trans(prm)
+
+    elif prm.data_transform == 'Permute_Labels':
+        # Create a fixed random label permutation, applied to all images
+        target_trans = create_label_permute_trans(prm)
 
     # Get dataset:
     if prm.data_source == 'MNIST':
@@ -28,20 +32,21 @@ def get_data_loader(prm, limit_train_samples = None):
         # MNIST_STD =  (0.3081,)  # (0.5,)
         # Note: keep values in [0,1] to avoid too large input norm (which cause high variance)
 
-        # Data transformations list:\
-        transforms_list = []
-        transforms_list.append(transforms.ToTensor())
-        # transforms_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
-        if transform_func:
+        # Data transformations list:
+
+        input_trans_list = [transforms.ToTensor()]
+        # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
+        if input_trans:
             # Note: this operates before transform to tensor
-            transforms_list.append(transforms.Lambda(transform_func))
+            input_trans_list.append(transforms.Lambda(input_trans))
 
         # Train set:
         train_dataset = datasets.MNIST('./data', train=True, download=True,
-                           transform=transforms.Compose(transforms_list))
+                                       transform=transforms.Compose(input_trans_list), target_transform=target_trans)
 
         # Test set:
-        test_dataset = datasets.MNIST('./data', train=False, transform=transforms.Compose(transforms_list))
+        test_dataset = datasets.MNIST('./data', train=False,
+                                      transform=transforms.Compose(input_trans_list), target_transform=target_trans)
 
     else:
         raise ValueError('Invalid data_source')
@@ -67,7 +72,6 @@ def get_data_loader(prm, limit_train_samples = None):
 
     return data_loader
 
-
 # -------------------------------------------------------------------------------------------
 #  Data sets parameters
 # -------------------------------------------------------------------------------------------
@@ -91,8 +95,6 @@ def get_batch_vars(batch_data, args, is_test=False):
     inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
     return inputs, targets
 
-
-
 # -----------------------------------------------------------------------------------------------------------#
 # Data manipulation
 # -----------------------------------------------------------------------------------------------------------#
@@ -113,3 +115,8 @@ def permute_pixels(x, inds_permute):
     x = x.view(1, im_H, im_W)
     return x
 
+def create_label_permute_trans(prm):
+    info = get_info(prm)
+    inds_permute = torch.randperm(info['n_classes'])
+    transform_func = lambda target: inds_permute[target]
+    return transform_func

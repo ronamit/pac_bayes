@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -76,7 +76,26 @@ def get_model(model_type, prm):
             x = self.fc_out(x)
             return x
 
-    models_dict = {'FcNet':FcNet(), 'ConvNet':ConvNet()}
+    class FcNet3(nn.Module):
+        def __init__(self):
+            super(FcNet3, self).__init__()
+            n_hidden1 = 400
+            n_hidden2 = 400
+            n_hidden3 = 400
+            self.fc1 = nn.Linear(input_size, n_hidden1)
+            self.fc2 = nn.Linear(n_hidden1, n_hidden2)
+            self.fc3 = nn.Linear(n_hidden2, n_hidden3)
+            self.fc_out = nn.Linear(n_hidden3, n_classes)
+
+        def forward(self, x):
+            x = x.view(-1, input_size)  # flatten image
+            x = F.elu(self.fc1(x))
+            x = F.elu(self.fc2(x))
+            x = F.elu(self.fc3(x))
+            x = self.fc_out(x)
+            return x
+
+    models_dict = {'FcNet':FcNet(), 'ConvNet':ConvNet(), 'FcNet3':FcNet3()}
     model = models_dict[model_type]
 
 

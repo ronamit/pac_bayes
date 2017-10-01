@@ -2,16 +2,14 @@
 
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
 
 from datetime import datetime
 import glob
 import os
 import shutil
-
+from torch.autograd import Variable
 import torch.nn as nn
 import torch
-
 # -----------------------------------------------------------------------------------------------------------#
 # General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
@@ -21,7 +19,7 @@ def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
 
 def zeros_gpu(shape):
-    return torch.cuda.FloatTensor(*shape).fill_(0)
+    return torch.cuda.FloatTensor(shape).fill_(0)
 
 
 def count_correct(outputs, targets):

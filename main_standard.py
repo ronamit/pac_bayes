@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import torch
 import torch.optim as optim
 import argparse
@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
+parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
@@ -72,4 +72,4 @@ data_loader = data_gen.get_data_loader(prm)
 #  Run learning
 # -------------------------------------------------------------------------------------------
 from learn_standard import run_learning
-run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion, lr_schedule)
+run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
