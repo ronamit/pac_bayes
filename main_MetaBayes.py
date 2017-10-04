@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=30)
+                    default=600)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-2)
@@ -87,7 +87,7 @@ prm.full_eps_ratio_in_stage_2 = 0.5
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 2
+n_train_tasks = 5
 train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
 # -------------------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ test_err_avg = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = MetaTesting.run_learning(task_data, prior_model, prm,
+    test_err = MetaTestingBayes.run_learning(task_data, prior_model, prm,
                                         model_type, optim_func, optim_args, loss_criterion,
                                         lr_schedule, init_from_prior)
     test_err_avg += test_err / n_test_tasks

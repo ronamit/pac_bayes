@@ -8,6 +8,7 @@ import common as cmn
 import data_gen
 from common import count_correct, grad_step
 from models_Bayes import get_bayes_model
+from meta_utils import get_eps_std
 
 def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
 
@@ -24,23 +25,6 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     #  Get optimizer:
     optimizer = optim_func(model.parameters(), **optim_args)
 
-    total_iter = prm.num_epochs * n_batches
-    n_iter_stage_1 = int( total_iter * prm.stage_1_ratio)
-    n_iter_stage_2 = total_iter- n_iter_stage_1
-    n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
-    full_eps_std = 1.0
-
-    def get_eps_std(i_epoch, batch_idx):
-        # We gradually increase epsilon's STD from 0 to 1.
-        # The reason is that using 1 from the start results in high variance gradients.
-        iter_idx = i_epoch * n_batches + batch_idx
-        if iter_idx >= n_iter_stage_1:
-            eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
-        else:
-            eps_std = 0.0
-        eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
-        return eps_std
-
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
     # -------------------------------------------------------------------------------------------
@@ -52,7 +36,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
         for batch_idx, batch_data in enumerate(train_loader):
 
-            eps_std = get_eps_std(i_epoch, batch_idx)
+            eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
 
             # get batch:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
@@ -104,7 +88,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     cmn.write_result(str(prm), prm.log_file)
     cmn.write_result(cmn.get_model_string(model), prm.log_file)
     cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
-    cmn.write_result('Total number of steps: {}'.format(total_iter), prm.log_file)
+    cmn.write_result('Total number of steps: {}'.format(n_batches * prm.batch_size), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs

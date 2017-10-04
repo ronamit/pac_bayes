@@ -10,6 +10,8 @@ import shutil
 from torch.autograd import Variable
 import torch.nn as nn
 import torch
+
+
 # -----------------------------------------------------------------------------------------------------------#
 # General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
@@ -18,8 +20,8 @@ import torch
 def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
 
-def zeros_gpu(*shape):
-    return torch.cuda.FloatTensor(*shape).fill_(0)
+def zeros_gpu(size):
+    return torch.cuda.FloatTensor(size).fill_(0)
 
 def randn_gpu(size, mean=0, std=1):
     return torch.cuda.FloatTensor(size).normal_(mean, std)
@@ -46,6 +48,19 @@ def load_models_dict(models_dict, dir_path):
         f_path = dir_path + '/' + name + '.pt'
         with open(f_path, 'rb') as f_pointer:
             models_dict[name].load_state_dict(torch.load(f_pointer))
+
+# -------------------------------------------------------------------------------------------
+#  Regularization
+# -------------------------------------------------------------------------------------------
+
+def net_L1_norm(model):
+    l1_crit = torch.nn.L1Loss(size_average=False)
+    total_norm = 0
+    for param in model.parameters():
+        target = Variable(zeros_gpu(param.size()), requires_grad=False)  # dummy target
+        total_norm += l1_crit(param, target)
+    return total_norm
+
 
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer

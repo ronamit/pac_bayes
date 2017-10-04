@@ -2,15 +2,15 @@
 from __future__ import absolute_import, division, print_function
 
 import timeit
-import data_gen
 
 import numpy as np
-import torch
-import random
+
 import common as cmn
-from common import count_correct, get_param_from_model, grad_step
+import data_gen
+from MetaLearninig_Deterministc.meta_deterministic_utils import get_weights_complexity_term
+from common import count_correct, grad_step, net_L1_norm
 from models_standard import get_model
-from bayes_func import get_weights_complexity_term, net_L1_norm
+
 
 # -------------------------------------------------------------------------------------------
 #  Learning function

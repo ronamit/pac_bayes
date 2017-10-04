@@ -9,25 +9,22 @@ import torch
 import random
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step
-from models_standard import get_model
-from bayes_func import get_weights_complexity_term
+from models_Bayes import get_bayes_model
+from meta_utils import get_posterior_complexity_term, get_eps_std
 
 
-def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior):
+def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
 
-    # The pre-learned prior parameters are contained in these models:
-    prior_means_model = prior_dict['means_model']
-    prior_log_vars_model = prior_dict['log_var_model']
 
     # Create posterior model for the new task:
-    post_model = get_model(model_type, prm)
+    post_model = get_bayes_model(model_type, prm)
 
     if init_from_prior:
-        post_model.load_state_dict(prior_means_model.state_dict())
+        post_model.load_state_dict(prior_model.state_dict())
 
     # The data-sets of the new task:
     train_loader = task_data['train']
@@ -49,16 +46,18 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
         post_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 
+            eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
+
             # get batch:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
             # Calculate empirical loss:
-            outputs = post_model(inputs)
+            outputs = post_model(inputs, eps_std)
             empirical_loss = loss_criterion(outputs, targets)
 
             # Total objective:
-            intra_task_comp = get_weights_complexity_term(prm.complexity_type, prior_means_model,
-                                                          prior_log_vars_model, post_model, n_train_samples)
+            intra_task_comp = get_posterior_complexity_term(
+                prm.complexity_type, prior_model, post_model, n_train_samples)
             total_objective = empirical_loss + intra_task_comp
 
             # Take gradient step:
@@ -67,7 +66,10 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = count_correct(outputs, targets) / prm.batch_size
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
+                      'Eps-STD: {:.4}\t Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
+                      format(eps_std, empirical_loss.data[0], intra_task_comp.data[0]))
+
 
     # -------------------------------------------------------------------------------------------
     #  Test evaluation function
@@ -78,7 +80,8 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
         n_correct = 0
         for batch_data in test_loader:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            outputs = post_model(inputs)
+            eps_std = 0.0  # test with max-posterior
+            outputs = post_model(inputs, eps_std)
             test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
             n_correct += count_correct(outputs, targets)
 

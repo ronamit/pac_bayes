@@ -8,9 +8,9 @@ import numpy as np
 import torch
 import random
 import common as cmn
-from common import count_correct, get_param_from_model, grad_step
+from common import count_correct, get_param_from_model, grad_step, net_L1_norm
 from models_Bayes import get_bayes_model
-from bayes_func import get_posterior_complexity_term, net_L1_norm
+from meta_utils import get_posterior_complexity_term, get_eps_std
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -47,22 +47,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     # number of training samples in each task :
     n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
 
-    total_iter = prm.num_epochs * n_meta_batches
-    n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
-    n_iter_stage_2 = total_iter - n_iter_stage_1
-    n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
-    full_eps_std = 1.0
 
-    def get_eps_std(i_epoch, batch_idx):
-        # We gradually increase epsilon's STD from 0 to 1.
-        # The reason is that using 1 from the start results in high variance gradients.
-        iter_idx = i_epoch * n_meta_batches + batch_idx
-        if iter_idx >= n_iter_stage_1:
-            eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
-        else:
-            eps_std = 0.0
-        eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
-        return eps_std
 
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
@@ -74,7 +59,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
 
         for i_batch in range(n_meta_batches):
 
-            eps_std = get_eps_std(i_epoch, i_batch)
+            eps_std = get_eps_std(i_epoch, i_batch, n_meta_batches, prm)
 
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
