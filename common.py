@@ -18,8 +18,11 @@ import torch
 def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
 
-def zeros_gpu(shape):
-    return torch.cuda.FloatTensor(shape).fill_(0)
+def zeros_gpu(*shape):
+    return torch.cuda.FloatTensor(*shape).fill_(0)
+
+def randn_gpu(size, mean=0, std=1):
+    return torch.cuda.FloatTensor(size).normal_(mean, std)
 
 
 def count_correct(outputs, targets):
@@ -41,7 +44,7 @@ def load_models_dict(models_dict, dir_path):
     ''' Load models '''
     for name in models_dict:
         f_path = dir_path + '/' + name + '.pt'
-        with open(f_path, 'r') as f_pointer:
+        with open(f_path, 'rb') as f_pointer:
             models_dict[name].load_state_dict(torch.load(f_pointer))
 
 # -----------------------------------------------------------------------------------------------------------#

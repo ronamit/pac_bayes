@@ -15,10 +15,10 @@ import torch.optim as optim
 # -------------------------------------------------------------------------------------------
 
 # Random seed:
-seed = 0
+seed = 1
 if not seed == 0:
     torch.manual_seed(seed)
-
+    np.random.seed(seed)
 
 # -------------------------------------------------------------------------------------------
 # Define scenario
@@ -40,11 +40,11 @@ if data_type == 0:
 elif data_type == 1:
     n_tasks = 2
     # number of samples in each task:
-    n_samples_list =[100, 100]
+    n_samples_list = [100, 100]
     # True means vector for each task [n_dim x n_tasks]:
-    true_mu = [[4, 2], [8, 2]]
+    true_mu = [[4, 2], [10, 2]]
     # True sigma vector for each task [n_dim x n_tasks]:
-    true_sigma = [[0.3, 0.3], [0.5, 0.5]]
+    true_sigma = [[0.2, 0.2], [0.5, 0.5]]
 
 else:
     raise ValueError('Invalid data_type')
@@ -65,7 +65,7 @@ for i_task in range(n_tasks):
 # -------------------------------------------------------------------------------------------
 #  Learning
 # -------------------------------------------------------------------------------------------
-learning_type = 'MetaLearnWeights' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearnPosteriors' \ MetaLearnWeights
+learning_type = 'MetaLearnPosteriors' # 'Standard' \ 'Bayes_FixedPrior' \ 'MetaLearnPosteriors' \ MetaLearnWeights
 # 'Standard' = Learn optimal weights in each task separately
 # 'Bayes_FixedPrior' = Learn posteriors for each task, assuming a fixed shared prior
 # 'MetaLearnPosteriors' = Learn weights for each task and the shared prior jointly

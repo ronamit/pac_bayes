@@ -12,7 +12,7 @@ from layers import StochasticLinear
 # Note: the net return scores (not normalized probabilities)
 
 
-def get_model(model_type, prm):
+def get_bayes_model(model_type, prm):
 
     info = data_gen.get_info(prm)
     color_channels = info['color_channels']

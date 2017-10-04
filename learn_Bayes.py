@@ -7,14 +7,19 @@ import timeit
 import common as cmn
 import data_gen
 from common import count_correct, grad_step
+from models_Bayes import get_bayes_model
 
+def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
 
-def run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion, lr_schedule):
-
+    # -------------------------------------------------------------------------------------------
+    #  Setting-up
     # -------------------------------------------------------------------------------------------
     train_loader = data_loader['train']
     test_loader = data_loader['test']
     n_batches = len(train_loader)
+
+    # get model:
+    model = get_bayes_model(model_type, prm)
 
     #  Get optimizer:
     optimizer = optim_func(model.parameters(), **optim_args)
@@ -24,10 +29,6 @@ def run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion
     n_iter_stage_2 = total_iter- n_iter_stage_1
     n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
     full_eps_std = 1.0
-
-    # -------------------------------------------------------------------------------------------
-    #  Training epoch  function
-    # -------------------------------------------------------------------------------------------
 
     def get_eps_std(i_epoch, batch_idx):
         # We gradually increase epsilon's STD from 0 to 1.
@@ -40,6 +41,9 @@ def run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion
         eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
         return eps_std
 
+    # -------------------------------------------------------------------------------------------
+    #  Training epoch  function
+    # -------------------------------------------------------------------------------------------
 
     def run_train_epoch(i_epoch):
         log_interval = 500
@@ -105,7 +109,7 @@ def run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion
     # -------------------------------------------------------------------------------------------
     #  Run epochs
     # -------------------------------------------------------------------------------------------
-    startRuntime = timeit.default_timer()
+    start_time = timeit.default_timer()
 
     # Training loop:
     for i_epoch in range(prm.num_epochs):
@@ -114,6 +118,6 @@ def run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion
     # Test:
     test_acc = run_test()
 
-    stopRuntime = timeit.default_timer()
-    cmn.write_final_result(test_acc, stopRuntime - startRuntime, prm.log_file)
+    stop_time = timeit.default_timer()
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
     cmn.save_code('CodeBackup', run_name)

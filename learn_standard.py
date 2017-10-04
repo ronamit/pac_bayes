@@ -79,7 +79,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     # -------------------------------------------------------------------------------------------
     #  Run epochs
     # -------------------------------------------------------------------------------------------
-    startRuntime = timeit.default_timer()
+    start_time = timeit.default_timer()
 
     # Training loop:
     for i_epoch in range(prm.num_epochs):
@@ -88,8 +88,8 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     # Test:
     test_acc = run_test()
 
-    stopRuntime = timeit.default_timer()
-    cmn.write_final_result(test_acc, stopRuntime - startRuntime, prm.log_file)
+    stop_time = timeit.default_timer()
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
     cmn.save_code('CodeBackup', run_name)
 
     return (1-test_acc)

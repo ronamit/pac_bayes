@@ -49,7 +49,7 @@ def learn(data_set, complexity_type):
         complex_term_sum = 0
         for i_task in range(n_tasks):
             small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
-            neg_log_pdf = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (sigma_sqr_prior + small_num))
+            neg_log_pdf = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (2*sigma_sqr_prior + small_num))
             n_samples = n_samples_list[i_task]
 
             if complexity_type == 'Variational_Bayes':
@@ -60,8 +60,9 @@ def learn(data_set, complexity_type):
                 raise ValueError('Invalid complexity_type')
 
 
-        hyper_prior_factor =  1e-6 * np.sqrt(1 / n_tasks)
+        hyper_prior_factor =  1e-5 * np.sqrt(1 / n_tasks)
         hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2)) * hyper_prior_factor
+        # hyper_prior = torch.sum(sigma_sqr_prior) * hyper_prior_factor
 
         # Total objective:
         complex_term = (1 / n_tasks) * complex_term_sum

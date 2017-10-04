@@ -10,7 +10,7 @@ import common as cmn
 from models_standard import get_model
 from common import save_models_dict, load_models_dict
 import data_gen
-import MetaTraining, MetaTesting, learn_standard
+import MetaTrainingBayes, MetaTesting, learn_standard
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -56,7 +56,10 @@ prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 torch.manual_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-model_type = 'FcNet3' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
+model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
+
+# Weights initialization:
+prm.rand_init_std = 0.1
 
 # Loss criterion
 loss_criterion = cmn.get_loss_criterion(prm.loss_type)
@@ -70,16 +73,22 @@ lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 20]}
 # lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes' /
+prm.complexity_type = 'PAC_Bayes_McAllaster'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity'
 prm.hyper_prior_factor = 1e-5
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
+
+# Learning parameters:
+# In the stage 1 of the learning epochs, epsilon std == 0
+# In the second stage it increases linearly until reaching std==1 (full eps)
+prm.stage_1_ratio = 0.00  # 0.05
+prm.full_eps_ratio_in_stage_2 = 0.5
+
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 10
+n_train_tasks = 2
 train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
-
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -99,11 +108,11 @@ if load_pretrained_prior:
 
 else:
     # Meta-training to learn prior:
-    prior_dict = MetaTraining.run_meta_learning(train_tasks_data,
+    prior_model = MetaTrainingBayes.run_meta_learning(train_tasks_data,
                                    prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     # save learned prior:
-    save_models_dict(prior_dict, dir_path)
-    print('Trained prior saved in ' + dir_path)
+    # save_models_dict(prior_dict, dir_path)
+    # print('Trained prior saved in ' + dir_path)
 
 
 # -------------------------------------------------------------------------------------------

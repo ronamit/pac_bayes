@@ -9,14 +9,13 @@ import torch
 import random
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step
-from models_standard import get_model
-from bayes_func import get_weights_complexity_term, net_L1_norm
+from models_Bayes import get_bayes_model
+from bayes_func import get_posterior_complexity_term, net_L1_norm
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
 # -------------------------------------------------------------------------------------------
 def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule,):
-
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -24,11 +23,10 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     n_tasks = len(train_tasks_data)
 
     # Create posterior models for each task:
-    posteriors_models = [get_model(model_type, prm) for _ in range(n_tasks)]
+    posteriors_models = [get_bayes_model(model_type, prm) for _ in range(n_tasks)]
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
-    prior_means_model = get_model(model_type, prm)
-    prior_log_vars_model = get_model(model_type, prm)
+    prior_model = get_bayes_model(model_type, prm)
 
     # number of batches from each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
@@ -42,13 +40,29 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
         all_post_param += post_params
 
     # Create optimizer for all parameters (posteriors + prior)
-    prior_params = list(prior_means_model.parameters()) + list(prior_log_vars_model.parameters())
+    prior_params = list(prior_model.parameters())
     all_params = all_post_param + prior_params
     all_optimizer = optim_func(all_params, **optim_args)
 
     # number of training samples in each task :
     n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
 
+    total_iter = prm.num_epochs * n_meta_batches
+    n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
+    n_iter_stage_2 = total_iter - n_iter_stage_1
+    n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
+    full_eps_std = 1.0
+
+    def get_eps_std(i_epoch, batch_idx):
+        # We gradually increase epsilon's STD from 0 to 1.
+        # The reason is that using 1 from the start results in high variance gradients.
+        iter_idx = i_epoch * n_meta_batches + batch_idx
+        if iter_idx >= n_iter_stage_1:
+            eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
+        else:
+            eps_std = 0.0
+        eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
+        return eps_std
 
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
@@ -59,6 +73,8 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
         task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in range(n_tasks)]
 
         for i_batch in range(n_meta_batches):
+
+            eps_std = get_eps_std(i_epoch, i_batch)
 
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
@@ -76,12 +92,12 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # Empirical Loss on current task:
-                outputs = post_model(inputs)
+                outputs = post_model(inputs, eps_std)
                 task_empirical_loss = loss_criterion(outputs, targets)
 
                 # Intra-task complexity of current task:
-                task_complexity = get_weights_complexity_term(
-                    prm.complexity_type, prior_means_model, prior_log_vars_model, posteriors_models[i_task],
+                task_complexity = get_posterior_complexity_term(
+                    prm.complexity_type, prior_model, post_model,
                     n_samples_list[i_task])
 
                 sum_empirical_loss += task_empirical_loss
@@ -90,7 +106,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             # end tasks loop
 
             # Hyper-prior term:
-            hyperprior = net_L1_norm(prior_log_vars_model) + net_L1_norm(prior_log_vars_model)
+            hyperprior = net_L1_norm(prior_model)
             hyperprior *= np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
 
             # Total objective:
@@ -103,7 +119,9 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             log_interval = 500
             if i_batch % log_interval == 0:
                 batch_acc = count_correct(outputs, targets) / prm.batch_size
-                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
+                      'Eps-STD: {:.4}\tAvg Empiric Loss: {:.4}\t Avg Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                      format(eps_std, sum_empirical_loss.data[0]/ n_tasks, sum_intra_task_comp.data[0]/ n_tasks, hyperprior.data[0]))
         # end batches loop
     # end run_epoch()
 
@@ -122,7 +140,8 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             n_correct = 0
             for batch_data in test_loader:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-                outputs = model(inputs)
+                eps_std = 0.0  # test with max-posterior
+                outputs = model(inputs, eps_std)
                 test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
                 n_correct += count_correct(outputs, targets)
 
@@ -137,13 +156,14 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
         return test_acc_list
 
     # -----------------------------------------------------------------------------------------------------------#
-    # Update Log file
+    # Main script
     # -----------------------------------------------------------------------------------------------------------#
 
+    # Update Log file
     run_name = cmn.gen_run_name('Meta-Training')
     cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
     cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(prior_means_model), prm.log_file)
+    cmn.write_result(cmn.get_model_string(prior_model), prm.log_file)
     cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
     cmn.write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
 
@@ -167,5 +187,4 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     cmn.save_code('CodeBackup', run_name)
 
     # Return learned prior:
-    prior_dict = {'means_model': prior_means_model, 'log_var_model': prior_log_vars_model}
-    return prior_dict
+    return prior_model

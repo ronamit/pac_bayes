@@ -8,7 +8,7 @@ import torch.optim as optim
 
 import common as cmn
 import data_gen
-import models_Bayes
+
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200)
+                    default=10) # 200
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-2)
@@ -51,13 +51,13 @@ prm.cuda = True
 
 torch.manual_seed(prm.seed)
 
-# Weights initialization:
-prm.rand_init_std = 0.01
 
 #  Get model:
 model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
 prm.model_type = model_type
-model = models_Bayes.get_model(model_type, prm)
+
+# Weights initialization:
+prm.rand_init_std = 0.1
 
 #  Define optimizer:
 optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
@@ -74,7 +74,7 @@ loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.05  # 0.05
+prm.stage_1_ratio = 0.01  # 0.05
 prm.full_eps_ratio_in_stage_2 = 0.5
 
 # Generate task data set:
@@ -86,4 +86,4 @@ data_loader = data_gen.get_data_loader(prm)
 # -------------------------------------------------------------------------------------------
 
 from learn_Bayes import run_learning
-run_learning(data_loader, prm, model, optim_func, optim_args, loss_criterion, lr_schedule)
+run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)

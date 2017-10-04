@@ -6,7 +6,7 @@ from torchvision import datasets, transforms
 import torch.utils.data as data_utils
 from torch.autograd import Variable
 import multiprocessing
-
+import numpy as np
 # -------------------------------------------------------------------------------------------
 #  Create data loader
 # -------------------------------------------------------------------------------------------
@@ -28,14 +28,14 @@ def get_data_loader(prm, limit_train_samples = None):
 
     # Get dataset:
     if prm.data_source == 'MNIST':
-        # MNIST_MEAN =  (0.1307,) # (0.5,)
-        # MNIST_STD =  (0.3081,)  # (0.5,)
+        MNIST_MEAN =  (0.1307,) # (0.5,)
+        MNIST_STD =  (0.3081,)  # (0.5,)
         # Note: keep values in [0,1] to avoid too large input norm (which cause high variance)
 
         # Data transformations list:
 
         input_trans_list = [transforms.ToTensor()]
-        # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
+        input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
         if input_trans:
             # Note: this operates before transform to tensor
             input_trans_list.append(transforms.Lambda(input_trans))
@@ -47,6 +47,12 @@ def get_data_loader(prm, limit_train_samples = None):
         # Test set:
         test_dataset = datasets.MNIST('./data', train=False,
                                       transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+
+    elif prm.data_source == 'Sinusoid':
+
+        task_param = create_sinusoid_task()
+        train_dataset = create_sinusoid_data(task_param, n_samples=10)
+        test_dataset = create_sinusoid_data(task_param, n_samples=100)
 
     else:
         raise ValueError('Invalid data_source')
@@ -75,6 +81,7 @@ def get_data_loader(prm, limit_train_samples = None):
 # -------------------------------------------------------------------------------------------
 #  Data sets parameters
 # -------------------------------------------------------------------------------------------
+
 
 def get_info(prm):
     if prm.data_source == 'MNIST':
@@ -120,3 +127,23 @@ def create_label_permute_trans(prm):
     inds_permute = torch.randperm(info['n_classes'])
     transform_func = lambda target: inds_permute[target]
     return transform_func
+
+# -----------------------------------------------------------------------------------------------------------#
+# Sinusoid Regression
+# -----------------------------------------------------------------------------------------------------------#
+def create_sinusoid_task():
+    task_param = {'phase':np.random.uniform(0, np.pi),
+                  'amplitude':np.random.uniform(0.1, 5.0),
+                  'freq': 5.0,
+                  'input_range': [-0.5, 0.5]}
+    return task_param
+
+def create_sinusoid_data(task_param, n_samples):
+    amplitude = task_param['amplitude']
+    phase = task_param['phase']
+    freq = task_param['freq']
+    input_range = task_param['input_range']
+    y = np.ndarray(shape=(n_samples, 1), dtype=np.float32)
+    x = np.random.uniform(input_range[0], input_range[1], n_samples)
+    y = amplitude * np.sin(phase + 2 * np.pi * freq * x)
+    return x, y
