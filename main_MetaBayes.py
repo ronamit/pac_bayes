@@ -14,6 +14,7 @@ import MetaTrainingBayes, MetaTestingBayes, learn_standard
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
+# TODO: find  solution to negative KLD
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -65,8 +66,8 @@ prm.rand_init_std = 0.1
 loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 
 #  Define optimizer:
-# optim_func, optim_args = optim.Adam,  {'lr': prm.lr,} #   'weight_decay': 1e-4
-optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+optim_func, optim_args = optim.Adam,  {'lr': prm.lr,} #   'weight_decay': 1e-4
+# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
 lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 20]}
@@ -81,7 +82,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.00  # 0.05
+prm.stage_1_ratio = 0.05  # 0.05
 prm.full_eps_ratio_in_stage_2 = 0.5
 
 # -------------------------------------------------------------------------------------------

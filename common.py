@@ -113,7 +113,7 @@ def get_loss_criterion(loss_type):
 def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
 
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * prm.num_epochs)
-    return ('({:2.1f}%) \t Train Epoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
+    return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
 def get_model_string(model):

@@ -7,6 +7,8 @@ import data_gen
 import numpy as np
 import torch
 from torch.autograd import Variable
+import torch.nn.functional as F
+
 import random
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step
@@ -84,19 +86,24 @@ def get_total_kld(prior_model, post_model):
         total_kld += kld_element(post_layer.w, prior_layer.w)
         total_kld += kld_element(post_layer.b, prior_layer.b)
 
+    
+    total_kld += 1e-10 # to avoid negative KLD
+
     return total_kld
 
 
 def kld_element(post, prior):
+    """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
-    small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
+    small_num = 1e-10  # add small positive number to avoid division by zero due to numerical errors
 
     post_var = torch.exp(post['log_var'])
     prior_var = torch.exp(prior['log_var'])
     #  TODO: maybe the exp can be done once for the KL and forward pass operations for efficiency
 
-    kld = torch.sum(prior['log_var'] - post['log_var'] +
-                     ((post['mean'] - prior['mean']).pow(2) + post_var) /
-                     (2 * prior_var + small_num) - 0.5)
+    numerator = (post['mean'] - prior['mean']).pow(2) + post_var
+    denominator = prior_var + small_num
+    kld = 0.5 * torch.sum(prior['log_var'] - post['log_var'] + numerator / denominator - 1)
+
 
     return kld
