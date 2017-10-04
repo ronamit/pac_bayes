@@ -34,20 +34,31 @@ def count_correct(outputs, targets):
 
 
 def save_models_dict(models_dict, dir_path):
-    ''' Save the models '''
+
+    for name in models_dict:
+        save_model_state(models_dict[name], dir_path, name)
+
+def save_model_state(model, dir_path, name):
+
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-    for name in models_dict:
-        f_path = dir_path + '/' + name + '.pt'
-        with open(f_path, 'wb') as f_pointer:
-            torch.save(models_dict[name].state_dict(), f_pointer)
+    f_path = dir_path + '/' + name + '.pt'
+    with open(f_path, 'wb') as f_pointer:
+        torch.save(model.state_dict(), f_pointer)
+    return f_path
+
 
 def load_models_dict(models_dict, dir_path):
     ''' Load models '''
     for name in models_dict:
-        f_path = dir_path + '/' + name + '.pt'
-        with open(f_path, 'rb') as f_pointer:
-            models_dict[name].load_state_dict(torch.load(f_pointer))
+        load_model_state(models_dict[name], dir_path, name)
+
+def load_model_state(model, dir_path, name):
+
+    f_path = dir_path + '/' + name + '.pt'
+    with open(f_path, 'rb') as f_pointer:
+        model.load_state_dict(torch.load(f_pointer))
+
 
 # -------------------------------------------------------------------------------------------
 #  Regularization
@@ -117,7 +128,7 @@ def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
 def get_model_string(model):
-    return str(model.__class__)+ '\n ' + '-> '.join([m.__str__() for m in model._modules.values()])
+    return str(model.model_type)+ ': ' + '-> '.join([m.__str__() for m in model._modules.values()])
 
 # -----------------------------------------------------------------------------------------------------------#
 # Result saving

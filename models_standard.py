@@ -63,6 +63,8 @@ def get_model(model_type, prm):
     class FcNet(nn.Module):
         def __init__(self):
             super(FcNet, self).__init__()
+            self.model_type = model_type
+
             n_hidden1 = 800
             n_hidden2 = 800
             self.fc1 = nn.Linear(input_size, n_hidden1)
@@ -79,6 +81,8 @@ def get_model(model_type, prm):
     class FcNet3(nn.Module):
         def __init__(self):
             super(FcNet3, self).__init__()
+            self.model_type = model_type
+
             n_hidden1 = 400
             n_hidden2 = 400
             n_hidden3 = 400

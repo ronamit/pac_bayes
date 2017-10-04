@@ -54,8 +54,8 @@ class StochasticLinear(nn.Module):
             # layer output:
             noise = out_mean.data.new(out_mean.size()).normal_(0, eps_std)
             # noise = randn_gpu(size=out_mean.size(), mean=0, std=eps_std)
-            ksi = Variable(noise, requires_grad=False)
+            noise = Variable(noise, requires_grad=False)
 
-            layer_out = out_mean + ksi * torch.sqrt(out_var)
+            layer_out = out_mean + noise * torch.sqrt(out_var)
 
         return layer_out

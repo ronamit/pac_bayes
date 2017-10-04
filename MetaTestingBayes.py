@@ -6,7 +6,7 @@ import data_gen
 
 import numpy as np
 import torch
-import random
+
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step
 from models_Bayes import get_bayes_model
@@ -99,7 +99,7 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
     run_name = cmn.gen_run_name('Meta-Testing')
     cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
     cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
+    cmn.write_result(model_type, prm.log_file)
     cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
 
     # -------------------------------------------------------------------------------------------

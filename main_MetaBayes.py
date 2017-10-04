@@ -8,13 +8,13 @@ import torch.optim as optim
 
 import common as cmn
 from models_standard import get_model
-from common import save_models_dict, load_models_dict
+from common import save_model_state, load_model_state
 import data_gen
 import MetaTrainingBayes, MetaTestingBayes, learn_standard
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
-# TODO: find  solution to negative KLD
+
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=600)
+                    default=1)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-2)
@@ -58,6 +58,7 @@ torch.manual_seed(prm.seed)
 
 #  Define model type (hypothesis class):
 model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
+model_type_standard = 'FcNet'#  for comparision
 
 # Weights initialization:
 prm.rand_init_std = 0.1
@@ -75,7 +76,7 @@ lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 20]}
 
 # Meta-alg params:
 prm.complexity_type = 'PAC_Bayes_McAllaster'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity'
-prm.hyper_prior_factor = 1e-5
+prm.hyper_prior_factor = 0 #  1e-5
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
@@ -83,7 +84,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.05  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.5
+prm.full_eps_ratio_in_stage_2 = 0.3
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
@@ -97,14 +98,14 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 
 load_pretrained_prior = False  # False \ True
 dir_path = './tmp'
+f_name='prior'
 
 if load_pretrained_prior:
     # Loads  previously training prior.
-    # First, create the models:
-    prior_dict ={'means_model': get_model(model_type, prm),
-                 'log_var_model': get_model(model_type, prm)}
+    # First, create the model:
+    prior_model = get_model(model_type, prm)
     # Then load the weights:
-    load_models_dict(prior_dict, dir_path)
+    load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 
 else:
@@ -112,8 +113,8 @@ else:
     prior_model = MetaTrainingBayes.run_meta_learning(train_tasks_data,
                                    prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     # save learned prior:
-    # save_models_dict(prior_dict, dir_path)
-    # print('Trained prior saved in ' + dir_path)
+    f_path = save_model_state(prior_model, dir_path, name=f_name)
+    print('Trained prior saved in ' + f_path)
 
 
 # -------------------------------------------------------------------------------------------
@@ -146,7 +147,7 @@ test_err_avg2 = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = learn_standard.run_learning(task_data, prm, model_type,
+    test_err = learn_standard.run_learning(task_data, prm, model_type_standard,
                                            optim_func, optim_args, loss_criterion, lr_schedule)
     test_err_avg2 += test_err / n_test_tasks
 
