@@ -7,10 +7,11 @@ import torch
 import torch.optim as optim
 
 import common as cmn
-from models_standard import get_model
-from common import save_models_dict, load_models_dict
 import data_gen
-import MetaTraining, MetaTesting, learn_standard
+import learn_standard
+from MetaLearninig_Deterministc import MetaTraining, MetaTesting
+from common import save_models_dict, load_models_dict
+from models_standard import get_model
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -100,7 +101,7 @@ if load_pretrained_prior:
 else:
     # Meta-training to learn prior:
     prior_dict = MetaTraining.run_meta_learning(train_tasks_data,
-                                   prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+                                                prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     # save learned prior:
     save_models_dict(prior_dict, dir_path)
     print('Trained prior saved in ' + dir_path)

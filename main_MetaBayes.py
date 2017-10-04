@@ -10,7 +10,7 @@ import common as cmn
 from models_standard import get_model
 from common import save_models_dict, load_models_dict
 import data_gen
-import MetaTrainingBayes, MetaTesting, learn_standard
+import MetaTrainingBayes, MetaTestingBayes, learn_standard
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -131,7 +131,7 @@ test_err_avg = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = MetaTesting.run_learning(task_data, prior_dict, prm,
+    test_err = MetaTesting.run_learning(task_data, prior_model, prm,
                                         model_type, optim_func, optim_args, loss_criterion,
                                         lr_schedule, init_from_prior)
     test_err_avg += test_err / n_test_tasks
