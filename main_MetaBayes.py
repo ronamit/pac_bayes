@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1)
+                    default=600)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-2)
@@ -63,6 +63,9 @@ model_type_standard = 'FcNet'#  for comparision
 # Weights initialization:
 prm.rand_init_std = 0.1
 
+# Mumber of Monte-Carlo iterations (for re-parametrization trick):
+prm.n_MC = 10
+
 # Loss criterion
 loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 
@@ -83,7 +86,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.05  # 0.05
+prm.stage_1_ratio = 0.01  # 0.05
 prm.full_eps_ratio_in_stage_2 = 0.3
 
 # -------------------------------------------------------------------------------------------

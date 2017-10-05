@@ -48,12 +48,16 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
 
             eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
 
-            # get batch:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # Monte-Carlo iterations:
+            n_MC = prm.n_MC if eps_std > 0 else 1
+            empirical_loss = 0
+            for i_MC in range(n_MC):
+                # get batch:
+                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-            # Calculate empirical loss:
-            outputs = post_model(inputs, eps_std)
-            empirical_loss = loss_criterion(outputs, targets)
+                # Calculate empirical loss:
+                outputs = post_model(inputs, eps_std)
+                empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
 
             # Total objective:
             intra_task_comp = get_posterior_complexity_term(

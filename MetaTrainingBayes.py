@@ -73,12 +73,16 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
                 post_model = posteriors_models[i_task]
                 post_model.train()
 
+                # Monte-Carlo iterations:
+                n_MC = prm.n_MC if eps_std > 0 else 1
+                task_empirical_loss = 0
+                for i_MC in range(n_MC):
                 # get batch variables:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+                    inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-                # Empirical Loss on current task:
-                outputs = post_model(inputs, eps_std)
-                task_empirical_loss = loss_criterion(outputs, targets)
+                    # Empirical Loss on current task:
+                    outputs = post_model(inputs, eps_std)
+                    task_empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
 
                 # Intra-task complexity of current task:
                 task_complexity = get_posterior_complexity_term(

@@ -38,13 +38,20 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
             eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
 
-            # get batch:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # Monte-Carlo iterations:
+            empirical_loss = 0
+            n_MC = prm.n_MC if eps_std > 0 else 1
+            for i_MC in range(n_MC):
+                # get batch:
+                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-            # calculate objective:
-            outputs = model(inputs, eps_std)
-            empirical_loss = loss_criterion(outputs, targets)
-            objective = empirical_loss  # TODO: add prior term
+                # calculate objective:
+                outputs = model(inputs, eps_std)
+                empirical_loss_c = loss_criterion(outputs, targets)
+                empirical_loss += (1 / n_MC) * empirical_loss_c
+
+            # Total objective:
+            objective = empirical_loss # TODO: add prior term
 
             # Take gradient step:
             grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
@@ -88,7 +95,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     cmn.write_result(str(prm), prm.log_file)
     cmn.write_result(cmn.get_model_string(model), prm.log_file)
     cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
-    cmn.write_result('Total number of steps: {}'.format(n_batches * prm.batch_size), prm.log_file)
+    cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs

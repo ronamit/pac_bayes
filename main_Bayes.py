@@ -59,6 +59,9 @@ prm.model_type = model_type
 # Weights initialization:
 prm.rand_init_std = 0.1
 
+# Mumber of Monte-Carlo iterations (for re-parametrization trick):
+prm.n_MC = 10
+
 #  Define optimizer:
 optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
