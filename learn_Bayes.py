@@ -8,7 +8,7 @@ import common as cmn
 import data_gen
 from common import count_correct, grad_step
 from models_Bayes import get_bayes_model
-from meta_utils import get_eps_std
+from meta_utils import get_eps_std, run_test_max_posterior, run_test_majority_vote
 
 def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
 
@@ -64,32 +64,11 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
 
     # -------------------------------------------------------------------------------------------
-    #  Test evaluation function
+    #  Main Script
     # -------------------------------------------------------------------------------------------
-    def run_test():
-        model.eval()
-        test_loss = 0
-        n_correct = 0
-        for batch_data in test_loader:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
-            eps_std = 0.0 # test with max-posterior
-            outputs = model(inputs, eps_std)
-            test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
-            n_correct += count_correct(outputs, targets)
-
-        n_test_samples = len(test_loader.dataset)
-        n_test_batches = len(test_loader)
-        test_loss /= n_test_batches
-        test_acc = n_correct / n_test_samples
-        print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-            test_loss.data[0], test_acc, n_correct, n_test_samples))
-        return test_acc
 
 
-    # -----------------------------------------------------------------------------------------------------------#
     #  Update Log file
-    # -----------------------------------------------------------------------------------------------------------#
-
     run_name = cmn.gen_run_name('Bayes')
     cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
     cmn.write_result(str(prm), prm.log_file)
@@ -97,18 +76,17 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
     cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
-    # -------------------------------------------------------------------------------------------
-    #  Run epochs
-    # -------------------------------------------------------------------------------------------
     start_time = timeit.default_timer()
 
-    # Training loop:
+    # Run training epochs:
     for i_epoch in range(prm.num_epochs):
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc = run_test()
+    test_acc = run_test_max_posterior(model, test_loader, loss_criterion, prm)
+    test_acc_majority = run_test_majority_vote(model, test_loader, prm, n_votes=5)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name='Max-Posterior')
+    cmn.write_final_result(test_acc_majority, stop_time - start_time, prm.log_file, result_name='Majority-Vote')
     cmn.save_code('CodeBackup', run_name)

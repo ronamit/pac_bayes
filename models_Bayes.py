@@ -27,6 +27,7 @@ def get_bayes_model(model_type, prm):
         def __init__(self):
             super(self.__class__, self).__init__()
             self.model_type = model_type
+            self.out_size = n_classes
 
             n_hidden1 = 800
             n_hidden2 = 800
@@ -46,6 +47,7 @@ def get_bayes_model(model_type, prm):
         def __init__(self):
             super(self.__class__, self).__init__()
             self.model_type = model_type
+            self.out_size = n_classes
 
             n_hidden1 = 1200
             n_hidden2 = 1200

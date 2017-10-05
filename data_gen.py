@@ -35,7 +35,7 @@ def get_data_loader(prm, limit_train_samples = None):
         # Data transformations list:
 
         input_trans_list = [transforms.ToTensor()]
-        input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
+        # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
         if input_trans:
             # Note: this operates before transform to tensor
             input_trans_list.append(transforms.Lambda(input_trans))

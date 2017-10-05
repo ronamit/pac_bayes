@@ -21,10 +21,10 @@ def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
 
 def zeros_gpu(size):
-    return torch.cuda.FloatTensor(size).fill_(0)
+    return torch.cuda.FloatTensor(*size).fill_(0)
 
 def randn_gpu(size, mean=0, std=1):
-    return torch.cuda.FloatTensor(size).normal_(mean, std)
+    return torch.cuda.FloatTensor(*size).normal_(mean, std)
 
 
 def count_correct(outputs, targets):
@@ -157,9 +157,9 @@ def save_code(setting_name, run_name):
         shutil.copy(filename, dest_dir)
 
 
-def write_final_result(test_acc,run_time, log_file_name):
+def write_final_result(test_acc,run_time, log_file_name, result_name=''):
     write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
-    write_result('Average Test Error: {:.3}%\t Runtime: {} [sec]'
+    write_result(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
                      .format(100 * (1 - test_acc), run_time), log_file_name)
 
 
