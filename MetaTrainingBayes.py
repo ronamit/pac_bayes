@@ -127,7 +127,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             n_test_samples = len(test_loader.dataset)
 
             print('Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
-                prm.test_typ, i_task, test_loss, test_acc, n_test_samples))
+                prm.test_type, i_task, test_loss, test_acc, n_test_samples))
 
             test_acc_avg += (1 / n_tasks) * test_acc
 
@@ -157,11 +157,10 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     stop_time = timeit.default_timer()
 
     # Test:
-    test_acc_max_post_avg, test_acc_majority_avg = run_test()
+    test_acc_avg = run_test()
 
     # Update Log file:
-    cmn.write_final_result(test_acc_max_post_avg, stop_time - start_time, prm.log_file, result_name='Max-Posterior')
-    cmn.write_final_result(test_acc_majority_avg, stop_time - start_time, prm.log_file, result_name='Majority-Vote')
+    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
     # Return learned prior:
     return prior_model
