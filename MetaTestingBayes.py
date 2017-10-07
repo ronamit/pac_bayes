@@ -8,12 +8,12 @@ import numpy as np
 import torch
 
 import common as cmn
-from common import count_correct, get_param_from_model, grad_step
+from common import count_correct, get_param_from_model, grad_step, correct_rate
 from models_Bayes import get_bayes_model
 from meta_utils import get_posterior_complexity_term, get_eps_std
 
 
-def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior):
+def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -69,7 +69,7 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
 
             # Print status:
             if batch_idx % log_interval == 0:
-                batch_acc = count_correct(outputs, targets) / prm.batch_size
+                batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
                       'Eps-STD: {:.4}\t Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
                       format(eps_std, empirical_loss.data[0], intra_task_comp.data[0]))
@@ -101,10 +101,11 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
     run_name = cmn.gen_run_name('Meta-Testing')
-    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-    cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(model_type, prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
+    if verbose == 1:
+        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
+        cmn.write_result(str(prm), prm.log_file)
+        cmn.write_result(model_type, prm.log_file)
+        cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -119,7 +120,6 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
     test_acc = run_test()
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
-    cmn.save_code('CodeBackup', run_name)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
 
     return (1 - test_acc)

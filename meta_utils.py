@@ -32,7 +32,7 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     test_acc = n_correct / n_test_samples
     print('\nMax-Posterior, Test set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
         test_loss.data[0], test_acc, n_correct, n_test_samples))
-    return test_acc
+    return test_acc, test_loss.data[0]
 
 
 def run_test_majority_vote(model, test_loader, prm, n_votes=5):
@@ -77,7 +77,10 @@ def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
     # The reason is that using 1 from the start results in high variance gradients.
     iter_idx = i_epoch * n_meta_batches + batch_idx
     if iter_idx >= n_iter_stage_1:
-        eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
+        if n_iter_stage_2 == n_iter_with_full_eps_std:
+            eps_std = 1.0
+        else:
+            eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
     else:
         eps_std = 0.0
     eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
@@ -97,10 +100,12 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_McAllaster':
         delta = 0.95
-        complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld))
+        # complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld ))
+        complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta)))
+
         # delta = 0.95
         # complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta))) - \
-        #                torch.sqrt((1 / (2 * n_samples)) * (np.log(2*np.sqrt(n_samples) / delta)))
+        #                np.sqrt((1 / (2 * n_samples)) * (np.log(2*np.sqrt(n_samples) / delta)))
         # I subtracted a const so that the optimization could reach 0
 
     elif complexity_type == 'PAC_Bayes_Pentina':
@@ -120,8 +125,7 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     return complex_term
 
-    
-    
+
 def get_total_kld(prior_model, post_model):
 
     prior_layers_list = list(prior_model.children())
@@ -134,24 +138,20 @@ def get_total_kld(prior_model, post_model):
         total_kld += kld_element(post_layer.w, prior_layer.w)
         total_kld += kld_element(post_layer.b, prior_layer.b)
 
-    
-    total_kld += 1e-10 # to avoid negative KLD
-
     return total_kld
 
 
 def kld_element(post, prior):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
-    small_num = 1e-10  # add small positive number to avoid division by zero due to numerical errors
-
     post_var = torch.exp(post['log_var'])
     prior_var = torch.exp(prior['log_var'])
     #  TODO: maybe the exp can be done once for the KL and forward pass operations for efficiency
 
     numerator = (post['mean'] - prior['mean']).pow(2) + post_var
-    denominator = prior_var + small_num
+    denominator = prior_var
     kld = 0.5 * torch.sum(prior['log_var'] - post['log_var'] + numerator / denominator - 1)
 
+    # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 
     return kld

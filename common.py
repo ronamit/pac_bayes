@@ -33,6 +33,11 @@ def count_correct(outputs, targets):
     return pred.eq(targets.data.view_as(pred)).cpu().sum()
 
 
+def correct_rate(outputs, targets):
+    n_correct = count_correct(outputs, targets)
+    return n_correct / outputs.size()[0]
+
+
 def save_models_dict(models_dict, dir_path):
 
     for name in models_dict:
@@ -146,19 +151,20 @@ def gen_run_name(name_prefix):
     time_str = datetime.now().strftime(' %Y-%m-%d %H:%M:%S')
     return name_prefix + time_str
 
-def save_code(setting_name, run_name):
-    dir_name = setting_name + '_' + run_name
-    # Create backup of code
-    source_dir = os.getcwd()
-    dest_dir = source_dir + '/Code_Archive/' + dir_name
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
-    for filename in glob.glob(os.path.join(source_dir, '*.*')):
-        shutil.copy(filename, dest_dir)
+# def save_code(setting_name, run_name):
+#     dir_name = setting_name + '_' + run_name
+#     # Create backup of code
+#     source_dir = os.getcwd()
+#     dest_dir = source_dir + '/Code_Archive/' + dir_name
+#     if not os.path.exists(dest_dir):
+#         os.makedirs(dest_dir)
+#     for filename in glob.glob(os.path.join(source_dir, '*.*')):
+#         shutil.copy(filename, dest_dir)
 
 
-def write_final_result(test_acc,run_time, log_file_name, result_name=''):
-    write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
+def write_final_result(test_acc,run_time, log_file_name, result_name='', verbose=1):
+    if verbose == 1:
+        write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
     write_result(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
                      .format(100 * (1 - test_acc), run_time), log_file_name)
 

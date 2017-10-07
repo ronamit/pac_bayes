@@ -8,7 +8,7 @@ import numpy as np
 import common as cmn
 import data_gen
 from MetaLearninig_Deterministc.meta_deterministic_utils import get_weights_complexity_term
-from common import count_correct, grad_step, net_L1_norm
+from common import count_correct, grad_step, net_L1_norm, correct_rate
 from models_standard import get_model
 
 
@@ -102,7 +102,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             # Print status:
             log_interval = 500
             if i_batch % log_interval == 0:
-                batch_acc = count_correct(outputs, targets) / prm.batch_size
+                batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]))
         # end batches loop
     # end run_epoch()
@@ -164,7 +164,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     # Update Log file:
     test_acc_mean = sum(test_acc, 0) / n_tasks
     cmn.write_final_result(test_acc_mean, stop_time - start_time, prm.log_file)
-    cmn.save_code('CodeBackup', run_name)
+
 
     # Return learned prior:
     prior_dict = {'means_model': prior_means_model, 'log_var_model': prior_log_vars_model}

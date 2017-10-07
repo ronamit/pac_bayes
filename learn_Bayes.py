@@ -6,7 +6,7 @@ import timeit
 
 import common as cmn
 import data_gen
-from common import count_correct, grad_step
+from common import count_correct, grad_step, correct_rate
 from models_Bayes import get_bayes_model
 from meta_utils import get_eps_std, run_test_max_posterior, run_test_majority_vote
 
@@ -58,7 +58,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
             # Print status:
             if batch_idx % log_interval == 0:
-                batch_acc = count_correct(outputs, targets) / prm.batch_size
+                batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]) +
                       '\t eps-std: {:.4}'.format(eps_std))
 
@@ -83,10 +83,11 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc = run_test_max_posterior(model, test_loader, loss_criterion, prm)
+    test_acc_max_post, test_loss = run_test_max_posterior(model, test_loader, loss_criterion, prm)
     test_acc_majority = run_test_majority_vote(model, test_loader, prm, n_votes=5)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name='Max-Posterior')
+    cmn.write_final_result(test_acc_max_post, stop_time - start_time, prm.log_file, result_name='Max-Posterior')
     cmn.write_final_result(test_acc_majority, stop_time - start_time, prm.log_file, result_name='Majority-Vote')
-    cmn.save_code('CodeBackup', run_name)
+
+    return (1-test_acc_max_post)

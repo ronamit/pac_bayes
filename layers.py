@@ -11,7 +11,10 @@ class StochasticLinear(nn.Module):
     def __init__(self, in_dim, out_dim, prm):
         super(self.__class__, self).__init__()
 
-        rand_init_std = prm.rand_init_std
+        log_var_init_std = prm.log_var_init_std
+        mu_init_std = prm.mu_init_std
+        log_var_init_bias= prm.log_var_init_bias
+        mu_init_bias = prm.mu_init_bias
         self.in_dim = in_dim
         self.out_dim = out_dim
 
@@ -21,11 +24,11 @@ class StochasticLinear(nn.Module):
         # self.b_mean = nn.Parameter(randn_gpu(out_dim) * rand_init_std)
         # self.b_log_var = nn.Parameter(randn_gpu(out_dim) * rand_init_std)
 
-        self.w_mean = nn.Parameter(torch.randn(out_dim, in_dim) * rand_init_std)
-        self.w_log_var = nn.Parameter(torch.randn(out_dim, in_dim) * rand_init_std)
+        self.w_mean = nn.Parameter(torch.randn(out_dim, in_dim) * mu_init_std + mu_init_std)
+        self.w_log_var = nn.Parameter(torch.randn(out_dim, in_dim) * log_var_init_std + log_var_init_bias)
 
-        self.b_mean = nn.Parameter(torch.randn(out_dim) * rand_init_std)
-        self.b_log_var = nn.Parameter(torch.randn(out_dim) * rand_init_std)
+        self.b_mean = nn.Parameter(torch.randn(out_dim) * mu_init_std + mu_init_std)
+        self.b_log_var = nn.Parameter(torch.randn(out_dim) * log_var_init_std + log_var_init_bias)
 
 
         self.w = {'mean': self.w_mean, 'log_var': self.w_log_var}

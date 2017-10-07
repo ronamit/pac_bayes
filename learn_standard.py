@@ -3,11 +3,11 @@ from __future__ import absolute_import, division, print_function
 from six.moves import xrange
 import timeit
 import common as cmn
-from common import count_correct, grad_step
+from common import count_correct, grad_step, correct_rate
 import data_gen
 from models_standard import get_model
 
-def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
+def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, verbose=1):
 
     # The data-sets:
     train_loader = data_loader['train']
@@ -42,7 +42,7 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
             # Print status:
             if batch_idx % log_interval == 0:
-                batch_acc = count_correct(outputs, targets) / prm.batch_size
+                batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss.data[0]))
 
 
@@ -71,10 +71,11 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
     run_name = cmn.gen_run_name('Standard')
-    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-    cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(model), prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
+    if verbose == 1:
+        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
+        cmn.write_result(str(prm), prm.log_file)
+        cmn.write_result(cmn.get_model_string(model), prm.log_file)
+        cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -89,7 +90,6 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     test_acc = run_test()
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
-    cmn.save_code('CodeBackup', run_name)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
 
     return (1-test_acc)

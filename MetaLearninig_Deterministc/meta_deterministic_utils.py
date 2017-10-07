@@ -40,7 +40,7 @@ def calc_neg_log_pdf(prior_means_model, prior_log_vars_model, task_post_model):
 
     param_names_list = [param_name for param_name, param in prior_means_model.named_parameters()]
 
-    small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
+
     neg_log_pdf = 0
 
     # Since the distribution is factorized, we sum the log-prob over all elements:
@@ -55,7 +55,7 @@ def calc_neg_log_pdf(prior_means_model, prior_log_vars_model, task_post_model):
         sigma_sqr_prior = torch.exp(w_P_log_var)
 
         neg_log_pdf_curr = 0.5 * torch.sum(w_P_log_var + np.log(2*np.pi) +
-                                           (w_post - w_P_mu).pow(2) / (2*sigma_sqr_prior + small_num))
+                                           (w_post - w_P_mu).pow(2) / (2*sigma_sqr_prior ))
 
         # Sum the contribution to the total log-probability
         neg_log_pdf += neg_log_pdf_curr

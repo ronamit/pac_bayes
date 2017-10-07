@@ -32,10 +32,10 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=50) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
-                    default=1e-2)
+                    default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
@@ -57,10 +57,13 @@ model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
 prm.model_type = model_type
 
 # Weights initialization:
-prm.rand_init_std = 0.1
+prm.log_var_init_std = 0.1
+prm.log_var_init_bias = -10  # start with small sigma - so gradients variance estimate will be low
+prm.mu_init_std = 0.1
+prm.mu_init_bias = 0.0
 
-# Mumber of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 10
+# Number of Monte-Carlo iterations (for re-parametrization trick):
+prm.n_MC = 3
 
 #  Define optimizer:
 optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
@@ -68,8 +71,8 @@ optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
 
 
 # Learning rate decay schedule:
-lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 100]}
-# lr_schedule = {} # No decay
+# lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
+lr_schedule = {} # No decay
 
 # Loss criterion:
 loss_criterion = cmn.get_loss_criterion(prm.loss_type)
@@ -77,8 +80,8 @@ loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.01  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.5
+prm.stage_1_ratio = 0  # 0.05
+prm.full_eps_ratio_in_stage_2 = 1 # 0.5
 
 # Generate task data set:
 data_loader = data_gen.get_data_loader(prm)

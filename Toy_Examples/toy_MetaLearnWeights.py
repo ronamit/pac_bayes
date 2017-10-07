@@ -48,8 +48,7 @@ def learn(data_set, complexity_type):
         sigma_sqr_prior = torch.exp(w_P_log_var)
         complex_term_sum = 0
         for i_task in range(n_tasks):
-            small_num = 1e-20  # add small positive number to avoid division by zero due to numerical errors
-            neg_log_pdf = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (2*sigma_sqr_prior + small_num))
+            neg_log_pdf = 0.5 * torch.sum(w_P_log_var + (w_post[i_task] - w_P_mu).pow(2) / (2*sigma_sqr_prior ))
             n_samples = n_samples_list[i_task]
 
             if complexity_type == 'Variational_Bayes':

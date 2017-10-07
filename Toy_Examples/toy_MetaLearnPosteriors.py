@@ -53,11 +53,13 @@ def learn(data_set, complexity_type):
         sigma_sqr_prior = torch.exp(2 * w_P_log_sigma)
         complex_term_sum = 0
         for i_task in range(n_tasks):
-            small_num = 1e-9  # add small positive number to avoid division by zero due to numerical errors
+
             sigma_sqr_post = torch.exp(2 * w_log_sigma[i_task])
+
             kl_dist = torch.sum(w_P_log_sigma - w_log_sigma[i_task] +
                                 ((w_mu[i_task] - w_P_mu).pow(2) + sigma_sqr_post) /
-                                (2 * sigma_sqr_prior + small_num) - 0.5)
+                                (2 * sigma_sqr_prior) - 0.5)
+
             n_samples = n_samples_list[i_task]
 
             if complexity_type == 'PAC_Bayes_McAllaster':

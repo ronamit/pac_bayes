@@ -6,7 +6,7 @@ import timeit
 import common as cmn
 import data_gen
 from MetaLearninig_Deterministc.meta_deterministic_utils import get_weights_complexity_term
-from common import count_correct, grad_step
+from common import count_correct, grad_step, correct_rate
 from models_standard import get_model
 
 
@@ -63,7 +63,7 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
 
             # Print status:
             if batch_idx % log_interval == 0:
-                batch_acc = count_correct(outputs, targets) / prm.batch_size
+                batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]))
 
     # -------------------------------------------------------------------------------------------
@@ -110,6 +110,5 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
-    cmn.save_code('CodeBackup', run_name)
 
     return (1 - test_acc)
