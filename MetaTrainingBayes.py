@@ -6,11 +6,10 @@ import data_gen
 
 import numpy as np
 import torch
-import random
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step, net_L1_norm, correct_rate
 from models_Bayes import get_bayes_model
-from meta_utils import get_posterior_complexity_term, get_eps_std, run_test_max_posterior, run_test_majority_vote
+from Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -95,8 +94,7 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
             # end tasks loop
 
             # Hyper-prior term:
-            hyperprior = net_L1_norm(prior_model)
-            hyperprior *= np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
+            hyperprior = net_L1_norm(prior_model) * np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
 
             # Total objective:
             total_objective = (1 / n_tasks) * (sum_empirical_loss + sum_intra_task_comp) + hyperprior
@@ -119,25 +117,21 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     # Evaluate the mean loss on samples from the test sets of the training tasks
     # --------------------------------------------------------------------------------------------
     def run_test():
-        test_acc_max_post_avg = 0
-        test_acc_majority_avg = 0
+        test_acc_avg = 0
 
         for i_task in range(n_tasks):
             model = posteriors_models[i_task]
             test_loader = train_tasks_data[i_task]['test']
-            test_acc_max_post, test_loss = run_test_max_posterior(model, test_loader, loss_criterion, prm)
-            test_acc_majority = run_test_majority_vote(model, test_loader, prm, n_votes=5)
+            test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm)
 
             n_test_samples = len(test_loader.dataset)
 
-            print('Task {}, Test set: Max-posterior -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
-                i_task, test_loss, test_acc_max_post, n_test_samples))
-            print('Task {}, Test set: Majority-Vote - Accuracy: {:.3} of {} samples\n'.format(
-                i_task, test_acc_majority, n_test_samples))
-            test_acc_max_post_avg += (1 / n_tasks) * test_acc_max_post
-            test_acc_majority_avg += (1 / n_tasks) * test_acc_majority
+            print('Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
+                prm.test_typ, i_task, test_loss, test_acc, n_test_samples))
 
-        return test_acc_max_post_avg, test_acc_majority_avg
+            test_acc_avg += (1 / n_tasks) * test_acc
+
+        return test_acc_avg
 
     # -----------------------------------------------------------------------------------------------------------#
     # Main script

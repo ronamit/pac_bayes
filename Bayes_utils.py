@@ -15,6 +15,15 @@ from common import count_correct, get_param_from_model, grad_step
 from models_standard import get_model
 
 
+def run_test_Bayes(model, test_loader, loss_criterion, prm):
+    if prm.test_type == 'MaxPosterior':
+        return run_test_max_posterior(model, test_loader, loss_criterion, prm)
+    elif prm.test_type == 'MajorityVote':
+        return run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+    else:
+        raise ValueError('Invalid test_type')
+
+
 def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     model.eval()
     test_loss = 0
@@ -35,7 +44,7 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     return test_acc, test_loss.data[0]
 
 
-def run_test_majority_vote(model, test_loader, prm, n_votes=5):
+def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 # TODO:  more efficent
     model.eval()
     test_loss = 0
@@ -48,6 +57,7 @@ def run_test_majority_vote(model, test_loader, prm, n_votes=5):
         votes = cmn.zeros_gpu((batch_size, n_labels))
         for i_vote in range(n_votes):
             outputs = model(inputs, eps_std=1.0)
+            test_loss += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
             for i_sample in range(batch_size):
                 votes[i_sample, pred[i_sample].cpu().numpy()[0]] += 1
@@ -61,7 +71,7 @@ def run_test_majority_vote(model, test_loader, prm, n_votes=5):
     test_acc = n_correct / n_test_samples
     print('\nMajority-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
         test_acc, n_correct, n_test_samples))
-    return test_acc
+    return test_acc, test_loss
 
 ###
 

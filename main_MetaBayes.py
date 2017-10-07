@@ -95,10 +95,12 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.3
+prm.stage_1_ratio = 0.0  # 0.05
+prm.full_eps_ratio_in_stage_2 = 1.0
 # Note:
 
+# Test type:
+prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
@@ -111,7 +113,7 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './tmp'
 f_name='prior'
 

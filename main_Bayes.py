@@ -83,6 +83,10 @@ loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 prm.stage_1_ratio = 0  # 0.05
 prm.full_eps_ratio_in_stage_2 = 1 # 0.5
 
+
+# Test type:
+prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
+
 # Generate task data set:
 data_loader = data_gen.get_data_loader(prm)
 

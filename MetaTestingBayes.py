@@ -6,14 +6,14 @@ import data_gen
 
 import numpy as np
 import torch
-
 import common as cmn
 from common import count_correct, get_param_from_model, grad_step, correct_rate
 from models_Bayes import get_bayes_model
-from meta_utils import get_posterior_complexity_term, get_eps_std
+from Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
 
 
-def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior, verbose=1):
+def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args,
+                 loss_criterion, lr_schedule, init_from_prior, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -75,28 +75,6 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
                       format(eps_std, empirical_loss.data[0], intra_task_comp.data[0]))
 
 
-    # -------------------------------------------------------------------------------------------
-    #  Test evaluation function
-    # --------------------------------------------------------------------------------------------
-    def run_test():
-        post_model.eval()
-        test_loss = 0
-        n_correct = 0
-        for batch_data in test_loader:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            eps_std = 0.0  # test with max-posterior
-            outputs = post_model(inputs, eps_std)
-            test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
-            n_correct += count_correct(outputs, targets)
-
-        n_test_samples = len(test_loader.dataset)
-        n_test_batches = len(test_loader)
-        test_loss = test_loss.data[0] / n_test_batches
-        test_acc = n_correct / n_test_samples
-        print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-            test_loss, test_acc, n_correct, n_test_samples))
-        return test_acc
-
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
@@ -117,9 +95,10 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc = run_test()
+    test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type, verbose=verbose)
+
 
     return (1 - test_acc)
