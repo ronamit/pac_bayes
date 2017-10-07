@@ -4,11 +4,11 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-import common as cmn
-import data_gen
-from common import count_correct, grad_step, correct_rate
-from models_Bayes import get_bayes_model
-from Bayes_utils import get_eps_std, run_test_Bayes
+from Models.models_Bayes import get_bayes_model
+from Utils import common as cmn, data_gen
+from Utils.Bayes_utils import get_eps_std, run_test_Bayes
+from Utils.common import grad_step, correct_rate
+
 
 def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
 

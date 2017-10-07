@@ -6,11 +6,11 @@ import argparse
 import torch
 import torch.optim as optim
 
-import common as cmn
-import models_Bayes
-from common import save_model_state, load_model_state
-import data_gen
-import MetaTrainingBayes, MetaTestingBayes, learn_standard, learn_Bayes
+from Stochsastic_Meta_Learning import meta_testing_Bayes, meta_training_Bayes
+from Models import models_Bayes
+from Single_Task import learn_single_Bayes, learn_single_standard
+from Utils import data_gen
+from Utils.common import save_model_state, load_model_state, get_loss_criterion, write_result
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200)
+                    default=200) # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -53,6 +53,8 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
 
 prm = parser.parse_args()
 prm.cuda = not prm.no_cuda and torch.cuda.is_available()
+
+prm.data_path = './data'
 
 torch.manual_seed(prm.seed)
 
@@ -74,7 +76,7 @@ prm.mu_init_bias = 0.0
 prm.n_MC = 3
 
 # Loss criterion
-loss_criterion = cmn.get_loss_criterion(prm.loss_type)
+loss_criterion = get_loss_criterion(prm.loss_type)
 
 #  Define optimizer:
 optim_func, optim_args = optim.Adam,  {'lr': prm.lr,} #'weight_decay': 1e-4
@@ -96,7 +98,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.0  # 0.05
-prm.full_eps_ratio_in_stage_2 = 1.0
+prm.full_eps_ratio_in_stage_2 = 0.3
 # Note:
 
 # Test type:
@@ -114,14 +116,14 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 # -------------------------------------------------------------------------------------------
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
-dir_path = './tmp'
+dir_path = './data'
 f_name='prior'
 
 
 if mode == 'MetaTrain':
     # Meta-training to learn prior:
-    prior_model = MetaTrainingBayes.run_meta_learning(train_tasks_data,
-                                   prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+    prior_model = meta_training_Bayes.run_meta_learning(train_tasks_data,
+                                                        prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)
@@ -142,7 +144,7 @@ n_test_tasks = 5
 limit_train_samples = 1000
 test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
 
-cmn.write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
+write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
                  format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
@@ -153,11 +155,11 @@ for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     if mode == 'FromScratch':
-        test_err = learn_Bayes.run_learning(task_data, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+        test_err = learn_single_Bayes.run_learning(task_data, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     else:
-        test_err = MetaTestingBayes.run_learning(task_data, prior_model, prm,
-                                            model_type, optim_func, optim_args, loss_criterion,
-                                            lr_schedule, init_from_prior, verbose=0)
+        test_err = meta_testing_Bayes.run_learning(task_data, prior_model, prm,
+                                                   model_type, optim_func, optim_args, loss_criterion,
+                                                   lr_schedule, init_from_prior, verbose=0)
     test_err_avg += test_err / n_test_tasks
 
 
@@ -169,14 +171,14 @@ test_err_avg2 = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = learn_standard.run_learning(task_data, prm, model_type_standard,
-                                           optim_func, optim_args, loss_criterion, lr_schedule, verbose=0)
+    test_err = learn_single_standard.run_learning(task_data, prm, model_type_standard,
+                                                  optim_func, optim_args, loss_criterion, lr_schedule, verbose=0)
     test_err_avg2 += test_err / n_test_tasks
 
 
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
-cmn.write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-cmn.write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
-cmn.write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)
+write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
+write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)

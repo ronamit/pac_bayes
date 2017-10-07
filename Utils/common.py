@@ -43,24 +43,25 @@ def save_models_dict(models_dict, dir_path):
     for name in models_dict:
         save_model_state(models_dict[name], dir_path, name)
 
-def save_model_state(model, dir_path, name):
-
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    f_path = dir_path + '/' + name + '.pt'
-    with open(f_path, 'wb') as f_pointer:
-        torch.save(model.state_dict(), f_pointer)
-    return f_path
-
-
 def load_models_dict(models_dict, dir_path):
     ''' Load models '''
     for name in models_dict:
         load_model_state(models_dict[name], dir_path, name)
 
+
+def save_model_state(model, dir_path, name):
+
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    f_path = os.path.join(dir_path, name + '.pt')
+    with open(f_path, 'wb') as f_pointer:
+        torch.save(model.state_dict(), f_pointer)
+    return f_path
+
+
 def load_model_state(model, dir_path, name):
 
-    f_path = dir_path + '/' + name + '.pt'
+    f_path = os.path.join(dir_path, name + '.pt')
     with open(f_path, 'rb') as f_pointer:
         model.load_state_dict(torch.load(f_pointer))
 
@@ -155,7 +156,7 @@ def gen_run_name(name_prefix):
 #     dir_name = setting_name + '_' + run_name
 #     # Create backup of code
 #     source_dir = os.getcwd()
-#     dest_dir = source_dir + '/Code_Archive/' + dir_name
+#     dest_dir = source_dir + '/Code_Archive/' + dir_name # os.path.join
 #     if not os.path.exists(dest_dir):
 #         os.makedirs(dest_dir)
 #     for filename in glob.glob(os.path.join(source_dir, '*.*')):

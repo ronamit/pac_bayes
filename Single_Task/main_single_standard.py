@@ -1,12 +1,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+import argparse
+
 import torch
 import torch.optim as optim
-import argparse
-import models_standard
-import common as cmn
-import data_gen
+
+from Utils import common as cmn, data_gen
+
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
@@ -49,6 +50,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False, help='disab
 prm = parser.parse_args()
 prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 
+prm.data_path = './data'
+
 torch.manual_seed(prm.seed)
 
 #  Define model:
@@ -71,5 +74,5 @@ data_loader = data_gen.get_data_loader(prm)
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
-from learn_standard import run_learning
+from Single_Task.learn_single_standard import run_learning
 run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)

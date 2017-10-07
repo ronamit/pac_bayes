@@ -6,9 +6,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-import common as cmn
-import data_gen
-
+from Utils import common as cmn, data_gen
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -49,8 +47,9 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
 prm = parser.parse_args()
 prm.cuda = True
 
-torch.manual_seed(prm.seed)
+prm.data_path = './data'
 
+torch.manual_seed(prm.seed)
 
 #  Get model:
 model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
@@ -95,5 +94,5 @@ data_loader = data_gen.get_data_loader(prm)
 #  Run learning
 # -------------------------------------------------------------------------------------------
 
-from learn_Bayes import run_learning
+from Single_Task.learn_single_Bayes import run_learning
 run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)

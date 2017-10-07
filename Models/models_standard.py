@@ -1,12 +1,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
 from torch.autograd import Variable
 
-import data_gen
+from Utils import data_gen
 
 
 # Note: the net return scores (not normalized probabilities)

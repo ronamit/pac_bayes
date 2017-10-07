@@ -2,14 +2,11 @@
 from __future__ import absolute_import, division, print_function
 
 import timeit
-import data_gen
 
-import numpy as np
-import torch
-import common as cmn
-from common import count_correct, get_param_from_model, grad_step, correct_rate
-from models_Bayes import get_bayes_model
-from Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
+from Models.models_Bayes import get_bayes_model
+from Utils import common as cmn, data_gen
+from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
+from Utils.common import grad_step, correct_rate
 
 
 def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args,

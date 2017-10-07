@@ -1,13 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
-import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
+from Models.layers import StochasticLinear
+from Utils import data_gen
 
-import data_gen
-from layers import StochasticLinear
 
 # Note: the net return scores (not normalized probabilities)
 

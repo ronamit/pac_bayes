@@ -28,25 +28,7 @@ def get_data_loader(prm, limit_train_samples = None):
 
     # Get dataset:
     if prm.data_source == 'MNIST':
-        MNIST_MEAN =  (0.1307,) # (0.5,)
-        MNIST_STD =  (0.3081,)  # (0.5,)
-        # Note: keep values in [0,1] to avoid too large input norm (which cause high variance)
-
-        # Data transformations list:
-
-        input_trans_list = [transforms.ToTensor()]
-        # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
-        if input_trans:
-            # Note: this operates before transform to tensor
-            input_trans_list.append(transforms.Lambda(input_trans))
-
-        # Train set:
-        train_dataset = datasets.MNIST('./data', train=True, download=True,
-                                       transform=transforms.Compose(input_trans_list), target_transform=target_trans)
-
-        # Test set:
-        test_dataset = datasets.MNIST('./data', train=False,
-                                      transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+        train_dataset, test_dataset = load_MNIST(input_trans, target_trans, prm)
 
     elif prm.data_source == 'Sinusoid':
 
@@ -77,6 +59,35 @@ def get_data_loader(prm, limit_train_samples = None):
                    'n_train_samples': n_train_samples, 'n_test_samples': n_test_samples}
 
     return data_loader
+
+
+# -------------------------------------------------------------------------------------------
+#  Data sets
+# -------------------------------------------------------------------------------------------
+
+def load_MNIST(input_trans, target_trans, prm):
+    MNIST_MEAN = (0.1307,)  # (0.5,)
+    MNIST_STD = (0.3081,)  # (0.5,)
+    # Note: keep values in [0,1] to avoid too large input norm (which cause high variance)
+
+    # Data transformations list:
+
+    input_trans_list = [transforms.ToTensor()]
+    # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
+    if input_trans:
+        # Note: this operates before transform to tensor
+        input_trans_list.append(transforms.Lambda(input_trans))
+
+    # Train set:
+    train_dataset = datasets.MNIST(prm.data_path, train=True, download=True,
+                                   transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+
+    # Test set:
+    test_dataset = datasets.MNIST(prm.data_path, train=False,
+                                  transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+
+
+    return train_dataset, test_dataset
 
 # -------------------------------------------------------------------------------------------
 #  Data sets parameters

@@ -1,14 +1,12 @@
 
 from __future__ import absolute_import, division, print_function
 
-import data_gen
-
 import numpy as np
 import torch
 from torch.autograd import Variable
-import common as cmn
-from common import count_correct, get_param_from_model, grad_step
-from models_standard import get_model
+
+from Utils import common as cmn, data_gen
+from Utils.common import count_correct
 
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm):
@@ -106,13 +104,7 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_McAllaster':
         delta = 0.95
-        # complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld ))
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta)))
-
-        # delta = 0.95
-        # complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta))) - \
-        #                np.sqrt((1 / (2 * n_samples)) * (np.log(2*np.sqrt(n_samples) / delta)))
-        # I subtracted a const so that the optimization could reach 0
 
     elif complexity_type == 'PAC_Bayes_Pentina':
         complex_term = np.sqrt(1 / n_samples) * kld

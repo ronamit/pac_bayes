@@ -6,12 +6,11 @@ import argparse
 import torch
 import torch.optim as optim
 
-import common as cmn
-import data_gen
-import learn_standard
-from MetaLearninig_Deterministc import MetaTraining, MetaTesting
-from common import save_models_dict, load_models_dict
-from models_standard import get_model
+from Deterministic_Meta_Learning import meta_training_deterministic, meta_testing_deterministic
+from Models.models_standard import get_model
+from Single_Task import learn_single_standard
+from Utils import common as cmn, data_gen
+from Utils.common import save_models_dict, load_models_dict
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -53,6 +52,8 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
 
 prm = parser.parse_args()
 prm.cuda = not prm.no_cuda and torch.cuda.is_available()
+
+prm.data_path = './data'
 
 torch.manual_seed(prm.seed)
 
@@ -100,8 +101,8 @@ if load_pretrained_prior:
 
 else:
     # Meta-training to learn prior:
-    prior_dict = MetaTraining.run_meta_learning(train_tasks_data,
-                                                prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data,
+                                                               prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
     # save learned prior:
     save_models_dict(prior_dict, dir_path)
     print('Trained prior saved in ' + dir_path)
@@ -123,9 +124,9 @@ test_err_avg = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = MetaTesting.run_learning(task_data, prior_dict, prm,
-                                        model_type, optim_func, optim_args, loss_criterion,
-                                        lr_schedule, init_from_prior)
+    test_err = meta_testing_deterministic.run_learning(task_data, prior_dict, prm,
+                                                       model_type, optim_func, optim_args, loss_criterion,
+                                                       lr_schedule, init_from_prior)
     test_err_avg += test_err / n_test_tasks
 
 
@@ -137,8 +138,8 @@ test_err_avg2 = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = learn_standard.run_learning(task_data, prm, model_type,
-                                           optim_func, optim_args, loss_criterion, lr_schedule)
+    test_err = learn_single_standard.run_learning(task_data, prm, model_type,
+                                                  optim_func, optim_args, loss_criterion, lr_schedule)
     test_err_avg2 += test_err / n_test_tasks
 
 

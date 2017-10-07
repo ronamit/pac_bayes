@@ -2,9 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
-from common import randn_gpu
+from torch.autograd import Variable
+
 
 class StochasticLinear(nn.Module):
 

@@ -1,23 +1,38 @@
 
 from __future__ import absolute_import, division, print_function
-from six.moves import xrange
+
 import timeit
-import common as cmn
-from common import count_correct, grad_step, correct_rate
-import data_gen
-from models_standard import get_model
 
-def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, verbose=1):
+from Models.models_standard import get_model
+from Utils import common as cmn, data_gen
+from Utils.common import count_correct, grad_step, correct_rate
+from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_complexity_term
 
-    # The data-sets:
-    train_loader = data_loader['train']
-    test_loader = data_loader['test']
 
-    # Create  model:
-    model = get_model(model_type, prm)
+def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior):
+
+    # -------------------------------------------------------------------------------------------
+    #  Setting-up
+    # -------------------------------------------------------------------------------------------
+
+    # The pre-learned prior parameters are contained in these models:
+    prior_means_model = prior_dict['means_model']
+    prior_log_vars_model = prior_dict['log_var_model']
+
+    # Create posterior model for the new task:
+    post_model = get_model(model_type, prm)
+
+    if init_from_prior:
+        post_model.load_state_dict(prior_means_model.state_dict())
+
+    # The data-sets of the new task:
+    train_loader = task_data['train']
+    test_loader = task_data['test']
+    n_train_samples = len(train_loader.dataset)
 
     #  Get optimizer:
-    optimizer = optim_func(model.parameters(), **optim_args)
+    optimizer = optim_func(post_model.parameters(), **optim_args)
+
 
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
@@ -27,35 +42,39 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
         log_interval = 500
         n_batches = len(train_loader)
 
-        model.train()
+        post_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 
             # get batch:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-            # Calculate loss:
-            outputs = model(inputs)
-            loss = loss_criterion(outputs, targets)
+            # Calculate empirical loss:
+            outputs = post_model(inputs)
+            empirical_loss = loss_criterion(outputs, targets)
+
+            # Total objective:
+            intra_task_comp = get_weights_complexity_term(prm.complexity_type, prior_means_model,
+                                                          prior_log_vars_model, post_model, n_train_samples)
+            total_objective = empirical_loss + intra_task_comp
 
             # Take gradient step:
-            grad_step(loss, optimizer, lr_schedule, prm.lr, i_epoch)
+            grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
 
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss.data[0]))
-
+                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]))
 
     # -------------------------------------------------------------------------------------------
     #  Test evaluation function
     # --------------------------------------------------------------------------------------------
     def run_test():
-        model.eval()
+        post_model.eval()
         test_loss = 0
         n_correct = 0
         for batch_data in test_loader:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            outputs = model(inputs)
+            outputs = post_model(inputs)
             test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
             n_correct += count_correct(outputs, targets)
 
@@ -70,12 +89,11 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
-    run_name = cmn.gen_run_name('Standard')
-    if verbose == 1:
-        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-        cmn.write_result(str(prm), prm.log_file)
-        cmn.write_result(cmn.get_model_string(model), prm.log_file)
-        cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
+    run_name = cmn.gen_run_name('Meta-Testing')
+    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
+    cmn.write_result(str(prm), prm.log_file)
+    cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
+    cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -90,6 +108,6 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     test_acc = run_test()
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
 
-    return (1-test_acc)
+    return (1 - test_acc)

@@ -1,16 +1,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-import timeit
-import data_gen
-
 import numpy as np
 import torch
-from torch.autograd import Variable
-import random
-import common as cmn
-from common import count_correct, get_param_from_model, grad_step
-from models_standard import get_model
+
+from Utils.common import get_param_from_model
+
 
 #  -----------
 # -------------------------------------------------------------------------------------------
