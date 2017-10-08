@@ -4,6 +4,7 @@
 
 Requirements:
 * Python 2.7+ or 3.6+ (recomended package manager: Anaconda python)
+* numpy + matplotlib
 * PyTorch 0.2+ with CUDA
 
 Run files:
