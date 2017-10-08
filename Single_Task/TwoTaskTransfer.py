@@ -77,15 +77,20 @@ prm.lr_schedule = {} # No decay
 task1_data = data_gen.get_data_loader(prm)
 
 
-
 #  Run learning of task 1
-test_err, model = learn_single_standard.run_learning(
-    task1_data, prm)
+write_result('-'*5 + 'Standard learning of task 1' + '-'*5, prm.log_file)
+test_err, transfered_model = learn_single_standard.run_learning(task1_data, prm, model_type)
 
 # Generate the task 2 data set:
-task2_data = data_gen.get_data_loader(prm)
+limit_train_samples = 1000
+write_result('-'*5 + 'Generating task 2 with at most {} samples'.format(limit_train_samples) + '-'*5, prm.log_file)
+task2_data = data_gen.get_data_loader(prm, limit_train_samples = 1000)
 
 
 #  Run learning of task 2 from scratch:
-learn_single_standard.run_learning(task1_data, model_type, prm)
+write_result('-'*5 + 'Standard learning of task 2 (from scratch)' + '-'*5, prm.log_file)
+learn_single_standard.run_learning(task2_data, prm, model_type, verbose=0)
 
+#  Run learning of task 2 using transferred initial point:
+write_result('-'*5 + 'Standard learning of task 2 (using transferred weights as initial point)' + '-'*5, prm.log_file)
+learn_single_standard.run_learning(task2_data, prm, model_type, initial_model=transfered_model, verbose=0)

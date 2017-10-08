@@ -8,7 +8,7 @@ from Utils import common as cmn, data_gen
 from Utils.common import count_correct, grad_step, correct_rate
 
 
-def run_learning(data_loader, prm, model_type, verbose=1):
+def run_learning(data_loader, prm, model_type, verbose=1, initial_model=None):
 
     # Unpack parameters:
     optim_func, optim_args, loss_criterion, lr_schedule = \
@@ -22,6 +22,8 @@ def run_learning(data_loader, prm, model_type, verbose=1):
 
     # Create  model:
     model = get_model(model_type, prm)
+    if initial_model:
+        model.load_state_dict(initial_model.state_dict())
 
     #  Get optimizer:
     optimizer = optim_func(model.parameters(), **optim_args)
@@ -97,7 +99,7 @@ def run_learning(data_loader, prm, model_type, verbose=1):
     test_acc = run_test()
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose, result_name='Standard')
 
     test_err = 1-test_acc
     return test_err, model
