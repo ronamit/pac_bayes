@@ -71,7 +71,7 @@ def get_bayes_model(model_type, prm):
     models_dict = {'BayesNN':BayesNN(), 'BigBayesNN':BigBayesNN()}
     model = models_dict[model_type]
 
-    if prm.cuda:
-        model.cuda()
+
+    model.cuda()
 
     return model

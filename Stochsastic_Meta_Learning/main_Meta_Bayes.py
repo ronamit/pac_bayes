@@ -10,7 +10,7 @@ from Stochsastic_Meta_Learning import meta_testing_Bayes, meta_training_Bayes
 from Models import models_Bayes
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
-from Utils.common import save_model_state, load_model_state, get_loss_criterion, write_result, set_random_seed
+from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -73,9 +73,6 @@ prm.mu_init_bias = 0.0
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 3
 
-# Loss criterion
-prm.loss_criterion = get_loss_criterion(prm.loss_type)
-
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #'weight_decay': 1e-4
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
@@ -113,8 +110,8 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
-dir_path = './saved_prior'
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+dir_path = './saved'
 f_name='prior'
 
 
@@ -139,8 +136,8 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 5
-limit_train_samples = 1000
+n_test_tasks = 1
+limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
@@ -167,7 +164,7 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 #  Compare to standard learning
 # -------------------------------------------------------------------------------------------
-init_standard_with_prior = False
+init_standard_with_prior = False # TODO: implement this
 if init_standard_with_prior:
     initial_model = prior_model
     write_result('Run standard learning using transferred prior as initial point...', prm.log_file)

@@ -5,14 +5,17 @@ import timeit
 
 from Models.models_standard import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, correct_rate
+from Utils.common import count_correct, grad_step, correct_rate, get_loss_criterion
 
 
 def run_learning(data_loader, prm, model_type, verbose=1, initial_model=None):
 
     # Unpack parameters:
-    optim_func, optim_args, loss_criterion, lr_schedule = \
-        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
+    optim_func, optim_args, lr_schedule = \
+        prm.optim_func, prm.optim_args, prm.lr_schedule
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
 
     # The data-sets:
     train_loader = data_loader['train']

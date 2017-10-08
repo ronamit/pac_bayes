@@ -75,9 +75,6 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
 prm.lr_schedule = {} # No decay
 
-# Loss criterion:
-prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)
-
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)

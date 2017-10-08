@@ -8,7 +8,7 @@ import numpy as np
 from Models.models_Bayes import get_bayes_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
-from Utils.common import grad_step, net_L1_norm, correct_rate
+from Utils.common import grad_step, net_L1_norm, correct_rate, get_loss_criterion
 
 
 # -------------------------------------------------------------------------------------------
@@ -16,13 +16,17 @@ from Utils.common import grad_step, net_L1_norm, correct_rate
 # -------------------------------------------------------------------------------------------
 def run_meta_learning(train_tasks_data, prm, model_type):
 
-    # Unpack parameters:
-    optim_func, optim_args, loss_criterion, lr_schedule =\
-        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
-
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
+    # Unpack parameters:
+    optim_func, optim_args, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.lr_schedule
+
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
+
     n_tasks = len(train_tasks_data)
 
     # Create posterior models for each task:

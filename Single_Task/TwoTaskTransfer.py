@@ -61,10 +61,6 @@ set_random_seed(prm.seed)
 #  Define model:
 model_type = 'FcNet'
 
-# Loss criterion
-prm.loss_criterion = get_loss_criterion(prm.loss_type)
-
-
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}

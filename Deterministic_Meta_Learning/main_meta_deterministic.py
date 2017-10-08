@@ -86,7 +86,7 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 # -------------------------------------------------------------------------------------------
 
 load_pretrained_prior = False  # False \ True
-dir_path = './saved_prior'
+dir_path = './saved'
 
 if load_pretrained_prior:
     # Loads  previously training prior.

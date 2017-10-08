@@ -6,7 +6,7 @@ import timeit
 from Models.models_Bayes import get_bayes_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
-from Utils.common import grad_step, correct_rate
+from Utils.common import grad_step, correct_rate, get_loss_criterion
 
 
 def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, verbose=1):
@@ -15,8 +15,11 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     #  Setting-up
     # -------------------------------------------------------------------------------------------
     # Unpack parameters:
-    optim_func, optim_args, loss_criterion, lr_schedule =\
-        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
+    optim_func, optim_args, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.lr_schedule
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
 
     # Create posterior model for the new task:
     post_model = get_bayes_model(model_type, prm)
