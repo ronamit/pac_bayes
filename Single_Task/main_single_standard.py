@@ -7,6 +7,8 @@ import torch
 import torch.optim as optim
 
 from Utils import common as cmn, data_gen
+from Utils.common import set_random_seed
+from Single_Task import learn_single_standard
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -50,23 +52,23 @@ parser.add_argument('--no-cuda', action='store_true', default=False, help='disab
 prm = parser.parse_args()
 prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 
-prm.data_path = './data'
+prm.data_path = '../data'
 
-torch.manual_seed(prm.seed)
+set_random_seed(prm.seed)
 
 #  Define model:
 model_type = 'FcNet' # 'FcNet' \ 'ConvNet'
 
 # Loss criterion
-loss_criterion = cmn.get_loss_criterion(prm.loss_type)
+prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 
 #  Define optimizer:
-optim_func, optim_args = optim.Adam,  {'lr': prm.lr}
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
-lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
-# lr_schedule = {} # No decay
+#lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
+prm.lr_schedule = {} # No decay
 
 # Generate task data set:
 data_loader = data_gen.get_data_loader(prm)
@@ -74,5 +76,5 @@ data_loader = data_gen.get_data_loader(prm)
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
-from Single_Task.learn_single_standard import run_learning
-run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+
+learn_single_standard.run_learning(data_loader, prm, model_type)

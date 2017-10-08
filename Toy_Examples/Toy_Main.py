@@ -7,6 +7,7 @@ from matplotlib.patches import Ellipse
 import torch
 from torch.autograd import Variable
 import torch.optim as optim
+from Utils.common import  set_random_seed
 
 
 
@@ -17,8 +18,8 @@ import torch.optim as optim
 # Random seed:
 seed = 1
 if not seed == 0:
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    set_random_seed(seed)
+
 
 # -------------------------------------------------------------------------------------------
 # Define scenario

@@ -10,11 +10,16 @@ from Utils.Bayes_utils import get_eps_std, run_test_Bayes
 from Utils.common import grad_step, correct_rate
 
 
-def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
+def run_learning(data_loader, prm, model_type, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
+
+    # Unpack parameters:
+    optim_func, optim_args, loss_criterion, lr_schedule = \
+        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
+
     train_loader = data_loader['train']
     test_loader = data_loader['test']
     n_batches = len(train_loader)
@@ -70,11 +75,11 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
 
     #  Update Log file
     run_name = cmn.gen_run_name('Bayes')
-    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-    cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(model), prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
-    cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
+    if verbose == 1:
+        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
+        cmn.write_result(str(prm), prm.log_file)
+        cmn.write_result(cmn.get_model_string(model), prm.log_file)
+        cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     start_time = timeit.default_timer()
 
@@ -88,5 +93,5 @@ def run_learning(data_loader, prm, model_type, optim_func, optim_args, loss_crit
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
-
-    return (1-test_acc)
+    test_err = 1 - test_acc
+    return test_err

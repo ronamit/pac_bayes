@@ -10,7 +10,7 @@ from Deterministic_Meta_Learning import meta_training_deterministic, meta_testin
 from Models.models_standard import get_model
 from Single_Task import learn_single_standard
 from Utils import common as cmn, data_gen
-from Utils.common import save_models_dict, load_models_dict
+from Utils.common import save_models_dict, load_models_dict, set_random_seed
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -42,8 +42,6 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
-parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
 
@@ -51,11 +49,11 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
                     default='log')
 
 prm = parser.parse_args()
-prm.cuda = not prm.no_cuda and torch.cuda.is_available()
+prm.cuda = True
 
-prm.data_path = './data'
+prm.data_path = '../data'
 
-torch.manual_seed(prm.seed)
+set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
 model_type = 'FcNet3' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
@@ -88,7 +86,7 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 # -------------------------------------------------------------------------------------------
 
 load_pretrained_prior = False  # False \ True
-dir_path = './tmp'
+dir_path = './saved_prior'
 
 if load_pretrained_prior:
     # Loads  previously training prior.
@@ -138,7 +136,7 @@ test_err_avg2 = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = learn_single_standard.run_learning(task_data, prm, model_type,
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type,
                                                   optim_func, optim_args, loss_criterion, lr_schedule)
     test_err_avg2 += test_err / n_test_tasks
 

@@ -9,13 +9,14 @@ from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_te
 from Utils.common import grad_step, correct_rate
 
 
-def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args,
-                 loss_criterion, lr_schedule, init_from_prior, verbose=1):
+def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
-
+    # Unpack parameters:
+    optim_func, optim_args, loss_criterion, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
 
     # Create posterior model for the new task:
     post_model = get_bayes_model(model_type, prm)
@@ -27,6 +28,7 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
     train_loader = task_data['train']
     test_loader = task_data['test']
     n_train_samples = len(train_loader.dataset)
+    n_batches = len(train_loader)
 
     #  Get optimizer:
     optimizer = optim_func(post_model.parameters(), **optim_args)
@@ -38,7 +40,7 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
 
     def run_train_epoch(i_epoch):
         log_interval = 500
-        n_batches = len(train_loader)
+
 
         post_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
@@ -80,7 +82,7 @@ def run_learning(task_data, prior_model, prm, model_type, optim_func, optim_args
         cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
         cmn.write_result(str(prm), prm.log_file)
         cmn.write_result(model_type, prm.log_file)
-        cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
+        cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs

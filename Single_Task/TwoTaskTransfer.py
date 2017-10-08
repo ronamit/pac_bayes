@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function
 
 import argparse
@@ -6,11 +5,16 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Utils import common as cmn, data_gen
-from Utils.common import set_random_seed
-from Single_Task import learn_single_Bayes
+from Stochsastic_Meta_Learning import meta_testing_Bayes, meta_training_Bayes
+from Models import models_Bayes
+from Single_Task import learn_single_Bayes, learn_single_standard
+from Utils import data_gen
+from Utils.common import save_model_state, load_model_state, get_loss_criterion, write_result, set_random_seed
 
+import Single_Task.learn_single_standard
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+
+
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -19,11 +23,11 @@ from Single_Task import learn_single_Bayes
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' ",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
-                    default='None')
+parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -32,9 +36,9 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 300
+                    default=200) # 200
 
-parser.add_argument('--lr', type=float, help='learning rate (initial)',
+parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
@@ -46,6 +50,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 parser.add_argument('--log-file', type=str, help='Name of file to save log (default: no save)',
                     default='log')
 
+
 prm = parser.parse_args()
 prm.cuda = True
 
@@ -53,47 +58,34 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-#  Get model:
-model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
-prm.model_type = model_type
+#  Define model:
+model_type = 'FcNet'
 
-# Weights initialization:
-prm.log_var_init_std = 0.1
-prm.log_var_init_bias = -10  # start with small sigma - so gradients variance estimate will be low
-prm.mu_init_std = 0.1
-prm.mu_init_bias = 0.0
+# Loss criterion
+prm.loss_criterion = get_loss_criterion(prm.loss_type)
 
-# Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
-
 # Learning rate decay schedule:
-# lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
+# lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
 prm.lr_schedule = {} # No decay
 
-# Loss criterion:
-prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)
-
-# Learning parameters:
-# In the stage 1 of the learning epochs, epsilon std == 0
-# In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.9 # 0.5
+# Generate the task 1 data set:
+task1_data = data_gen.get_data_loader(prm)
 
 
-# Test type:
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
-# Generate task data set:
-data_loader = data_gen.get_data_loader(prm)
+#  Run learning of task 1
+test_err, model = learn_single_standard.run_learning(
+    task1_data, prm)
+
+# Generate the task 2 data set:
+task2_data = data_gen.get_data_loader(prm)
 
 
-# -------------------------------------------------------------------------------------------
-#  Run learning
-# -------------------------------------------------------------------------------------------
+#  Run learning of task 2 from scratch:
+learn_single_standard.run_learning(task1_data, model_type, prm)
 
-learn_single_Bayes.run_learning(data_loader, prm, model_type)

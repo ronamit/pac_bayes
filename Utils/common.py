@@ -10,11 +10,21 @@ import shutil
 from torch.autograd import Variable
 import torch.nn as nn
 import torch
-
+import numpy as np
+import random
 
 # -----------------------------------------------------------------------------------------------------------#
 # General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
+
+
+def set_random_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+
 
 # Get the parameters from a model:
 def get_param_from_model(model, param_name):

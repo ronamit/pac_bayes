@@ -14,7 +14,11 @@ from Utils.common import grad_step, net_L1_norm, correct_rate
 # -------------------------------------------------------------------------------------------
 #  Learning function
 # -------------------------------------------------------------------------------------------
-def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule):
+def run_meta_learning(train_tasks_data, prm, model_type):
+
+    # Unpack parameters:
+    optim_func, optim_args, loss_criterion, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.loss_criterion, prm.lr_schedule
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -142,7 +146,8 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
     cmn.write_result(str(prm), prm.log_file)
     cmn.write_result(cmn.get_model_string(prior_model), prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
+    cmn.write_result('Total number of steps: {}'.format(n_meta_batches * prm.num_epochs), prm.log_file)
+
     cmn.write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
