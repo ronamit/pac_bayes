@@ -141,13 +141,16 @@ else:
 
 n_test_tasks = 5
 limit_train_samples = 1000
+
+write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
+             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
+
 test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
 
-write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
 # -------------------------------------------------------------------------------
+write_result('Meta-Testing with transferred prior....', prm.log_file)
 
 test_err_avg = 0
 for i_task in range(n_test_tasks):
@@ -164,12 +167,23 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 #  Compare to standard learning
 # -------------------------------------------------------------------------------------------
+init_standard_with_prior = False
+if init_standard_with_prior:
+    initial_model = prior_model
+    write_result('Run standard learning using transferred prior as initial point...', prm.log_file)
+else:
+    initial_model = None
+    write_result('Run standard learning from scratch....', prm.log_file)
+
+
+write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
+             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_err_avg2 = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type_standard, verbose=0)
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type_standard, verbose=0, initial_model=initial_model)
     test_err_avg2 += test_err / n_test_tasks
 
 
