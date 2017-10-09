@@ -81,7 +81,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 10
+n_train_tasks = 5
 
 write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
 
@@ -91,10 +91,18 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-load_pretrained_prior = True  # False \ True
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 
-if load_pretrained_prior:
+if mode == 'MetaTrain':
+    # Meta-training to learn prior:
+    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data, prm, model_type)
+
+    # save learned prior:
+    save_models_dict(prior_dict, dir_path)
+    print('Trained prior saved in ' + dir_path)
+
+elif mode == 'LoadPrior':
     # Loads  previously training prior.
     # First, create the models:
     prior_dict ={'means_model': get_model(model_type, prm),
@@ -104,13 +112,7 @@ if load_pretrained_prior:
     print('Pre-trained  prior loaded from ' + dir_path)
 
 else:
-    # Meta-training to learn prior:
-    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data, prm, model_type)
-
-    # save learned prior:
-    save_models_dict(prior_dict, dir_path)
-    print('Trained prior saved in ' + dir_path)
-
+    prior_dict = None
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
