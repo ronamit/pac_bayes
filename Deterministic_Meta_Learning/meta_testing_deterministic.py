@@ -5,15 +5,22 @@ import timeit
 
 from Models.models_standard import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, correct_rate
+from Utils.common import count_correct, grad_step, correct_rate, get_loss_criterion, write_result
 from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_complexity_term
 
 
-def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule, init_from_prior):
+def run_learning(task_data, prior_dict, prm, model_type, init_from_prior,  verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
+
+    # Unpack parameters:
+    optim_func, optim_args, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.lr_schedule
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
 
     # The pre-learned prior parameters are contained in these models:
     prior_means_model = prior_dict['means_model']
@@ -90,10 +97,10 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
     run_name = cmn.gen_run_name('Meta-Testing')
-    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-    cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) + str(lr_schedule), prm.log_file)
+    if verbose == 1:
+        write_result('-'*10+run_name+'-'*10, prm.log_file)
+        write_result(str(prm), prm.log_file)
+        write_result(cmn.get_model_string(post_model), prm.log_file)        
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -108,6 +115,7 @@ def run_learning(task_data, prior_dict, prm, model_type, optim_func, optim_args,
     test_acc = run_test()
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name='Meta_Testing', verbose=verbose)
 
-    return (1 - test_acc)
+    test_err = 1 - test_acc
+    return test_err

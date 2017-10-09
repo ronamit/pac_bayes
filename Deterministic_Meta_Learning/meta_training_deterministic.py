@@ -7,19 +7,28 @@ import numpy as np
 
 from Models.models_standard import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, net_L1_norm, correct_rate
+from Utils.common import count_correct, grad_step, net_L1_norm, correct_rate, get_loss_criterion, write_result
 from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_complexity_term
 
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
 # -------------------------------------------------------------------------------------------
-def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule,):
+def run_meta_learning(train_tasks_data, prm, model_type):
 
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
+
+    # Unpack parameters:
+    optim_func, optim_args, lr_schedule =\
+        prm.optim_func, prm.optim_args, prm.lr_schedule
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
+
+
     n_tasks = len(train_tasks_data)
 
     # Create posterior models for each task:
@@ -27,6 +36,8 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
     prior_means_model = get_model(model_type, prm)
+    log_var_model_prm = prm
+    log_var_model_prm.weights_init_bias = -10 # set the initial sigma to a low value
     prior_log_vars_model = get_model(model_type, prm)
 
     # number of batches from each task:
@@ -140,11 +151,11 @@ def run_meta_learning(train_tasks_data, prm, model_type, optim_func, optim_args,
     # -----------------------------------------------------------------------------------------------------------#
 
     run_name = cmn.gen_run_name('Meta-Training')
-    cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-    cmn.write_result(str(prm), prm.log_file)
-    cmn.write_result(cmn.get_model_string(prior_means_model), prm.log_file)
-    cmn.write_result(str(optim_func) + str(optim_args) +  str(lr_schedule), prm.log_file)
-    cmn.write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
+    write_result('-'*10+run_name+'-'*10, prm.log_file)
+    write_result(str(prm), prm.log_file)
+    write_result(cmn.get_model_string(prior_means_model), prm.log_file)
+    write_result('Total number of steps: {}'.format(n_meta_batches * prm.num_epochs), prm.log_file)
+    write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs

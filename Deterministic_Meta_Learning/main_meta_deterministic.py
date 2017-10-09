@@ -10,7 +10,7 @@ from Deterministic_Meta_Learning import meta_training_deterministic, meta_testin
 from Models.models_standard import get_model
 from Single_Task import learn_single_standard
 from Utils import common as cmn, data_gen
-from Utils.common import save_models_dict, load_models_dict, set_random_seed
+from Utils.common import save_models_dict, load_models_dict, set_random_seed, write_result
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -37,7 +37,7 @@ parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=30)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
-                    default=1e-2)
+                    default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
@@ -56,36 +56,42 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-model_type = 'FcNet3' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
+model_type = 'FcNet' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
+
+# Weights initialization (for standard models):
+prm.weights_init_std = 0.1
+prm.weights_init_bias = 0.0
 
 # Loss criterion
-loss_criterion = cmn.get_loss_criterion(prm.loss_type)
+prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)
 
 #  Define optimizer:
-# optim_func, optim_args = optim.Adam,  {'lr': prm.lr,} #   'weight_decay': 1e-4
-optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #   'weight_decay': 1e-4
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
-lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 20]}
-# lr_schedule = {} # No decay
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 20]}
+prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes' /
-prm.hyper_prior_factor = 1e-5
+prm.complexity_type = 'Variational_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes' /
+prm.hyper_prior_factor = 1e-6
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
 n_train_tasks = 10
-train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
+write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
+
+train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-load_pretrained_prior = False  # False \ True
+load_pretrained_prior = True  # False \ True
 dir_path = './saved'
 
 if load_pretrained_prior:
@@ -99,8 +105,8 @@ if load_pretrained_prior:
 
 else:
     # Meta-training to learn prior:
-    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data,
-                                                               prm, model_type, optim_func, optim_args, loss_criterion, lr_schedule)
+    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data, prm, model_type)
+
     # save learned prior:
     save_models_dict(prior_dict, dir_path)
     print('Trained prior saved in ' + dir_path)
@@ -110,40 +116,43 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 1
-limit_train_samples = 1000
+n_test_tasks = 5
+limit_train_samples = 2000
+
+write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
+             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
+
 test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
 # -------------------------------------------------------------------------------
 
-test_err_avg = 0
+
+test_err_avg_mt = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err = meta_testing_deterministic.run_learning(task_data, prior_dict, prm,
-                                                       model_type, optim_func, optim_args, loss_criterion,
-                                                       lr_schedule, init_from_prior)
-    test_err_avg += test_err / n_test_tasks
+                                                       model_type, init_from_prior=init_from_prior)
+    test_err_avg_mt += test_err / n_test_tasks
 
 
 # -------------------------------------------------------------------------------------------
 #  Compare to standard learning
 # -------------------------------------------------------------------------------------------
 
-test_err_avg2 = 0
+test_err_sd = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type,
-                                                  optim_func, optim_args, loss_criterion, lr_schedule)
-    test_err_avg2 += test_err / n_test_tasks
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type,  verbose=0,)
+    test_err_sd += test_err / n_test_tasks
 
 
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
-cmn.write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-cmn.write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
-cmn.write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)
+write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg_mt), prm.log_file)
+write_result('Standard - Avg test err: {0}%'.format(100 * test_err_sd), prm.log_file)
