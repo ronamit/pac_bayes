@@ -59,8 +59,10 @@ set_random_seed(prm.seed)
 model_type = 'FcNet' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
 
 # Weights initialization (for standard models):
-prm.weights_init_std = 0.1
-prm.weights_init_bias = 0.0
+# None = use default initializer
+prm.weights_init_std = None
+prm.weights_init_bias = None
+
 
 # Loss criterion
 prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)
@@ -91,7 +93,7 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 
 if mode == 'MetaTrain':

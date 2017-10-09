@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-import timeit
+import timeit, copy
 
 import numpy as np
 
@@ -36,8 +36,8 @@ def run_meta_learning(train_tasks_data, prm, model_type):
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
     prior_means_model = get_model(model_type, prm)
-    log_var_model_prm = prm
-    log_var_model_prm.weights_init_bias = -10 # set the initial sigma to a low value
+    log_var_model_prm = copy.copy(prm)
+    log_var_model_prm.weights_init_bias = -10  # set the initial sigma to a low value
     prior_log_vars_model = get_model(model_type, prm)
 
     # number of batches from each task:
