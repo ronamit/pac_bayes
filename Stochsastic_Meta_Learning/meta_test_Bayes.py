@@ -6,7 +6,7 @@ import timeit
 from Models.models_Bayes import get_bayes_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
-from Utils.common import grad_step, correct_rate, get_loss_criterion
+from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
 
 
 def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, verbose=1):
@@ -82,10 +82,10 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     # -----------------------------------------------------------------------------------------------------------#
     run_name = cmn.gen_run_name('Meta-Testing')
     if verbose == 1:
-        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-        cmn.write_result(str(prm), prm.log_file)
-        cmn.write_result(model_type, prm.log_file)
-        cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
+        write_result('-'*10+run_name+'-'*10, prm.log_file)
+        write_result(str(prm), prm.log_file)
+        write_result(model_type, prm.log_file)
+        write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -102,5 +102,5 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type, verbose=verbose)
 
-
-    return (1 - test_acc)
+    test_err = 1 - test_acc
+    return test_err

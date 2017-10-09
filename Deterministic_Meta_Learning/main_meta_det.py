@@ -6,7 +6,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Deterministic_Meta_Learning import meta_training_deterministic, meta_testing_deterministic
+from Deterministic_Meta_Learning import meta_train_det, meta_test_det
 from Models.models_standard import get_model
 from Single_Task import learn_single_standard
 from Utils import common as cmn, data_gen
@@ -96,7 +96,7 @@ dir_path = './saved'
 
 if mode == 'MetaTrain':
     # Meta-training to learn prior:
-    prior_dict = meta_training_deterministic.run_meta_learning(train_tasks_data, prm, model_type)
+    prior_dict = meta_train_det.run_meta_learning(train_tasks_data, prm, model_type)
 
     # save learned prior:
     save_models_dict(prior_dict, dir_path)
@@ -135,8 +135,8 @@ test_err_avg_mt = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err = meta_testing_deterministic.run_learning(task_data, prior_dict, prm,
-                                                       model_type, init_from_prior=init_from_prior)
+    test_err = meta_test_det.run_learning(task_data, prior_dict, prm,
+                                          model_type, init_from_prior=init_from_prior, verbose=0)
     test_err_avg_mt += test_err / n_test_tasks
 
 
@@ -148,7 +148,7 @@ test_err_sd = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type,  verbose=0,)
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type, verbose=0)
     test_err_sd += test_err / n_test_tasks
 
 

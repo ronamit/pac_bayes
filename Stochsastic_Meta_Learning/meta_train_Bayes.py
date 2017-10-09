@@ -5,10 +5,10 @@ import timeit
 
 import numpy as np
 
-from Models.models_standard import get_model
+from Models.models_Bayes import get_bayes_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, net_L1_norm, correct_rate, get_loss_criterion, write_result
-from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_complexity_term
+from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
+from Utils.common import grad_step, net_L1_norm, correct_rate, get_loss_criterion, write_result
 
 
 # -------------------------------------------------------------------------------------------
@@ -16,29 +16,24 @@ from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_com
 # -------------------------------------------------------------------------------------------
 def run_meta_learning(train_tasks_data, prm, model_type):
 
-
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
-
     # Unpack parameters:
     optim_func, optim_args, lr_schedule =\
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
+
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
-
 
     n_tasks = len(train_tasks_data)
 
     # Create posterior models for each task:
-    posteriors_models = [get_model(model_type, prm) for _ in range(n_tasks)]
+    posteriors_models = [get_bayes_model(model_type, prm) for _ in range(n_tasks)]
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
-    prior_means_model = get_model(model_type, prm)
-    log_var_model_prm = prm
-    log_var_model_prm.weights_init_bias = -10 # set the initial sigma to a low value
-    prior_log_vars_model = get_model(model_type, prm)
+    prior_model = get_bayes_model(model_type, prm)
 
     # number of batches from each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
@@ -52,12 +47,13 @@ def run_meta_learning(train_tasks_data, prm, model_type):
         all_post_param += post_params
 
     # Create optimizer for all parameters (posteriors + prior)
-    prior_params = list(prior_means_model.parameters()) + list(prior_log_vars_model.parameters())
+    prior_params = list(prior_model.parameters())
     all_params = all_post_param + prior_params
     all_optimizer = optim_func(all_params, **optim_args)
 
     # number of training samples in each task :
     n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
+
 
 
     # -------------------------------------------------------------------------------------------
@@ -69,6 +65,8 @@ def run_meta_learning(train_tasks_data, prm, model_type):
         task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in range(n_tasks)]
 
         for i_batch in range(n_meta_batches):
+
+            eps_std = get_eps_std(i_epoch, i_batch, n_meta_batches, prm)
 
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
@@ -82,16 +80,20 @@ def run_meta_learning(train_tasks_data, prm, model_type):
                 post_model = posteriors_models[i_task]
                 post_model.train()
 
+                # Monte-Carlo iterations:
+                n_MC = prm.n_MC if eps_std > 0 else 1
+                task_empirical_loss = 0
+                for i_MC in range(n_MC):
                 # get batch variables:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+                    inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-                # Empirical Loss on current task:
-                outputs = post_model(inputs)
-                task_empirical_loss = loss_criterion(outputs, targets)
+                    # Empirical Loss on current task:
+                    outputs = post_model(inputs, eps_std)
+                    task_empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
 
                 # Intra-task complexity of current task:
-                task_complexity = get_weights_complexity_term(
-                    prm.complexity_type, prior_means_model, prior_log_vars_model, posteriors_models[i_task],
+                task_complexity = get_posterior_complexity_term(
+                    prm.complexity_type, prior_model, post_model,
                     n_samples_list[i_task])
 
                 sum_empirical_loss += task_empirical_loss
@@ -100,8 +102,7 @@ def run_meta_learning(train_tasks_data, prm, model_type):
             # end tasks loop
 
             # Hyper-prior term:
-            hyperprior = net_L1_norm(prior_log_vars_model) + net_L1_norm(prior_log_vars_model)
-            hyperprior *= np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
+            hyperprior = net_L1_norm(prior_model) * np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
 
             # Total objective:
             total_objective = (1 / n_tasks) * (sum_empirical_loss + sum_intra_task_comp) + hyperprior
@@ -113,7 +114,9 @@ def run_meta_learning(train_tasks_data, prm, model_type):
             log_interval = 500
             if i_batch % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
+                      'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                      format(eps_std, sum_empirical_loss.data[0]/ n_tasks, sum_intra_task_comp.data[0]/ n_tasks, hyperprior.data[0]))
         # end batches loop
     # end run_epoch()
 
@@ -122,39 +125,33 @@ def run_meta_learning(train_tasks_data, prm, model_type):
     # Evaluate the mean loss on samples from the test sets of the training tasks
     # --------------------------------------------------------------------------------------------
     def run_test():
-        test_acc_list = []
+        test_acc_avg = 0
 
         for i_task in range(n_tasks):
             model = posteriors_models[i_task]
             test_loader = train_tasks_data[i_task]['test']
-            model.eval()
-            test_loss = 0
-            n_correct = 0
-            for batch_data in test_loader:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-                outputs = model(inputs)
-                test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
-                n_correct += count_correct(outputs, targets)
+            test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm)
 
             n_test_samples = len(test_loader.dataset)
-            n_test_batches = len(test_loader)
-            test_loss = test_loss.data[0] / n_test_batches
-            test_acc = n_correct / n_test_samples
-            print('Task {}, Test set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-                i_task, test_loss, test_acc, n_correct, n_test_samples))
-            test_acc_list.append(test_acc)
 
-        return test_acc_list
+            print('Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
+                prm.test_type, i_task, test_loss, test_acc, n_test_samples))
+
+            test_acc_avg += (1 / n_tasks) * test_acc
+
+        return test_acc_avg
 
     # -----------------------------------------------------------------------------------------------------------#
+    # Main script
+    # -----------------------------------------------------------------------------------------------------------#
+
     # Update Log file
-    # -----------------------------------------------------------------------------------------------------------#
-
     run_name = cmn.gen_run_name('Meta-Training')
     write_result('-'*10+run_name+'-'*10, prm.log_file)
     write_result(str(prm), prm.log_file)
-    write_result(cmn.get_model_string(prior_means_model), prm.log_file)
+    write_result(cmn.get_model_string(prior_model), prm.log_file)
     write_result('Total number of steps: {}'.format(n_meta_batches * prm.num_epochs), prm.log_file)
+
     write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
@@ -169,13 +166,10 @@ def run_meta_learning(train_tasks_data, prm, model_type):
     stop_time = timeit.default_timer()
 
     # Test:
-    test_acc = run_test()
+    test_acc_avg = run_test()
 
     # Update Log file:
-    test_acc_mean = sum(test_acc, 0) / n_tasks
-    cmn.write_final_result(test_acc_mean, stop_time - start_time, prm.log_file)
-
+    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
     # Return learned prior:
-    prior_dict = {'means_model': prior_means_model, 'log_var_model': prior_log_vars_model}
-    return prior_dict
+    return prior_model

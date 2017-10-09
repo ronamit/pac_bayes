@@ -5,7 +5,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_testing_Bayes, meta_training_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
 from Models import models_Bayes
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen

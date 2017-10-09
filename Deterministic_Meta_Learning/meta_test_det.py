@@ -6,7 +6,7 @@ import timeit
 from Models.models_standard import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct, grad_step, correct_rate, get_loss_criterion, write_result
-from Deterministic_Meta_Learning.meta_deterministic_utils import get_weights_complexity_term
+from Deterministic_Meta_Learning.utils_meta_det import get_weights_complexity_term
 
 
 def run_learning(task_data, prior_dict, prm, model_type, init_from_prior,  verbose=1):

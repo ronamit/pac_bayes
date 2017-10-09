@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import torch
 from torch.autograd import Variable
-
+import math
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct
 
@@ -107,7 +107,7 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
-        complex_term = np.sqrt(1 / n_samples) * kld
+        complex_term = math.sqrt(1 / n_samples) * kld
 
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,

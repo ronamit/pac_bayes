@@ -6,7 +6,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_testing_Bayes, meta_training_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
 from Models import models_Bayes
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
@@ -60,7 +60,7 @@ set_random_seed(prm.seed)
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 model_type_standard = 'FcNet'  # for comparision
 
-# Weights initialization:
+# Weights initialization (for Bayes models):
 prm.log_var_init_std = 0.1
 prm.log_var_init_bias = -10
 prm.mu_init_std = 0.1
@@ -69,6 +69,10 @@ prm.mu_init_bias = 0.0
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much variance so that complexity term won;t be too large
 
+# Weights initialization (for standard models):
+# None = use default initializer
+prm.weights_init_std = None
+prm.weights_init_bias = None
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 3
@@ -82,7 +86,8 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #'weight_decay': 1
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_McAllaster'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity'
+prm.complexity_type = 'Variational_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity' / 'PAC_Bayes_Pentina'
+print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-6  #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
@@ -102,8 +107,10 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 5
-# Why it worked with just one task???
+n_train_tasks = 6
+
+write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
+
 train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
 # -------------------------------------------------------------------------------------------
@@ -117,7 +124,7 @@ f_name='prior'
 
 if mode == 'MetaTrain':
     # Meta-training to learn prior:
-    prior_model = meta_training_Bayes.run_meta_learning(train_tasks_data, prm, model_type)
+    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm, model_type)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)
@@ -156,8 +163,8 @@ for i_task in range(n_test_tasks):
     if mode == 'FromScratch':
         test_err = learn_single_Bayes.run_learning(task_data, prm, model_type, verbose=0)
     else:
-        test_err = meta_testing_Bayes.run_learning(task_data, prior_model, prm,
-                                                   model_type, init_from_prior, verbose=0)
+        test_err = meta_test_Bayes.run_learning(task_data, prior_model, prm,
+                                                model_type, init_from_prior, verbose=0)
     test_err_avg += test_err / n_test_tasks
 
 

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 import argparse
 
-
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -29,7 +29,7 @@ set_random_seed(prm.seed)
 
 
 dir_path = './saved'
-f_name='prior_PermuteLabels'
+f_name='prior_PermuteLabels_MA' # PermuteLabels_VB \ prior_PermuteLabels_MA
 
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 #  TODO: get prm from file
@@ -46,8 +46,28 @@ prior_model = models_Bayes.get_bayes_model(model_type, prm)
 # Then load the weights:
 load_model_state(prior_model, dir_path, name=f_name)
 
-def get_params_statistics(model, name1, name2):
-    param_list = [named_param for named_param in model.named_parameters() if name1 in named_param[0] and name2 in named_param[0]]
+
+def extract_param_list(model, name1, name2):
+    return [named_param for named_param in model.named_parameters() if name1 in named_param[0] and name2 in named_param[0]]
+
+
+w_mu_params = extract_param_list(prior_model,'_mean', '.w_')
+b_mu_params = extract_param_list(prior_model,'_mean', '.b_')
+w_log_var_params = extract_param_list(prior_model,'_log_var', '.w_')
+b_log_var_params = extract_param_list(prior_model,'_log_var', '.b_')
+
+n_layers = len(w_mu_params)
+
+def log_var_to_sigma(log_var_params):
+    return  [(named_param[0].replace('_log_var', '_sigma'),
+              0.5 * torch.exp(named_param[1]))
+             for named_param in log_var_params]
+
+w_sigma_params = log_var_to_sigma(w_log_var_params)
+b_sigma_params = log_var_to_sigma(b_log_var_params)
+
+
+def get_params_statistics(param_list):
     n_list = len(param_list)
     mean_list = np.zeros(n_list)
     std_list = np.zeros(n_list)
@@ -59,9 +79,23 @@ def get_params_statistics(model, name1, name2):
         mean_list[i_param] = param_mean
         std_list[i_param] = param_std
         print('Parameter name: {}, mean value: {}, STD: {}'.format(param_name, param_mean, param_std))
-
-    plot_statistics(mean_list, std_list, name1, name2)
     return mean_list, std_list
+
+
+get_params_statistics(w_sigma_params)
+get_params_statistics(w_mu_params)
+
+def calc_SNR(mu_params, sigma_params):
+    w_snr = []
+    for i_layer in range(n_layers):
+        named_param = (mu_params[i_layer][0].replace('_mean', '_SNR'),
+                       torch.abs(mu_params[i_layer][1] / sigma_params[i_layer][1]))
+        w_snr.append(named_param)
+    return w_snr
+
+get_params_statistics(calc_SNR(w_mu_params, w_sigma_params))
+
+get_params_statistics(calc_SNR(b_mu_params, b_sigma_params))
 
 def plot_statistics(mean_list, std_list, name1, name2):
     plt.figure()
@@ -73,41 +107,4 @@ def plot_statistics(mean_list, std_list, name1, name2):
     plt.ylabel('value')
 
 
-
-log_var_w_mean, log_var_w_srd = get_params_statistics(prior_model, '_log_var', '.w_')
-mu_w_mean, mu_w_srd = get_params_statistics(prior_model, '_mean', '.w_')
-
 plt.show()
-
-# log_var_params = [named_param for named_param in prior_model.named_parameters() if 'log_var' in named_param[0]]
-#
-# b_log_var = [named_param for named_param in log_var_params if '.b_' in named_param[0]]
-# w_log_var = [named_param for named_param in log_var_params if '.w_' in named_param[0]]
-#
-# n_layers = len(b_log_var)
-# b_log_var_mean = np.zeros(n_layers)
-# b_log_var_std = np.zeros(n_layers)
-#
-#
-#
-# w_mean = np.zeros(n_layers)
-# w_std = np.zeros(n_layers)
-# for i_param, named_param in enumerate(w_log_var):
-#     param_name = named_param[0]
-#     param_vals = named_param[1]
-#     param_mean =  param_vals.mean().data[0]
-#     param_std = param_vals.std().data[0]
-#     w_mean[i_param] = param_mean
-#     w_std[i_param] = param_std
-#     print('Parameter name: {}, mean value: {}, STD: {}'.format(param_name, param_mean, param_std))
-#
-#
-#
-# plt.figure()
-# plt.errorbar(range(n_layers), b_log_var_mean, yerr=b_log_var_std)
-# plt.title("Statistics of the prior log-var of the bias weights")
-# plt.xticks(np.arange(n_layers))
-# plt.xlabel('Layer')
-# plt.ylabel('log-var param.')
-
-

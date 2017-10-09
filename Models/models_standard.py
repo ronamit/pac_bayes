@@ -5,11 +5,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+import math
 from Utils import data_gen
 
 
 # Note: the net return scores (not normalized probabilities)
+
+
 
 def get_model(model_type, prm):
 
@@ -18,6 +20,17 @@ def get_model(model_type, prm):
     im_size =info['im_size']
     n_classes = info['n_classes']
     input_size = info['input_size']
+
+    def init_normal(model, prm):
+        init_std = prm.weights_init_std
+        init_bias = prm.weights_init_bias
+        # Set initial values;
+        if init_bias and init_std:
+            print('Initializing model with N({}, {}^2)'.format(init_bias, init_std))
+            for param in model.parameters():
+                param.data.normal_(mean=init_bias, std=init_std)
+        else:
+            print('Initializing model with default initializer...')
 
     # -------------------------------------------------------------------------------------------
     #  ConvNet
@@ -34,6 +47,7 @@ def get_model(model_type, prm):
             n_conv_size = self._get_conv_output()
             self.fc1 = nn.Linear(n_conv_size, n_hidden_fc1)
             self.fc_out = nn.Linear(n_hidden_fc1, n_classes)
+            init_normal(self, prm)
 
         # generate dummy input sample and forward to get shape after conv layers
         def _get_conv_output(self):
@@ -70,6 +84,8 @@ def get_model(model_type, prm):
             self.fc1 = nn.Linear(input_size, n_hidden1)
             self.fc2 = nn.Linear(n_hidden1, n_hidden2)
             self.fc_out = nn.Linear(n_hidden2, n_classes)
+            init_normal(self, prm)
+
 
         def forward(self, x):
             x = x.view(-1, input_size)  # flatten image
@@ -90,6 +106,7 @@ def get_model(model_type, prm):
             self.fc2 = nn.Linear(n_hidden1, n_hidden2)
             self.fc3 = nn.Linear(n_hidden2, n_hidden3)
             self.fc_out = nn.Linear(n_hidden3, n_classes)
+
 
         def forward(self, x):
             x = x.view(-1, input_size)  # flatten image
