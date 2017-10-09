@@ -24,14 +24,19 @@ def get_model(model_type, prm):
     def init_normal(model, prm):
         init_std = prm.weights_init_std
         init_bias = prm.weights_init_bias
+        is_bias = not init_bias is None
+        is_std = not init_std is None
         # Set initial values;
-        if init_bias and init_std:
+        if is_bias and is_std:
             print('Initializing model with N({}, {}^2)'.format(init_bias, init_std))
             for param in model.parameters():
                 param.data.normal_(mean=init_bias, std=init_std)
+        elif (is_bias and not is_std) or (is_std and not is_bias):
+            raise ValueError('weights_init_std and weights_init_bias can only be None if both are None')
         else:
             print('Initializing model with default initializer...')
 
+    # -----------------------------------------------------------------
     # -------------------------------------------------------------------------------------------
     #  ConvNet
     # -------------------------------------------------------------------------------------------

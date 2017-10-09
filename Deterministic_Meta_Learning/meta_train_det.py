@@ -38,6 +38,8 @@ def run_meta_learning(train_tasks_data, prm, model_type):
     prior_means_model = get_model(model_type, prm)
     log_var_model_prm = copy.copy(prm)
     log_var_model_prm.weights_init_bias = -10  # set the initial sigma to a low value
+    log_var_model_prm.weights_init_std = 0.1 # set the initial sigma to a low value
+    # TODO: better way to set initial values
     prior_log_vars_model = get_model(model_type, log_var_model_prm)
 
     # number of batches from each task:
