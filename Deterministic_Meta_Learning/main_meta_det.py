@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=30)
+                    default=40)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -60,8 +60,8 @@ model_type = 'FcNet' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
 
 # Weights initialization (for standard models):
 # None = use default initializer
-prm.weights_init_std = None
-prm.weights_init_bias = None
+prm.weights_init_std = None  # 0.1
+prm.weights_init_bias = None  # 0.0
 
 
 # Loss criterion
@@ -76,14 +76,15 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #   'weight_decay'
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'Variational_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes' /
+prm.complexity_type = 'Variational_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity' / 'PAC_Bayes_Pentina'
+print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-6
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 5
+n_train_tasks = 10
 
 write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
 

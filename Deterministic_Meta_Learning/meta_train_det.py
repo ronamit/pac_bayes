@@ -115,7 +115,9 @@ def run_meta_learning(train_tasks_data, prm, model_type):
             log_interval = 500
             if i_batch % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
+                    '\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                      format(sum_empirical_loss.data[0] / n_tasks, sum_intra_task_comp.data[0] / n_tasks, hyperprior.data[0]))
         # end batches loop
     # end run_epoch()
 

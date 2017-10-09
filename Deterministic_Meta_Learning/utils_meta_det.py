@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import torch
 import math
-
+import torch.nn.functional as F
 from Utils.common import get_param_from_model
 
 
@@ -12,15 +12,19 @@ from Utils.common import get_param_from_model
 # -------------------------------------------------------------------------------------------
 #  Intra-task complexity for deterministic posterior (point-wise)
 # -------------------------------------------------------------------------------------------
-def get_weights_complexity_term(complexity_type, prior_means_model, prior_log_vars_model, task_post_model, n_samples_task):
+def get_weights_complexity_term(complexity_type, prior_means_model, prior_log_vars_model, task_post_model, n_samples):
 
     neg_log_pdf = calc_neg_log_pdf(prior_means_model, prior_log_vars_model, task_post_model)
 
     if complexity_type == 'Variational_Bayes':
-        complex_term = (1 / n_samples_task) * neg_log_pdf
+        complex_term = (1 / n_samples) * neg_log_pdf
 
-    elif complexity_type == 'PAC_Bayes':
-        complex_term = torch.sqrt((1 / n_samples_task) * (neg_log_pdf + 10))
+    elif complexity_type == 'PAC_Bayes_McAllaster':
+        complex_term = torch.sqrt((1 / n_samples) * F.relu(neg_log_pdf + 1e10)) - np.sqrt((1 / n_samples) * (1e10))
+        # I subtracted a const. to keep values around zero
+
+    elif complexity_type == 'PAC_Bayes_Pentina':
+        complex_term = math.sqrt(1 / n_samples) * neg_log_pdf
 
     else:
 
