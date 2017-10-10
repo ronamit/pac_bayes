@@ -77,7 +77,7 @@ def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
     n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
     full_eps_std = 1.0
 
-    # We gradually increase epsilon's STD from 0 to 1.
+    # We gradually increase epsilon'PermuteLabels_Seeger.out STD from 0 to 1.
     # The reason is that using 1 from the start results in high variance gradients.
     iter_idx = i_epoch * n_meta_batches + batch_idx
     if iter_idx >= n_iter_stage_1:
@@ -111,9 +111,10 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_Seeger':
         # Seeger complexity is unique since it requires the empirical loss
+        small_num = 1e-9 # to avoid nan due to numerical errors
         delta = 0.95
         seeger_eps = (1 / n_samples) * (kld + math.log(2 * np.sqrt(n_samples) / delta))
-        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss)
+        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss + small_num)
 
 
     elif complexity_type == 'Variational_Bayes':

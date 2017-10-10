@@ -29,16 +29,17 @@ set_random_seed(prm.seed)
 
 
 dir_path = './saved'
-f_name='PermutePixels_VB' # PermuteLabels_VB \ prior_PermuteLabels_MA \ PermutePixels_VB
+f_name='PermuteLabels_Seeger' # PermuteLabels_VB \ prior_PermuteLabels_MA \ PermutePixels_VB \ PermuteLabels_Seeger
 
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 #  TODO: get prm from file
 
+
 # Weights initialization:
-prm.log_var_init_std = 0.1
-prm.log_var_init_bias = -10
-prm.mu_init_std = 0.1
-prm.mu_init_bias = 0.0
+prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+           'Bayes-log-var': {'bias': -10, 'std': 0.1},
+           'Standard-Net': {'bias': None, 'std': None}}
+# None = use default initializer
 
 # Loads  previously training prior.
 # First, create the model:

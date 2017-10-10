@@ -63,7 +63,7 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
 
             # Total objective:
             intra_task_comp = get_posterior_complexity_term(
-                prm.complexity_type, prior_model, post_model, n_train_samples)
+                prm.complexity_type, prior_model, post_model, n_train_samples, empirical_loss)
             total_objective = empirical_loss + intra_task_comp
 
             # Take gradient step:

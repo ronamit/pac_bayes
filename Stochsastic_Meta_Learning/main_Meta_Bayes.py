@@ -26,7 +26,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' 
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -104,7 +104,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 5
+n_train_tasks = 10
 
 write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
 
@@ -140,7 +140,7 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 1
+n_test_tasks = 5
 limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
