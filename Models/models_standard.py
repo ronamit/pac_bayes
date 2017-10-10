@@ -28,13 +28,14 @@ def get_model(model_type, prm, init_type='Standard-Net'):
         is_std = not init_std is None
         # Set initial values;
         if is_bias and is_std:
-            print('Initializing model with N({}, {}^2)'.format(init_bias, init_std))
+            # print('Initializing model with N({}, {}^2)'.format(init_bias, init_std))
             for param in model.parameters():
                 param.data.normal_(mean=init_bias, std=init_std)
         elif (is_bias and not is_std) or (is_std and not is_bias):
             raise ValueError('weights_init_std and weights_init_bias can only be None if both are None')
         else:
-            print('Initializing model with default initializer...')
+            # print('Initializing model with default initializer...')
+            pass
 
     # -----------------------------------------------------------------
     # -------------------------------------------------------------------------------------------

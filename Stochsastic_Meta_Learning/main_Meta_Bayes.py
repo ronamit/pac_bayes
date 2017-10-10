@@ -61,7 +61,7 @@ model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 model_type_standard = 'FcNet'  # for comparision
 
 # Weights initialization:
-prm.init ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
            'Bayes-log-var': {'bias': -10, 'std': 0.1},
            'Standard-Net': {'bias': None, 'std': None}}
 # None = use default initializer
@@ -82,7 +82,8 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #'weight_decay': 1
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'Variational_Bayes'   #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'KLD' / 'NoComplexity' / 'PAC_Bayes_Pentina'
+prm.complexity_type = 'PAC_Bayes_Seeger'
+#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-6  #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
@@ -113,7 +114,7 @@ train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_ta
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 

@@ -60,7 +60,7 @@ set_random_seed(prm.seed)
 model_type = 'FcNet' # 'FcNet' \ 'ConvNet'
 
 # Weights initialization:
-prm.init ={'Standard-Net': {'bias': None, 'std': None}}
+prm.inits ={'Standard-Net': {'bias': None, 'std': None}}
 # None = use default initializer
 
 #  Define optimizer:

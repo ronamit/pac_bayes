@@ -58,7 +58,7 @@ model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
 prm.model_type = model_type
 
 # Weights initialization:
-prm.init ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
            'Bayes-log-var': {'bias': -10, 'std': 0.1},
            'Standard-Net': {'bias': None, 'std': None}}
 # None = use default initializer

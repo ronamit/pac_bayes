@@ -95,7 +95,7 @@ def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_samples):
+def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_samples, task_empirical_loss):
     
     kld = get_total_kld(prior_model, post_model)
 
@@ -108,6 +108,13 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_Pentina':
         complex_term = math.sqrt(1 / n_samples) * kld
+
+    elif complexity_type == 'PAC_Bayes_Seeger':
+        # Seeger complexity is unique since it requires the empirical loss
+        delta = 0.95
+        seeger_eps = (1 / n_samples) * (kld + math.log(2 * np.sqrt(n_samples) / delta))
+        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss)
+
 
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,

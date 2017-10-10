@@ -93,7 +93,7 @@ def run_meta_learning(train_tasks_data, prm, model_type):
                 # Intra-task complexity of current task:
                 task_complexity = get_posterior_complexity_term(
                     prm.complexity_type, prior_model, post_model,
-                    n_samples_list[i_task])
+                    n_samples_list[i_task], task_empirical_loss)
 
                 sum_empirical_loss += task_empirical_loss
                 sum_intra_task_comp += task_complexity
