@@ -13,7 +13,7 @@ from Utils import data_gen
 
 
 
-def get_model(model_type, prm, net_type='Standard-Net'):
+def get_model(model_type, prm, init_type='Standard-Net'):
 
     info = data_gen.get_info(prm)
     color_channels = info['color_channels']
@@ -22,8 +22,8 @@ def get_model(model_type, prm, net_type='Standard-Net'):
     input_size = info['input_size']
 
     def init_normal(model, prm):
-        init_bias = prm.inits[net_type]['bias']
-        init_std = prm.inits[net_type]['std']
+        init_bias = prm.inits[init_type]['bias']
+        init_std = prm.inits[init_type]['std']
         is_bias = not init_bias is None
         is_std = not init_std is None
         # Set initial values;
