@@ -59,10 +59,9 @@ set_random_seed(prm.seed)
 #  Define model:
 model_type = 'FcNet' # 'FcNet' \ 'ConvNet'
 
-# Weights initialization (for standard models):
+# Weights initialization:
+prm.init ={'Standard-Net': {'bias': None, 'std': None}}
 # None = use default initializer
-prm.weights_init_std = None
-prm.weights_init_bias = None
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}

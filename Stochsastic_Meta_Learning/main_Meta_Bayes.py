@@ -60,19 +60,15 @@ set_random_seed(prm.seed)
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 model_type_standard = 'FcNet'  # for comparision
 
-# Weights initialization (for Bayes models):
-prm.log_var_init_std = 0.1
-prm.log_var_init_bias = -10
-prm.mu_init_std = 0.1
-prm.mu_init_bias = 0.0
+# Weights initialization:
+prm.init ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+           'Bayes-log-var': {'bias': -10, 'std': 0.1},
+           'Standard-Net': {'bias': None, 'std': None}}
+# None = use default initializer
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
-# 2.  don't init with too much variance so that complexity term won;t be too large
+# 2.  don't init with too much std so that complexity term won't be too large
 
-# Weights initialization (for standard models):
-# None = use default initializer
-prm.weights_init_std = None
-prm.weights_init_bias = None
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 3
@@ -107,7 +103,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the training tasks:
 # -------------------------------------------------------------------------------------------
-n_train_tasks = 6
+n_train_tasks = 5
 
 write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
 

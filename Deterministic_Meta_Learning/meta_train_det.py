@@ -35,12 +35,9 @@ def run_meta_learning(train_tasks_data, prm, model_type):
     posteriors_models = [get_model(model_type, prm) for _ in range(n_tasks)]
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
-    prior_means_model = get_model(model_type, prm)
-    log_var_model_prm = copy.copy(prm)
-    log_var_model_prm.weights_init_bias = -10  # set the initial sigma to a low value
-    log_var_model_prm.weights_init_std = 0.1 # set the initial sigma to a low value
-    # TODO: better way to set initial values
-    prior_log_vars_model = get_model(model_type, log_var_model_prm)
+    prior_means_model = get_model(model_type, prm, 'Bayes-Mu')
+
+    prior_log_vars_model = get_model(model_type, prm, 'Bayes-log-var')
 
     # number of batches from each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]

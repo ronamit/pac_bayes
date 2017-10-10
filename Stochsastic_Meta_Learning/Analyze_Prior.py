@@ -29,7 +29,7 @@ set_random_seed(prm.seed)
 
 
 dir_path = './saved'
-f_name='prior_PermuteLabels_MA' # PermuteLabels_VB \ prior_PermuteLabels_MA
+f_name='PermutePixels_VB' # PermuteLabels_VB \ prior_PermuteLabels_MA \ PermutePixels_VB
 
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
 #  TODO: get prm from file
@@ -97,14 +97,15 @@ get_params_statistics(calc_SNR(w_mu_params, w_sigma_params))
 
 get_params_statistics(calc_SNR(b_mu_params, b_sigma_params))
 
-def plot_statistics(mean_list, std_list, name1, name2):
+def plot_statistics(mean_list, std_list, name):
     plt.figure()
     n_list = len(mean_list)
     plt.errorbar(range(n_list), mean_list, yerr=std_list)
-    plt.title("Statistics of the prior {} - {}".format(name1, name2))
+    plt.title("Statistics of the prior {} ".format(name))
     plt.xticks(np.arange(n_list))
     plt.xlabel('Layer')
     plt.ylabel('value')
 
+plot_statistics(*get_params_statistics(w_log_var_params), name='weights log-var')
 
 plt.show()

@@ -58,11 +58,13 @@ set_random_seed(prm.seed)
 #  Define model type (hypothesis class):
 model_type = 'FcNet' # 'FcNet' \ 'ConvNet'\ 'FcNet3'
 
-# Weights initialization (for standard models):
+# Weights initialization:
+prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+            'Bayes-log-var': {'bias': -10, 'std': 0.1},
+            'Standard-Net': {'bias': 0, 'std': 0.1}}
 # None = use default initializer
-prm.weights_init_std = None  # 0.1
-prm.weights_init_bias = None  # 0.0
-
+# Note:
+# 1.  don't init with too much std so that complexity term won't be too large
 
 # Loss criterion
 prm.loss_criterion = cmn.get_loss_criterion(prm.loss_type)

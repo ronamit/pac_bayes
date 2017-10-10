@@ -58,10 +58,12 @@ model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
 prm.model_type = model_type
 
 # Weights initialization:
-prm.log_var_init_std = 0.1
-prm.log_var_init_bias = -10  # start with small sigma - so gradients variance estimate will be low
-prm.mu_init_std = 0.1
-prm.mu_init_bias = 0.0
+prm.init ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
+           'Bayes-log-var': {'bias': -10, 'std': 0.1},
+           'Standard-Net': {'bias': None, 'std': None}}
+# None = use default initializer
+# Note:
+# 1. start with small sigma - so gradients variance estimate will be low
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 3
