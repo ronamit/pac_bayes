@@ -48,7 +48,6 @@ def get_data_loader(prm, limit_train_samples = None):
 
     # Create data loaders:
     kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True} if prm.cuda else {}
-    # kwargs = {'num_workers': 0, 'pin_memory': True} if prm.cuda else {}
 
     train_loader = data_utils.DataLoader(train_dataset, batch_size=prm.batch_size, shuffle=True, **kwargs)
     test_loader = data_utils.DataLoader(test_dataset, batch_size=prm.test_batch_size, shuffle=True, **kwargs)

@@ -43,7 +43,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
 
-parser.add_argument('--log-file', type=str, help='Name of file to save log (default: no save)',
+parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
 
 prm = parser.parse_args()

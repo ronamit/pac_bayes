@@ -26,7 +26,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' 
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -46,7 +46,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
 
-parser.add_argument('--log-file', type=str, help='Name of file to save log (default: no save)',
+parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
 
 prm = parser.parse_args()
@@ -76,6 +76,7 @@ prm.n_MC = 3
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+# Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
 #lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150]}
@@ -105,7 +106,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 
@@ -113,7 +114,7 @@ f_name='prior'
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 5
+    n_train_tasks = 20
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
@@ -139,7 +140,7 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 1
+n_test_tasks = 5
 limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
@@ -152,7 +153,7 @@ test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in r
 # -------------------------------------------------------------------------------
 write_result('Meta-Testing with transferred prior....', prm.log_file)
 
-test_err_avg = 0
+test_err_bayes_avg = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
@@ -161,7 +162,7 @@ for i_task in range(n_test_tasks):
     else:
         test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm,
                                                 model_type, init_from_prior, verbose=0)
-    test_err_avg += test_err / n_test_tasks
+    test_err_bayes_avg += test_err / n_test_tasks
 
 
 # -------------------------------------------------------------------------------------------
@@ -179,17 +180,17 @@ else:
 write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
-test_err_avg2 = 0
+test_err_avg_standard = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type_standard, verbose=0, initial_model=initial_model)
-    test_err_avg2 += test_err / n_test_tasks
+    test_err_avg_standard += test_err / n_test_tasks
 
 
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
-write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)
+write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_bayes_avg), prm.log_file)
+write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg_standard), prm.log_file)
