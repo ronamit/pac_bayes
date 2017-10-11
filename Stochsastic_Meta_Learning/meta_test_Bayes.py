@@ -103,4 +103,4 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type, verbose=verbose)
 
     test_err = 1 - test_acc
-    return test_err
+    return test_err, post_model

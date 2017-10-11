@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-
+import numpy as np
+import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 
@@ -11,6 +12,7 @@ from Models import models_Bayes
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
+from Utils.Bayes_utils import kld_element
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -58,7 +60,6 @@ set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
 model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
-model_type_standard = 'FcNet'  # for comparision
 
 # Weights initialization:
 prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
@@ -102,94 +103,78 @@ prm.full_eps_ratio_in_stage_2 = 0.3
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # -------------------------------------------------------------------------------------------
-#  Run Meta-Training
+#  Load pr-trained prior
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
-f_name='prior'
+f_name = 'PermuteLabels_Seeger2'  #  / 'PermuteLabels_Seeger2'
 
-
-if mode == 'MetaTrain':
-
-    # Generate the data sets of the training tasks:
-    n_train_tasks = 5
-    write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
-
-    # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm, model_type)
-    # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=f_name)
-    print('Trained prior saved in ' + f_path)
-
-
-elif mode == 'LoadPrior':
-
-    # Loads  previously training prior.
-    # First, create the model:
-    prior_model = models_Bayes.get_bayes_model(model_type, prm)
-    # Then load the weights:
-    load_model_state(prior_model, dir_path, name=f_name)
-    print('Pre-trained  prior loaded from ' + dir_path)
-else:
-    prior_model = None
+# Loads  previously training prior.
+# First, create the model:
+prior_model = models_Bayes.get_bayes_model(model_type, prm)
+# Then load the weights:
+load_model_state(prior_model, dir_path, name=f_name)
+print('Pre-trained  prior loaded from ' + dir_path)
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 1
 limit_train_samples = 2000
 
-write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
+print('-'*5 + 'Generating 1 test-task with at most {} training samples'.format(limit_train_samples)+'-'*5)
 
-test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
+test_task_data = data_gen.get_data_loader(prm, limit_train_samples)
 
-# -------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 #  Run Meta-Testing
 # -------------------------------------------------------------------------------
-write_result('Meta-Testing with transferred prior....', prm.log_file)
+print('Meta-Testing with transferred prior....')
 
-test_err_avg = 0
-for i_task in range(n_test_tasks):
-    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    if mode == 'FromScratch':
-        test_err = learn_single_Bayes.run_learning(task_data, prm, model_type, verbose=0)
-    else:
-        test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm,
-                                                model_type, init_from_prior, verbose=0)
-    test_err_avg += test_err / n_test_tasks
+test_err, post_model = meta_test_Bayes.run_learning(test_task_data, prior_model, prm,
+                                        model_type, init_from_prior, verbose=0)
+
+# --------------------------------------------------------------------------------
+#  Analyze
+# -------------------------------------------------------------------------------
 
 
-# -------------------------------------------------------------------------------------------
-#  Compare to standard learning
-# -------------------------------------------------------------------------------------------
-init_standard_with_prior = False # TODO: implement this
-if init_standard_with_prior:
-    initial_model = prior_model
-    write_result('Run standard learning using transferred prior as initial point...', prm.log_file)
-else:
-    initial_model = None
-    write_result('Run standard learning from scratch....', prm.log_file)
+prior_layers_list = list(prior_model.children())
+post_layers_list = list(post_model.children())
+n_layer = len(prior_layers_list)
+w_kld_per_layer = np.zeros(n_layer)
+b_kld_per_layer = np.zeros(n_layer)
+all_weight_kld_per_layer = np.zeros(n_layer)
 
 
-write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
+total_kld = 0
+for i_layer, prior_layer in enumerate(prior_layers_list):
+    post_layer = post_layers_list[i_layer]
 
-test_err_avg2 = 0
-for i_task in range(n_test_tasks):
-    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type_standard, verbose=0, initial_model=initial_model)
-    test_err_avg2 += test_err / n_test_tasks
+    w_kld_per_layer[i_layer] = kld_element(post_layer.w, prior_layer.w).data[0]
+    b_kld_per_layer[i_layer] = kld_element(post_layer.b, prior_layer.b).data[0]
+
+    all_weight_kld_per_layer[i_layer] = w_kld_per_layer[i_layer] + b_kld_per_layer[i_layer]
+
+    # normalize by the number of weights:
+    w_numel = prior_layer.in_dim * prior_layer.out_dim
+    b_numel = prior_layer.out_dim
+    w_kld_per_layer[i_layer] /= w_numel
+    b_kld_per_layer[i_layer] /= b_numel
+    all_weight_kld_per_layer[i_layer] /= w_numel + b_numel
 
 
-# -------------------------------------------------------------------------------------------
-#  Print results
-# -------------------------------------------------------------------------------------------
-write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_avg), prm.log_file)
-write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg2), prm.log_file)
+
+def plot_layes_kld(kld_per_layer, title_str):
+    plt.figure()
+    plt.plot(range(n_layer), kld_per_layer)
+    plt.title(title_str)
+    plt.xticks(np.arange(n_layer))
+    plt.xlabel('Layer')
+    plt.ylabel('value')
+
+
+plot_layes_kld(all_weight_kld_per_layer, "Mean KLD between posterior and prior per layer")
+
+
+plt.show()
