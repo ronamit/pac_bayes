@@ -26,7 +26,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' 
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Pixels')
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -74,7 +74,7 @@ prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
 prm.n_MC = 3
 
 #  Define optimizer:
-prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,} #'weight_decay': 1e-4
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,'weight_decay': 1e-4} #'weight_decay': 1e-4
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
@@ -94,21 +94,12 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.0  # 0.05
+prm.stage_1_ratio = 0.00  # 0.05
 prm.full_eps_ratio_in_stage_2 = 0.3
 # Note:
 
 # Test type:
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
-
-# -------------------------------------------------------------------------------------------
-# Generate the data sets of the training tasks:
-# -------------------------------------------------------------------------------------------
-n_train_tasks = 10
-
-write_result('-'*5 + 'Generating {} training-tasks'.format(n_train_tasks)+'-'*5, prm.log_file)
-
-train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
+prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -120,13 +111,21 @@ f_name='prior'
 
 
 if mode == 'MetaTrain':
+
+    # Generate the data sets of the training tasks:
+    n_train_tasks = 5
+    write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
+    train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
+
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm, model_type)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)
 
+
 elif mode == 'LoadPrior':
+
     # Loads  previously training prior.
     # First, create the model:
     prior_model = models_Bayes.get_bayes_model(model_type, prm)
@@ -155,7 +154,7 @@ write_result('Meta-Testing with transferred prior....', prm.log_file)
 
 test_err_avg = 0
 for i_task in range(n_test_tasks):
-    print('Meta-Testing task {} out of {}...'.format(i_task, n_test_tasks))
+    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     if mode == 'FromScratch':
         test_err = learn_single_Bayes.run_learning(task_data, prm, model_type, verbose=0)

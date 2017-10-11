@@ -14,6 +14,8 @@ def run_test_Bayes(model, test_loader, loss_criterion, prm):
         return run_test_max_posterior(model, test_loader, loss_criterion, prm)
     elif prm.test_type == 'MajorityVote':
         return run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+    elif prm.test_type == 'AvgVote':
+        return run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
     else:
         raise ValueError('Invalid test_type')
 
@@ -53,8 +55,9 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
             outputs = model(inputs, eps_std=1.0)
             test_loss += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
+            pred_val = pred.cpu().numpy()[0]
             for i_sample in range(batch_size):
-                votes[i_sample, pred[i_sample].cpu().numpy()[0]] += 1
+                votes[i_sample, pred_val] += 1
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
@@ -67,7 +70,33 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         test_acc, n_correct, n_test_samples))
     return test_acc, test_loss
 
-###
+def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
+# TODO:  more efficent
+    model.eval()
+    test_loss = 0
+    n_correct = 0
+    for batch_data in test_loader:
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+
+        batch_size = prm.test_batch_size
+        n_labels = model.out_size
+        votes = cmn.zeros_gpu((batch_size, n_labels))
+        for i_vote in range(n_votes):
+            outputs = model(inputs, eps_std=1.0)
+            test_loss += loss_criterion(outputs, targets)
+            votes += outputs.data
+
+        majority_pred = votes.max(1, keepdim=True)[1]
+        n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
+
+    n_test_samples = len(test_loader.dataset)
+    n_test_batches = len(test_loader)
+    test_loss /= n_test_batches
+    test_acc = n_correct / n_test_samples
+    print('\nAveraged-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
+        test_acc, n_correct, n_test_samples))
+    return test_acc, test_loss
+
 
 def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
 
@@ -103,7 +132,7 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
         complex_term = kld
 
     elif complexity_type == 'PAC_Bayes_McAllaster':
-        delta = 0.95
+        delta = 0.99
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + np.log(2*np.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
@@ -111,10 +140,10 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_Seeger':
         # Seeger complexity is unique since it requires the empirical loss
-        small_num = 1e-9 # to avoid nan due to numerical errors
-        delta = 0.95
-        seeger_eps = (1 / n_samples) * (kld + math.log(2 * np.sqrt(n_samples) / delta))
-        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss + small_num)
+        # small_num = 1e-9 # to avoid nan due to numerical errors
+        delta = 0.99
+        seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
+        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss )
 
 
     elif complexity_type == 'Variational_Bayes':
