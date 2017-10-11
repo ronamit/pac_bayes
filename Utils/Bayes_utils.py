@@ -7,7 +7,7 @@ from torch.autograd import Variable
 import math
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct
-
+import torch.nn.functional as F
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm):
     if prm.test_type == 'MaxPosterior':
@@ -55,8 +55,8 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
             outputs = model(inputs, eps_std=1.0)
             test_loss += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
-            pred_val = pred.cpu().numpy()[0]
             for i_sample in range(batch_size):
+                pred_val = pred[i_sample].cpu().numpy()[0]
                 votes[i_sample, pred_val] += 1
 
         majority_pred = votes.max(1, keepdim=True)[1]
@@ -143,7 +143,9 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
         # small_num = 1e-9 # to avoid nan due to numerical errors
         delta = 0.99
         seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
-        complex_term = 2 * seeger_eps + torch.sqrt(2 * seeger_eps * task_empirical_loss )
+        sqrt_arg = 2 * seeger_eps * task_empirical_loss
+        sqrt_arg = F.relu(sqrt_arg) # prevent negative values due to numerical errors
+        complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
 
     elif complexity_type == 'Variational_Bayes':

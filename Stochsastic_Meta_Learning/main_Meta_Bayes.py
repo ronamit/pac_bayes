@@ -74,7 +74,7 @@ prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
 prm.n_MC = 3
 
 #  Define optimizer:
-prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr,'weight_decay': 1e-4} #'weight_decay': 1e-4
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
 # optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
