@@ -3,7 +3,7 @@
 
 
 Requirements:
-* Python 2.7 or 3.5+ *(development was done with version 3.6, but it should work with other versions)*
+* Python 3.5+
 * numpy + matplotlib
 * PyTorch 0.2+ with CUDA
 
