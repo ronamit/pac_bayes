@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
+                    default=200)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -79,14 +79,14 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-#lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150]}
-prm.lr_schedule = {} # No decay
+prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150]}
+# prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
 prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-6  #  1e-5
+prm.hyper_prior_factor = 1e-8  #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
@@ -114,7 +114,7 @@ f_name='prior'
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 20
+    n_train_tasks = 5
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
