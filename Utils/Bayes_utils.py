@@ -8,6 +8,7 @@ import math
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct
 import torch.nn.functional as F
+from Models.layers import StochasticLayer
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm):
     if prm.test_type == 'MaxPosterior':
@@ -167,8 +168,8 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
 def get_total_kld(prior_model, post_model):
 
-    prior_layers_list = list(prior_model.children())
-    post_layers_list = list(post_model.children())
+    prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
+    post_layers_list =  [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
 
     total_kld = 0
     for i_layer, prior_layer in enumerate(prior_layers_list):

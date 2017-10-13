@@ -57,7 +57,7 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-prm.model_name = 'FcNet2'   # 'FcNet2' / 'FcNet3' / 'ConvNet'
+prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet'
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -106,7 +106,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 
