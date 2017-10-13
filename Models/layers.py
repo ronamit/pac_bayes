@@ -25,8 +25,8 @@ def get_randn_param(shape, mean, std):
 #  Stochastic linear layer
 # -------------------------------------------------------------------------------------------
 class StochasticLayer(nn.Module):
-    # Blue-print of stochastic layers with re-parametrization
-    # self.init  and self.operation should be filled by children
+    # base class of stochastic layers with re-parametrization
+    # self.init  and self.operation should be filled by derived classes
 
     def init_stochastic_layer(self, weights_size, bias_size, prm):
 
@@ -104,7 +104,7 @@ class StochasticConv2d(StochasticLayer):
         kernel_size = make_pair(kernel_size)
         self.kernel_size = kernel_size
 
-        weights_size = (out_channels, in_channels, *kernel_size)
+        weights_size = (out_channels, in_channels, kernel_size[0], kernel_size[1])
         bias_size = (out_channels)
         self.init_stochastic_layer(weights_size, bias_size, prm)
 

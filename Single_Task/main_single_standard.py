@@ -57,7 +57,7 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model:
-prm.model_name = 'ConvNet'  # 'FcNet2' / 'FcNet3' / 'ConvNet'
+prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer
