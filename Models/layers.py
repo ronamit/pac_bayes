@@ -21,36 +21,35 @@ def get_randn_param(shape, mean, std):
         shape = (shape,)
     return nn.Parameter(torch.FloatTensor(*shape).normal_(mean, std))
 
-
-def init_stochastic_layer(layer, weights_size, bias_size, prm):
-    
-    inits = prm.bayes_inits
-    mu_bias = inits['Bayes-Mu']['bias']
-    mu_std = inits['Bayes-Mu']['std']
-    log_var_bias = inits['Bayes-log-var']['bias']
-    log_var_std = inits['Bayes-log-var']['std']
-    
-    layer.w_mu = get_randn_param(weights_size, mu_bias, mu_std)
-    layer.w_log_var = get_randn_param(weights_size, log_var_bias, log_var_std)
-    layer.b_mu = get_randn_param(bias_size, mu_bias, mu_std)
-    layer.b_log_var = get_randn_param(bias_size, log_var_bias, log_var_std)
-
-    layer.w = {'mean': layer.w_mu, 'log_var': layer.w_log_var}
-    layer.b = {'mean': layer.b_mu, 'log_var': layer.b_log_var}
-
-
 # -------------------------------------------------------------------------------------------
 #  Stochastic linear layer
 # -------------------------------------------------------------------------------------------
 class StochasticLayer(nn.Module):
     # Blue-print of stochastic layers with re-parametrization
-    # self.operation should be filled withe linear or conv
+    # self.init  and self.operation should be filled by children
+
+    def init_stochastic_layer(self, weights_size, bias_size, prm):
+
+        inits = prm.bayes_inits
+        mu_bias = inits['Bayes-Mu']['bias']
+        mu_std = inits['Bayes-Mu']['std']
+        log_var_bias = inits['Bayes-log-var']['bias']
+        log_var_std = inits['Bayes-log-var']['std']
+
+        self.w_mu = get_randn_param(weights_size, mu_bias, mu_std)
+        self.w_log_var = get_randn_param(weights_size, log_var_bias, log_var_std)
+        self.b_mu = get_randn_param(bias_size, mu_bias, mu_std)
+        self.b_log_var = get_randn_param(bias_size, log_var_bias, log_var_std)
+
+        self.w = {'mean': self.w_mu, 'log_var': self.w_log_var}
+        self.b = {'mean': self.b_mu, 'log_var': self.b_log_var}
 
     def forward(self, x, eps_std=1.0):
 
         # Layer computations (based on "Variational Dropout and the Local
         # Reparameterization Trick", Kingma et.al 2015)
 
+        # self.operation should be linear or conv
         out_mean = self.operation(x, self.w['mean'], bias=self.b['mean'])
 
         if eps_std == 0.0:
@@ -83,7 +82,7 @@ class StochasticLinear(StochasticLayer):
         self.out_dim = out_dim
         weights_size = (out_dim, in_dim)
         bias_size = out_dim
-        init_stochastic_layer(self, weights_size, bias_size, prm)
+        self.init_stochastic_layer(weights_size, bias_size, prm)
 
 
     def __str__(self):
@@ -107,7 +106,7 @@ class StochasticConv2d(StochasticLayer):
 
         weights_size = (out_channels, in_channels, *kernel_size)
         bias_size = (out_channels)
-        init_stochastic_layer(self, weights_size, bias_size, prm)
+        self.init_stochastic_layer(weights_size, bias_size, prm)
 
 
     def __str__(self):
