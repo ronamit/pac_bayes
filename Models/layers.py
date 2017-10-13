@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from Utils.common import randn_gpu
 
-
 # -------------------------------------------------------------------------------------------
 #  Auxilary functions
 # -------------------------------------------------------------------------------------------

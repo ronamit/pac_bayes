@@ -5,8 +5,9 @@ import torch
 from torchvision import datasets, transforms
 import torch.utils.data as data_utils
 from torch.autograd import Variable
-import multiprocessing
+import multiprocessing, os
 import numpy as np
+
 # -------------------------------------------------------------------------------------------
 #  Create data loader
 # -------------------------------------------------------------------------------------------
@@ -36,6 +37,12 @@ def get_data_loader(prm, limit_train_samples = None):
         train_dataset = create_sinusoid_data(task_param, n_samples=10)
         test_dataset = create_sinusoid_data(task_param, n_samples=100)
 
+    elif prm.data_source == 'OMNIGLOT':
+        from Utils.OmniglotTask import get_omniglot_sets
+        root_path = os.path.join(prm.data_path, 'OMNIGLOT')
+        # train_dataset = omniglot_task(root_path, num_cls=4, num_inst=3, split = 'meta_train',
+        #                               transform=None, target_transform=None, download=True)
+        get_omniglot_sets(root_path, meta_split='meta_train', n_labels=4, k_train_shot=3)
     else:
         raise ValueError('Invalid data_source')
 
@@ -78,12 +85,13 @@ def load_MNIST(input_trans, target_trans, prm):
         # Note: this operates before transform to tensor
         input_trans_list.append(transforms.Lambda(input_trans))
 
+    full_path = os.path.join(prm.data_path, 'MNIST')
     # Train set:
-    train_dataset = datasets.MNIST(prm.data_path, train=True, download=True,
+    train_dataset = datasets.MNIST(full_path, train=True, download=True,
                                    transform=transforms.Compose(input_trans_list), target_transform=target_trans)
 
     # Test set:
-    test_dataset = datasets.MNIST(prm.data_path, train=False,
+    test_dataset = datasets.MNIST(full_path, train=False,
                                   transform=transforms.Compose(input_trans_list), target_transform=target_trans)
 
 

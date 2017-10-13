@@ -14,7 +14,6 @@ from Utils.common import save_model_state, load_model_state, write_result, set_r
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
-
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -167,23 +166,13 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 #  Compare to standard learning
 # -------------------------------------------------------------------------------------------
-init_standard_with_prior = False # TODO: implement this
-if init_standard_with_prior:
-    initial_model = prior_model
-    write_result('Run standard learning using transferred prior as initial point...', prm.log_file)
-else:
-    initial_model = None
-    write_result('Run standard learning from scratch....', prm.log_file)
 
-
-write_result('-'*5 + 'Meta-Testing with {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
-
+write_result('Run standard learning from scratch....', prm.log_file)
 test_err_avg_standard = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, verbose=0, initial_model=initial_model)
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
     test_err_avg_standard += test_err / n_test_tasks
 
 

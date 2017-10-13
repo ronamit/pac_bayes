@@ -35,7 +35,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=50) # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -58,7 +58,7 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model:
-prm.model_name = 'FcNet2'  # 'FcNet2' / 'FcNet3' / 'ConvNet'
+prm.model_name = 'ConvNet_Dropout'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization:
 prm.init_override = None # {'bias': 0, 'std': 0.1}
@@ -81,9 +81,9 @@ write_result('-'*5 + 'Standard learning of task 1' + '-'*5, prm.log_file)
 test_err, transfered_model = learn_single_standard.run_learning(task1_data, prm)
 
 # Generate the task 2 data set:
-limit_train_samples = 1000
+limit_train_samples = 100
 write_result('-'*5 + 'Generating task 2 with at most {} samples'.format(limit_train_samples) + '-'*5, prm.log_file)
-task2_data = data_gen.get_data_loader(prm, limit_train_samples = 1000)
+task2_data = data_gen.get_data_loader(prm, limit_train_samples = limit_train_samples)
 
 #  Run learning of task 2 from scratch:
 write_result('-'*5 + 'Standard learning of task 2 (from scratch)' + '-'*5, prm.log_file)
