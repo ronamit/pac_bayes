@@ -54,13 +54,11 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Get model:
-model_type = 'BayesNN' # 'BayesNN' \ 'BigBayesNN'
-prm.model_type = model_type
+prm.model_name = 'FcNet2'   # 'FcNet2' / 'FcNet3' / 'ConvNet'
 
 # Weights initialization:
-prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
-           'Bayes-log-var': {'bias': -10, 'std': 0.1},
-           'Standard-Net': {'bias': None, 'std': None}}
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+
 # None = use default initializer
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
@@ -81,7 +79,7 @@ prm.lr_schedule = {} # No decay
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.9 # 0.5
+prm.full_eps_ratio_in_stage_2 = 0.5 # 0.5
 
 
 # Test type:
@@ -90,9 +88,8 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 # Generate task data set:
 data_loader = data_gen.get_data_loader(prm)
 
-
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
 
-learn_single_Bayes.run_learning(data_loader, prm, model_type)
+learn_single_Bayes.run_learning(data_loader, prm)

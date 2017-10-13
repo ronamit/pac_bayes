@@ -5,15 +5,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import math
 from Utils import data_gen
 
 
-# Note: the net return scores (not normalized probabilities)
-
-
-
-def get_model(model_type, prm, init_type='Standard-Net'):
+def get_model(model_name, model_type, prm, init_type='Standard-Net'):
 
     info = data_gen.get_info(prm)
     color_channels = info['color_channels']
@@ -44,6 +39,7 @@ def get_model(model_type, prm, init_type='Standard-Net'):
     class ConvNet(nn.Module):
         def __init__(self):
             super(ConvNet, self).__init__()
+            self.model_type = model_type
             n_filt1 = 10
             n_filt2 = 20
             n_hidden_fc1 = 50
@@ -92,7 +88,6 @@ def get_model(model_type, prm, init_type='Standard-Net'):
             self.fc_out = nn.Linear(n_hidden2, n_classes)
             init_normal(self, prm)
 
-
         def forward(self, x):
             x = x.view(-1, input_size)  # flatten image
             x = F.elu(self.fc1(x))
@@ -122,7 +117,7 @@ def get_model(model_type, prm, init_type='Standard-Net'):
             x = self.fc_out(x)
             return x
 
-    models_dict = {'FcNet':FcNet(), 'ConvNet':ConvNet(), 'FcNet3':FcNet3()}
+    models_dict = {'FcNet2':FcNet(), 'ConvNet':ConvNet(), 'FcNet3':FcNet3()}
     model = models_dict[model_type]
 
 

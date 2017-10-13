@@ -57,11 +57,11 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model:
-model_type = 'FcNet' # 'FcNet' \ 'ConvNet'
+prm.model_name = 'ConvNet'  # 'FcNet2' / 'FcNet3' / 'ConvNet'
 
 # Weights initialization:
-prm.inits ={'Standard-Net': {'bias': None, 'std': None}}
-# None = use default initializer
+prm.init_override = None # None = use default initializer
+# prm.init_override = {'mean': 0, 'std': 0.1}
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
@@ -78,4 +78,4 @@ data_loader = data_gen.get_data_loader(prm)
 #  Run learning
 # -------------------------------------------------------------------------------------------
 
-learn_single_standard.run_learning(data_loader, prm, model_type)
+learn_single_standard.run_learning(data_loader, prm)

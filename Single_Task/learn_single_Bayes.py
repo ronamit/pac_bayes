@@ -4,13 +4,13 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models_Bayes import get_bayes_model
+from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_eps_std, run_test_Bayes
 from Utils.common import grad_step, correct_rate, get_loss_criterion
 
 
-def run_learning(data_loader, prm, model_type, verbose=1):
+def run_learning(data_loader, prm, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -23,13 +23,12 @@ def run_learning(data_loader, prm, model_type, verbose=1):
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
 
-
     train_loader = data_loader['train']
     test_loader = data_loader['test']
     n_batches = len(train_loader)
 
     # get model:
-    model = get_bayes_model(model_type, prm)
+    model = get_model(prm, 'Stochastic')
 
     #  Get optimizer:
     optimizer = optim_func(model.parameters(), **optim_args)

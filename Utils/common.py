@@ -148,7 +148,7 @@ def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
 def get_model_string(model):
-    return str(model.model_type)+ ': ' + '-> '.join([m.__str__() for m in model._modules.values()])
+    return str(model.model_type) + '-' + str(model.model_name) + ':' + '-> '.join([m.__str__() for m in model._modules.values()])
 
 # -----------------------------------------------------------------------------------------------------------#
 # Result saving

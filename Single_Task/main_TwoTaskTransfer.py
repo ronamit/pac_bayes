@@ -5,8 +5,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
-from Models import models_Bayes
+
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
 from Utils.common import save_model_state, load_model_state, get_loss_criterion, write_result, set_random_seed
@@ -42,7 +41,7 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=2)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -59,7 +58,11 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model:
-model_type = 'FcNet'
+prm.model_name = 'FcNet2'  # 'FcNet2' / 'FcNet3' / 'ConvNet'
+
+# Weights initialization:
+prm.init_override = None # {'bias': 0, 'std': 0.1}
+# None = use default initializer
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
@@ -75,18 +78,17 @@ task1_data = data_gen.get_data_loader(prm)
 
 #  Run learning of task 1
 write_result('-'*5 + 'Standard learning of task 1' + '-'*5, prm.log_file)
-test_err, transfered_model = learn_single_standard.run_learning(task1_data, prm, model_type)
+test_err, transfered_model = learn_single_standard.run_learning(task1_data, prm)
 
 # Generate the task 2 data set:
 limit_train_samples = 1000
 write_result('-'*5 + 'Generating task 2 with at most {} samples'.format(limit_train_samples) + '-'*5, prm.log_file)
 task2_data = data_gen.get_data_loader(prm, limit_train_samples = 1000)
 
-
 #  Run learning of task 2 from scratch:
 write_result('-'*5 + 'Standard learning of task 2 (from scratch)' + '-'*5, prm.log_file)
-learn_single_standard.run_learning(task2_data, prm, model_type, verbose=0)
+learn_single_standard.run_learning(task2_data, prm, verbose=0)
 
 #  Run learning of task 2 using transferred initial point:
 write_result('-'*5 + 'Standard learning of task 2 (using transferred weights as initial point)' + '-'*5, prm.log_file)
-learn_single_standard.run_learning(task2_data, prm, model_type, initial_model=transfered_model, verbose=0)
+learn_single_standard.run_learning(task2_data, prm, initial_model=transfered_model, verbose=0)

@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models_Bayes import get_bayes_model
+from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
 from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
 
 
-def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, verbose=1):
+def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -22,7 +22,7 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     loss_criterion = get_loss_criterion(prm.loss_type)
 
     # Create posterior model for the new task:
-    post_model = get_bayes_model(model_type, prm)
+    post_model = get_model(prm, 'Stochastic')
 
     if init_from_prior:
         post_model.load_state_dict(prior_model.state_dict())
@@ -84,7 +84,6 @@ def run_learning(task_data, prior_model, prm, model_type, init_from_prior=True, 
     if verbose == 1:
         write_result('-'*10+run_name+'-'*10, prm.log_file)
         write_result(str(prm), prm.log_file)
-        write_result(model_type, prm.log_file)
         write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     # -------------------------------------------------------------------------------------------

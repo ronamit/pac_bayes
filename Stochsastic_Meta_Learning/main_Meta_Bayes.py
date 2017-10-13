@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 
 from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
-from Models import models_Bayes
+from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
@@ -57,17 +57,17 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
-model_type_standard = 'FcNet'  # for comparision
+prm.model_name = 'FcNet2'   # 'FcNet2' / 'FcNet3' / 'ConvNet'
 
-# Weights initialization:
-prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
-           'Bayes-log-var': {'bias': -10, 'std': 0.1},
-           'Standard-Net': {'bias': None, 'std': None}}
-# None = use default initializer
+# Weights initialization (for Bayesian net):
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
+
+# Weights initialization (for standard comparision net):
+prm.init_override = None # None = use default initializer
+# prm.init_override = {'mean': 0, 'std': 0.1}
 
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
@@ -106,7 +106,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 
@@ -119,7 +119,7 @@ if mode == 'MetaTrain':
     train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm, model_type)
+    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)
@@ -129,7 +129,7 @@ elif mode == 'LoadPrior':
 
     # Loads  previously training prior.
     # First, create the model:
-    prior_model = models_Bayes.get_bayes_model(model_type, prm)
+    prior_model = get_model(prm, 'Stochastic')
     # Then load the weights:
     load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
@@ -141,7 +141,7 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 5
-limit_train_samples = 2000
+limit_train_samples = 10000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
@@ -158,10 +158,9 @@ for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     if mode == 'FromScratch':
-        test_err = learn_single_Bayes.run_learning(task_data, prm, model_type, verbose=0)
+        test_err = learn_single_Bayes.run_learning(task_data, prm, verbose=0)
     else:
-        test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm,
-                                                model_type, init_from_prior, verbose=0)
+        test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
     test_err_bayes_avg += test_err / n_test_tasks
 
 
@@ -184,7 +183,7 @@ test_err_avg_standard = 0
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, model_type_standard, verbose=0, initial_model=initial_model)
+    test_err, _ = learn_single_standard.run_learning(task_data, prm, verbose=0, initial_model=initial_model)
     test_err_avg_standard += test_err / n_test_tasks
 
 

@@ -3,12 +3,12 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models_standard import get_model
+from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct, grad_step, correct_rate, get_loss_criterion
 
 
-def run_learning(data_loader, prm, model_type, verbose=1, initial_model=None):
+def run_learning(data_loader, prm, verbose=1, initial_model=None):
 
     # Unpack parameters:
     optim_func, optim_args, lr_schedule = \
@@ -24,7 +24,7 @@ def run_learning(data_loader, prm, model_type, verbose=1, initial_model=None):
     n_batches = len(train_loader)
 
     # Create  model:
-    model = get_model(model_type, prm)
+    model = get_model(prm, 'Standard', prm.init_override)
     if initial_model:
         model.load_state_dict(initial_model.state_dict())
 
