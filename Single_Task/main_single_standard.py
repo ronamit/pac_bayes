@@ -20,7 +20,7 @@ from Single_Task import learn_single_standard
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='Omniglot')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='None')
