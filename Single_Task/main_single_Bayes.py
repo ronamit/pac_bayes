@@ -20,10 +20,10 @@ from Single_Task import learn_single_Bayes
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='MNIST')
+                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
-                    default='Permute_Pixels')
+                    default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -38,7 +38,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=666)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)

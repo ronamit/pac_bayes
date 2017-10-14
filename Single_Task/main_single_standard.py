@@ -20,10 +20,10 @@ from Single_Task import learn_single_standard
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='MNIST')
+                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+                    default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
