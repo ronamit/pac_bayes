@@ -19,10 +19,10 @@ def get_model(prm, model_type, init_override=None):
 
     # Get task info:
     info = data_gen.get_info(prm)
-    color_channels = info['color_channels']
-    im_size = info['im_size']
+    input_shape = info['input_shape']
+    color_channels = input_shape[0]
     n_classes = info['n_classes']
-    input_size = info['input_size']
+    input_size = input_shape[0] * input_shape[1] * input_shape[2]
 
     def linear_layer(in_dim, out_dim):
         if model_type == 'Standard':
@@ -105,7 +105,6 @@ def get_model(prm, model_type, init_override=None):
         # generate dummy input sample and forward to get shape after conv layers
         def _get_conv_output(self):
             batch_size = 1
-            input_shape = (color_channels, im_size, im_size)
             input = Variable(torch.rand(batch_size, *input_shape))
             output_feat = self._forward_features(input)
             n_conv_size = output_feat.data.view(batch_size, -1).size(1)
@@ -145,7 +144,6 @@ def get_model(prm, model_type, init_override=None):
         # generate dummy input sample and forward to get shape after conv layers
         def _get_conv_output(self):
             batch_size = 1
-            input_shape = (color_channels, im_size, im_size)
             input = Variable(torch.rand(batch_size, *input_shape))
             output_feat = self._forward_features(input)
             n_conv_size = output_feat.data.view(batch_size, -1).size(1)

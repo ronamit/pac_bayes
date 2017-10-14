@@ -9,7 +9,7 @@ import torch.optim as optim
 from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
 from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
-from Utils import data_gen
+from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
 # torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
@@ -21,11 +21,11 @@ from Utils.common import save_model_state, load_model_state, write_result, set_r
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' ",
-                    default='MNIST')
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Omniglot'",
+                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Pixels')
+                    default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -54,6 +54,11 @@ prm.cuda = True
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
+
+# For Omniglot data - N = number of classes. K = number of train samples per class:
+# Note: number of test samples per class is 20-K
+if prm.data_source == 'Omniglot':
+    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model type (hypothesis class):
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
@@ -115,7 +120,7 @@ if mode == 'MetaTrain':
     # Generate the data sets of the training tasks:
     n_train_tasks = 5
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_tasks_data = [data_gen.get_data_loader(prm) for i_task in range(n_train_tasks)]
+    train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
@@ -145,7 +150,7 @@ limit_train_samples = 10000
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
-test_tasks_data = [data_gen.get_data_loader(prm, limit_train_samples) for _ in range(n_test_tasks)]
+test_tasks_data = [get_data_loader(prm, limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing

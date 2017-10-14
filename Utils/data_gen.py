@@ -7,29 +7,30 @@ import torch.utils.data as data_utils
 from torch.autograd import Variable
 import multiprocessing, os
 import numpy as np
+from Utils.omniglot import get_omniglot_task
 
 # -------------------------------------------------------------------------------------------
 #  Create data loader
 # -------------------------------------------------------------------------------------------
 
 
-def get_data_loader(prm, limit_train_samples = None):
+def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
 
     # Set data transformation function:
-    input_trans = None
+    final_input_trans = None
     target_trans = None
 
     if prm.data_transform == 'Permute_Pixels':
         # Create a fixed random pixels permutation, applied to all images
-        input_trans = create_pixel_permute_trans(prm)
+        extra_input_trans = [create_pixel_permute_trans(prm)]
 
     elif prm.data_transform == 'Permute_Labels':
         # Create a fixed random label permutation, applied to all images
-        target_trans = create_label_permute_trans(prm)
+        target_trans = [create_label_permute_trans(prm)]
 
     # Get dataset:
     if prm.data_source == 'MNIST':
-        train_dataset, test_dataset = load_MNIST(input_trans, target_trans, prm)
+        train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
 
     elif prm.data_source == 'Sinusoid':
 
@@ -37,12 +38,10 @@ def get_data_loader(prm, limit_train_samples = None):
         train_dataset = create_sinusoid_data(task_param, n_samples=10)
         test_dataset = create_sinusoid_data(task_param, n_samples=100)
 
-    elif prm.data_source == 'OMNIGLOT':
-        from Utils.OmniglotTask import get_omniglot_sets
-        root_path = os.path.join(prm.data_path, 'OMNIGLOT')
-        # train_dataset = omniglot_task(root_path, num_cls=4, num_inst=3, split = 'meta_train',
-        #                               transform=None, target_transform=None, download=True)
-        get_omniglot_sets(root_path, meta_split='meta_train', n_labels=4, k_train_shot=3)
+    elif prm.data_source == 'Omniglot':
+        train_dataset, test_dataset = get_omniglot_task(prm.data_path, meta_split,
+            n_labels=prm.n_way_k_shot['N'], k_train_shot=prm.n_way_k_shot['K'],
+            final_input_trans=final_input_trans, target_transform=target_trans)
     else:
         raise ValueError('Invalid data_source')
 
@@ -69,30 +68,32 @@ def get_data_loader(prm, limit_train_samples = None):
 
 
 # -------------------------------------------------------------------------------------------
-#  Data sets
+#  MNIST  Data set
 # -------------------------------------------------------------------------------------------
 
-def load_MNIST(input_trans, target_trans, prm):
-    MNIST_MEAN = (0.1307,)  # (0.5,)
-    MNIST_STD = (0.3081,)  # (0.5,)
-    # Note: keep values in [0,1] to avoid too large input norm (which cause high variance)
+def load_MNIST(final_input_trans, target_trans, prm):
 
     # Data transformations list:
+    transform = [transforms.ToTensor()]
 
-    input_trans_list = [transforms.ToTensor()]
-    # input_trans_list.append(transforms.Normalize(MNIST_MEAN, MNIST_STD))
-    if input_trans:
-        # Note: this operates before transform to tensor
-        input_trans_list.append(transforms.Lambda(input_trans))
+    # Normalize values:
+    # Note: values are already in the range [0,1]
+    # MNIST_MEAN = (0.1307,)  # (0.5,)
+    # MNIST_STD = (0.3081,)  # (0.5,)
+    # transform += transforms.Normalize(MNIST_MEAN, MNIST_STD)
 
-    full_path = os.path.join(prm.data_path, 'MNIST')
+    if final_input_trans:
+        transform += final_input_trans
+
+    root_path = os.path.join(prm.data_path, 'MNIST')
+
     # Train set:
-    train_dataset = datasets.MNIST(full_path, train=True, download=True,
-                                   transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+    train_dataset = datasets.MNIST(root_path, train=True, download=True,
+                                   transform=transforms.Compose(transform), target_transform=target_trans)
 
     # Test set:
-    test_dataset = datasets.MNIST(full_path, train=False,
-                                  transform=transforms.Compose(input_trans_list), target_transform=target_trans)
+    test_dataset = datasets.MNIST(root_path, train=False,
+                                  transform=transforms.Compose(transform), target_transform=target_trans)
 
 
     return train_dataset, test_dataset
@@ -104,7 +105,10 @@ def load_MNIST(input_trans, target_trans, prm):
 
 def get_info(prm):
     if prm.data_source == 'MNIST':
-        info = {'im_size': 28, 'color_channels': 1, 'n_classes': 10, 'input_size': 1 * 28 * 28}
+        info = {'input_shape': (1, 28, 28),  'n_classes': 10}
+    elif prm.data_source == 'Omniglot':
+        info = {'input_shape': (3, 28, 28), 'n_classes': prm.n_way_k_shot['N']}
+
     else:
         raise ValueError('Invalid data_source')
 

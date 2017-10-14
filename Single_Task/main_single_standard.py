@@ -19,8 +19,8 @@ from Single_Task import learn_single_standard
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST / 'OMNIGLOT''",
-                    default='OMNIGLOT')
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
+                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='None')
@@ -38,7 +38,7 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=3)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -55,6 +55,11 @@ prm.cuda = not prm.no_cuda and torch.cuda.is_available()
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
+
+# For Omniglot data - N = number of classes. K = number of train samples per class:
+# Note: number of test samples per class is 20-K
+if prm.data_source == 'Omniglot':
+    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model:
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
