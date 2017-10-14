@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
@@ -9,6 +8,7 @@ from Utils import common as cmn, data_gen
 from Utils.common import count_correct
 import torch.nn.functional as F
 from Models.layers import StochasticLayer
+
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm):
     if prm.test_type == 'MaxPosterior':
@@ -22,6 +22,9 @@ def run_test_Bayes(model, test_loader, loss_criterion, prm):
 
 
 def run_test_max_posterior(model, test_loader, loss_criterion, prm):
+    n_test_samples = len(test_loader.dataset)
+    n_test_batches = len(test_loader)
+
     model.eval()
     test_loss = 0
     n_correct = 0
@@ -32,28 +35,30 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
         test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
         n_correct += count_correct(outputs, targets)
 
-    n_test_samples = len(test_loader.dataset)
-    n_test_batches = len(test_loader)
-    test_loss /= n_test_batches
+    test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
     print('\nMax-Posterior, Test set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
         test_loss.data[0], test_acc, n_correct, n_test_samples))
     return test_acc, test_loss.data[0]
 
 
-def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
-# TODO:  more efficent
+def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
+    #
+    n_test_samples = len(test_loader.dataset)
+    n_test_batches = len(test_loader)
     model.eval()
     test_loss = 0
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
 
-        batch_size = prm.test_batch_size
-        n_labels = model.out_size
+        batch_size = min(prm.test_batch_size, n_test_samples)
+        info = data_gen.get_info(prm)
+        n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
         for i_vote in range(n_votes):
-            outputs = model(inputs, eps_std=1.0)
+            eps_std = 1.0
+            outputs = model(inputs, eps_std)
             test_loss += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
             for i_sample in range(batch_size):
@@ -63,36 +68,36 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
 
-    n_test_samples = len(test_loader.dataset)
-    n_test_batches = len(test_loader)
-    test_loss /= n_test_batches
+    test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
     print('\nMajority-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
         test_acc, n_correct, n_test_samples))
     return test_acc, test_loss
 
+
 def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
-# TODO:  more efficent
+    n_test_samples = len(test_loader.dataset)
+    n_test_batches = len(test_loader)
     model.eval()
     test_loss = 0
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
 
-        batch_size = prm.test_batch_size
-        n_labels = model.out_size
+        batch_size = min(prm.test_batch_size, n_test_samples)
+        info = data_gen.get_info(prm)
+        n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
         for i_vote in range(n_votes):
-            outputs = model(inputs, eps_std=1.0)
+            eps_std = 1.0
+            outputs = model(inputs, eps_std)
             test_loss += loss_criterion(outputs, targets)
             votes += outputs.data
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
 
-    n_test_samples = len(test_loader.dataset)
-    n_test_batches = len(test_loader)
-    test_loss /= n_test_batches
+    test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
     print('\nAveraged-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
         test_acc, n_correct, n_test_samples))
@@ -100,7 +105,6 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 
 
 def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
-
     total_iter = prm.num_epochs * n_meta_batches
     n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
     n_iter_stage_2 = total_iter - n_iter_stage_1
@@ -126,7 +130,6 @@ def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
 # -------------------------------------------------------------------------------------------
 
 def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_samples, task_empirical_loss):
-    
     kld = get_total_kld(prior_model, post_model)
 
     if complexity_type == 'KLD':
@@ -134,7 +137,7 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
     elif complexity_type == 'PAC_Bayes_McAllaster':
         delta = 0.99
-        complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + math.log(2*math.sqrt(n_samples) / delta)))
+        complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + math.log(2 * math.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
         complex_term = math.sqrt(1 / n_samples) * kld
@@ -167,9 +170,8 @@ def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_sa
 
 
 def get_total_kld(prior_model, post_model):
-
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
-    post_layers_list =  [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
+    post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
 
     total_kld = 0
     for i_layer, prior_layer in enumerate(prior_layers_list):
