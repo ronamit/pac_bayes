@@ -22,10 +22,10 @@ from Utils.common import save_model_state, load_model_state, write_result, set_r
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Omniglot'",
-                    default='Omniglot')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='None')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200)
+                    default=1)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -150,7 +150,7 @@ limit_train_samples = 10000
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
-test_tasks_data = [get_data_loader(prm, limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
+test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing

@@ -20,10 +20,10 @@ from Single_Task import learn_single_Bayes
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='Omniglot')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
-                    default='None')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -38,7 +38,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=2)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -56,7 +56,7 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 5}
+    prm.n_way_k_shot = {'N': 5, 'K': 10}
 
 #  Get model:
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
@@ -91,7 +91,8 @@ prm.full_eps_ratio_in_stage_2 = 0.5 # 0.5
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Generate task data set:
-data_loader = data_gen.get_data_loader(prm)
+limit_train_samples = None  # None
+data_loader = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
 
 # -------------------------------------------------------------------------------------------
 #  Run learning

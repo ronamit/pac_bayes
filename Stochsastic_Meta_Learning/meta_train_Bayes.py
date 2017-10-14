@@ -53,8 +53,6 @@ def run_meta_learning(train_tasks_data, prm):
     # number of training samples in each task :
     n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
 
-
-
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
     # -------------------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
 
     # Set data transformation function:
     final_input_trans = None
-    target_trans = None
+    target_trans = []
 
     if prm.data_transform == 'Permute_Pixels':
         # Create a fixed random pixels permutation, applied to all images
@@ -46,9 +46,9 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
         raise ValueError('Invalid data_source')
 
     # Limit the training samples:
-    if limit_train_samples:
-        n_samples_orig = train_dataset.train_data.size()[0]
-        sampled_inds = torch.randperm(n_samples_orig)[:limit_train_samples]
+    n_train_samples_orig = len(train_dataset)
+    if limit_train_samples and limit_train_samples < n_train_samples_orig:
+        sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples]
         train_dataset.train_data = train_dataset.train_data[sampled_inds]
         train_dataset.train_labels = train_dataset.train_labels[sampled_inds]
 
@@ -89,11 +89,11 @@ def load_MNIST(final_input_trans, target_trans, prm):
 
     # Train set:
     train_dataset = datasets.MNIST(root_path, train=True, download=True,
-                                   transform=transforms.Compose(transform), target_transform=target_trans)
+                                   transform=transforms.Compose(transform), target_transform=transforms.Compose(target_trans))
 
     # Test set:
     test_dataset = datasets.MNIST(root_path, train=False,
-                                  transform=transforms.Compose(transform), target_transform=target_trans)
+                                  transform=transforms.Compose(transform), target_transform=transforms.Compose(target_trans))
 
 
     return train_dataset, test_dataset
@@ -131,7 +131,9 @@ def get_batch_vars(batch_data, args, is_test=False):
 
 def create_pixel_permute_trans(prm):
     info = get_info(prm)
-    inds_permute = torch.randperm(info['input_size'])
+    input_shape = info['input_shape']
+    input_size = input_shape[0] * input_shape[1] * input_shape[2]
+    inds_permute = torch.randperm(input_size)
     transform_func = lambda x: permute_pixels(x, inds_permute)
     return transform_func
 

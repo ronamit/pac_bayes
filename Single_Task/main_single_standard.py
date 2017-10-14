@@ -20,10 +20,10 @@ from Single_Task import learn_single_standard
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='Omniglot')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='None')
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -59,7 +59,7 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 5}
+    prm.n_way_k_shot = {'N': 5, 'K': 10}
 
 #  Define model:
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
@@ -77,7 +77,8 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 prm.lr_schedule = {} # No decay
 
 # Generate task data set:
-data_loader = data_gen.get_data_loader(prm)
+limit_train_samples = None  # None
+data_loader = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
 
 # -------------------------------------------------------------------------------------------
 #  Run learning
