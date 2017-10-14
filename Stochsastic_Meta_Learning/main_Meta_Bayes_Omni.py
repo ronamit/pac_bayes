@@ -28,13 +28,13 @@ parser.add_argument('--data-transform', type=str, help="Data transformation: 'No
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='CrossEntropy')
+                    default='L2_SVM')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=100)
+                    default=10000)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -58,13 +58,13 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 5}
+    prm.n_way_k_shot = {'N': 5, 'K': 5}
 
 #  Define model type (hypothesis class):
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.01}, 'Bayes-log-var': {'bias': -30, 'std': 0.01}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
@@ -79,18 +79,18 @@ prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
-# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [20, 50]}
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 100]}
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'NoComplexity'
+prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-8  #  1e-5
+prm.hyper_prior_factor = 1e-7 #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
@@ -100,7 +100,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.3
+prm.full_eps_ratio_in_stage_2 = 1.0
 # Note:
 
 # Test type:
