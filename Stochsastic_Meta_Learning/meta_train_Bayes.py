@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import timeit
-
+import random
 import numpy as np
 
 from Models.models import get_model
@@ -34,11 +34,6 @@ def run_meta_learning(train_tasks_data, prm):
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
     prior_model = get_model(prm, 'Stochastic')
 
-    # number of batches from each task:
-    n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
-
-    n_meta_batches = np.min(n_batch_list)
-
     # Gather all tasks posterior params:
     all_post_param = []
     for i_task in range(n_tasks):
@@ -61,77 +56,92 @@ def run_meta_learning(train_tasks_data, prm):
     # -------------------------------------------------------------------------------------------
     def run_train_epoch(i_epoch):
 
-        task_id_batch = range(n_tasks)
+        eps_std = 1.0 # TODO: set by epoch
 
-        # For each task, prepare an iterator to generate training batches:
-        task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in task_id_batch]
+        # shuffle a random order of tasks:
+        task_id_order = list(range(n_tasks))
+        random.shuffle(task_id_order)
 
-        for i_batch in range(n_meta_batches):
+        # Task-batches loop
+        for batch_start in range(0, n_tasks, prm.task_batch_size):
 
-            eps_std = get_eps_std(i_epoch, i_batch, n_meta_batches, prm)
+            task_id_batch = task_id_order[batch_start: (batch_start + prm.task_batch_size)]
+            n_tasks_batch = len(task_id_batch)
 
-            sum_empirical_loss = 0
-            sum_intra_task_comp = 0
+            # For each task, prepare an iterator to generate training batches:
+            task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in task_id_batch]
 
+            # number of batches from each task:
+            n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
 
-            # In each meta-step, we draws batches from all tasks to calculate the total empirical loss estimate:
-            for i_task in task_id_batch:
-                # get data from current task to calculate the empirical loss estimate:
-                batch_data = task_train_loaders[i_task].next()
+            n_sample_batches = np.min(n_batch_list)
 
-                # The posterior model corresponding to the task in the batch:
-                post_model = posteriors_models[i_task]
-                post_model.train()
+            # samples-batches loop
+            for i_batch in range(n_sample_batches):
 
-                # Monte-Carlo iterations:
-                n_MC = prm.n_MC if eps_std > 0 else 1
-                task_empirical_loss = 0
-                for i_MC in range(n_MC):
-                # get batch variables:
-                    inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+                sum_empirical_loss = 0
+                sum_intra_task_comp = 0
 
-                    # Empirical Loss on current task:
-                    outputs = post_model(inputs, eps_std)
-                    task_empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
+                # In each meta-step, we draws batches from all tasks in batch to calculate the total empirical loss estimate:
+                for i_task, task_id in enumerate(task_id_batch):
 
-                # Intra-task complexity of current task:
-                task_complexity = get_posterior_complexity_term(
-                    prm.complexity_type, prior_model, post_model,
-                    n_samples_list[i_task], task_empirical_loss)
+                    # get data from current task to calculate the empirical loss estimate:
+                    batch_data = task_train_loaders[i_task].next()
 
-                sum_empirical_loss += task_empirical_loss
-                sum_intra_task_comp += task_complexity
+                    # The posterior model corresponding to the task in the batch:
+                    post_model = posteriors_models[task_id]
+                    post_model.train()
 
-            # end tasks loop
+                    # Monte-Carlo iterations:
+                    n_MC = prm.n_MC if eps_std > 0 else 1
+                    task_empirical_loss = 0
+                    for i_MC in range(n_MC):
+                    # get batch variables:
+                        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
-            # Hyper-prior term:
-            hyperprior = net_L1_norm(prior_model) * np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
+                        # Empirical Loss on current task:
+                        outputs = post_model(inputs, eps_std)
+                        task_empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
 
-            # Total objective:
-            avg_empirical_loss = (1 / n_tasks) * sum_empirical_loss # TODO: replave with tasks batch len
-            avg_intra_task_comp = (1 / n_tasks) * sum_intra_task_comp
+                    # Intra-task complexity of current task:
+                    task_complexity = get_posterior_complexity_term(
+                        prm.complexity_type, prior_model, post_model,
+                        n_samples_list[task_id], task_empirical_loss)
 
-            total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
+                    sum_empirical_loss += task_empirical_loss
+                    sum_intra_task_comp += task_complexity
 
-            # ****************************************************************************
-            grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+                # end tasks loop
 
-            # if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
-            #     # Take gradient step with the shared prior and all tasks' posteriors:
-            #     grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
-            # else:
-            #      # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-            #      grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
-            # ****************************************************************************
+                # Hyper-prior term:
+                hyperprior = net_L1_norm(prior_model) * np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
 
-            # Print status:
-            log_interval = 500
-            if i_batch % log_interval == 0:
-                batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
-                      'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
-                      format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
-        # end batches loop
+                # Total objective:
+                avg_empirical_loss = (1 / n_tasks_batch) * sum_empirical_loss
+                avg_intra_task_comp = (1 / n_tasks_batch) * sum_intra_task_comp
+
+                total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
+
+                # ****************************************************************************
+                # grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+                # ****************************************************************************
+                if (i_epoch > prm.complexity_train_start) and (i_epoch % prm.complexity_train_interval == 0):
+                    # Take gradient step with the shared prior and all tasks' posteriors:
+                    grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+                else:
+                     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+                     grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
+                # ****************************************************************************
+
+                # Print status:
+                log_interval = 500
+                if i_batch % log_interval == 0:
+                    batch_acc = correct_rate(outputs, targets)
+                    print(cmn.status_string(i_epoch, batch_start, n_tasks, prm, batch_acc, total_objective.data[0]) +
+                          'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                          format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
+            # end samples batches loop
+        # end tasks batches loop
     # end run_epoch()
 
     # -------------------------------------------------------------------------------------------
@@ -164,7 +174,7 @@ def run_meta_learning(train_tasks_data, prm):
     write_result('-'*10+run_name+'-'*10, prm.log_file)
     write_result(str(prm), prm.log_file)
     write_result(cmn.get_model_string(prior_model), prm.log_file)
-    write_result('Total number of steps: {}'.format(n_meta_batches * prm.num_epochs), prm.log_file)
+    # write_result('Total number of steps: {}'.format(n_meta_batches * prm.num_epochs), prm.log_file)
 
     write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
 

@@ -26,19 +26,19 @@ parser.add_argument('--data-transform', type=str, help="Data transformation:  'N
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='CrossEntropy')
+                    default='L2_SVM')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=20)
+                    default=50)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=3)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -59,10 +59,10 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 5}
+    prm.n_way_k_shot = {'N': 20, 'K': 5}
 
 #  Define model:
-prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
+prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer

@@ -28,13 +28,13 @@ parser.add_argument('--data-transform', type=str, help="Data transformation: 'No
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='L2_SVM')
+                    default='CrossEntropy')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1000)
+                    default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -87,7 +87,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_McAllaster'
+prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-7 #  1e-5
@@ -103,9 +103,10 @@ prm.stage_1_ratio = 0.00  # 0.05
 prm.full_eps_ratio_in_stage_2 = 1.0
 # Note:
 
-# prm.comp_train_start = 60
-# prm.comp_train_interval = 10
+prm.complexity_train_start = 0
+prm.complexity_train_interval = 50
 
+prm.task_batch_size = 5
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
@@ -114,7 +115,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 
@@ -122,7 +123,7 @@ f_name='prior'
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 5
+    n_train_tasks = 32
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
