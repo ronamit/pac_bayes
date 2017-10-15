@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' ",
+parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",

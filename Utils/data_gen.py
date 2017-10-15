@@ -107,7 +107,7 @@ def get_info(prm):
     if prm.data_source == 'MNIST':
         info = {'input_shape': (1, 28, 28),  'n_classes': 10}
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (3, 28, 28), 'n_classes': prm.n_way_k_shot['N']}
+        info = {'input_shape': (1, 28, 28), 'n_classes': prm.n_way_k_shot['N']}
 
     else:
         raise ValueError('Invalid data_source')

@@ -87,7 +87,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
+prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-7 #  1e-5
