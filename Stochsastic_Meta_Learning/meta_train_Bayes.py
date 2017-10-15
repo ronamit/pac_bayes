@@ -150,7 +150,7 @@ def run_meta_learning(train_tasks_data, prm):
     # Evaluate the mean loss on samples from the test sets of the training tasks
     # --------------------------------------------------------------------------------------------
     def run_test():
-        test_acc_avg = 0
+        test_acc_avg = 0.0
         n_tests = 0
         for i_task in range(n_tasks):
             model = posteriors_models[i_task]
@@ -165,10 +165,10 @@ def run_meta_learning(train_tasks_data, prm):
                 write_result('Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
                     prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm.log_file)
             else:
-                write_result('Train Task {}, Test set: {} - to Test data'.format(prm.test_type, i_task), prm.log_file)
+                write_result('Train Task {}, Test set: {} - No test data'.format(prm.test_type, i_task), prm.log_file)
 
-
-        test_acc_avg /= n_tests
+        if n_tests > 0:
+            test_acc_avg /= n_tests
         return test_acc_avg
 
     # -----------------------------------------------------------------------------------------------------------#

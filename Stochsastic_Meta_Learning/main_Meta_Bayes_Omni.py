@@ -21,8 +21,6 @@ from Utils.common import save_model_state, load_model_state, write_result, set_r
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Omniglot'",
-                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='None')
@@ -53,12 +51,11 @@ prm.cuda = True
 
 prm.data_path = '../data'
 
+prm.data_source = 'Omniglot'
+
 set_random_seed(prm.seed)
 
-# For Omniglot data - N = number of classes. K = number of train samples per class:
-# Note: number of test samples per class is 20-K
-if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 20}
+
 
 #  Define model type (hypothesis class):
 prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
@@ -99,8 +96,8 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # Learning parameters:
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
-# prm.stage_1_ratio = 0.00  # 0.05
-# prm.full_eps_ratio_in_stage_2 = 1.0
+prm.stage_1_ratio = 0.00  # 0.05
+prm.full_eps_ratio_in_stage_2 = 1.0
 # # Note:
 
 prm.complexity_train_start = 0
@@ -121,10 +118,17 @@ f_name='prior'
 
 
 if mode == 'MetaTrain':
+    # For Omniglot data - N = number of classes. K = number of train samples per class:
+    # Note: number of test samples per class is 20-K
+    prm.n_way_k_shot = {'N': 10, 'K': 20}
 
     # Generate the data sets of the training tasks:
     n_train_tasks = 32
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
+
+    write_result('-' * 5 + 'Generating {} {}-Way {}-Shot meta-train tasks'.
+                 format(n_train_tasks, prm.n_way_k_shot['N'], prm.n_way_k_shot['K']) + '-' * 5, prm.log_file)
+
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
@@ -150,12 +154,13 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 5
-limit_train_samples = 5
+prm.n_way_k_shot = {'N': 10, 'K': 5}
 
-write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
-test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
+write_result('-'*5 + 'Generating {} {}-Way {}-Shot meta-test tasks'.
+             format(n_test_tasks, prm.n_way_k_shot['N'], prm.n_way_k_shot['K']) +'-'*5, prm.log_file)
+
+test_tasks_data = [get_data_loader(prm, meta_split='meta_test') for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
