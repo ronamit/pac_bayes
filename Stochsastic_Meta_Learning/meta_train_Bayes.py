@@ -61,8 +61,10 @@ def run_meta_learning(train_tasks_data, prm):
     # -------------------------------------------------------------------------------------------
     def run_train_epoch(i_epoch):
 
+        task_id_batch = range(n_tasks)
+
         # For each task, prepare an iterator to generate training batches:
-        task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in range(n_tasks)]
+        task_train_loaders = [iter(train_tasks_data[i_task]['train']) for i_task in task_id_batch]
 
         for i_batch in range(n_meta_batches):
 
@@ -71,8 +73,9 @@ def run_meta_learning(train_tasks_data, prm):
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
 
+
             # In each meta-step, we draws batches from all tasks to calculate the total empirical loss estimate:
-            for i_task in range(n_tasks):
+            for i_task in task_id_batch:
                 # get data from current task to calculate the empirical loss estimate:
                 batch_data = task_train_loaders[i_task].next()
 
@@ -105,7 +108,10 @@ def run_meta_learning(train_tasks_data, prm):
             hyperprior = net_L1_norm(prior_model) * np.sqrt(1 / n_tasks) * prm.hyper_prior_factor
 
             # Total objective:
-            total_objective = (1 / n_tasks) * (sum_empirical_loss + sum_intra_task_comp) + hyperprior
+            avg_empirical_loss = (1 / n_tasks) * sum_empirical_loss # TODO: replave with tasks batch len
+            avg_intra_task_comp = (1 / n_tasks) * sum_intra_task_comp
+
+            total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
 
             # ****************************************************************************
             grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -124,7 +130,7 @@ def run_meta_learning(train_tasks_data, prm):
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, i_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
                       'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
-                      format(eps_std, sum_empirical_loss.data[0]/ n_tasks, sum_intra_task_comp.data[0]/ n_tasks, hyperprior.data[0]))
+                      format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
         # end batches loop
     # end run_epoch()
 
