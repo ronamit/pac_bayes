@@ -38,7 +38,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=666)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -56,10 +56,10 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 5, 'K': 10}
+    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
-#  Get model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+#  Define model:
+prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
 
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}

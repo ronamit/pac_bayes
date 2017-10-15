@@ -28,7 +28,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' 
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -83,7 +83,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
+prm.complexity_type = 'Variational_Bayes'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-6  #  1e-5
@@ -107,7 +107,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 dir_path = './saved'
-f_name = 'PermuteLabels_Seeger2'  #  / 'PermuteLabels_Seeger2'
+f_name = 'Permute_Lables_CNN'  #  / 'PermuteLabels_Seeger2' / Permute_Pixels_VB
 
 # Loads  previously training prior.
 # First, create the model:

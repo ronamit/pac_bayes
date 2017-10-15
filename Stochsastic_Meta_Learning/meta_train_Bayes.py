@@ -125,12 +125,13 @@ def run_meta_learning(train_tasks_data, prm):
                 # ****************************************************************************
                 # grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
                 # ****************************************************************************
-                if (i_epoch > prm.complexity_train_start) and (i_epoch % prm.complexity_train_interval == 0):
+                if (avg_empirical_loss.data[0] < prm.complexity_train_loss_thresh ) or \
+                        ((i_epoch > prm.complexity_train_start) and (i_epoch % prm.complexity_train_interval == 0)):
                     # Take gradient step with the shared prior and all tasks' posteriors:
                     grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
                 else:
-                     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-                     grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
+                    # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+                    grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
                 # ****************************************************************************
 
                 # Print status:
@@ -150,19 +151,24 @@ def run_meta_learning(train_tasks_data, prm):
     # --------------------------------------------------------------------------------------------
     def run_test():
         test_acc_avg = 0
-
+        n_tests = 0
         for i_task in range(n_tasks):
             model = posteriors_models[i_task]
             test_loader = train_tasks_data[i_task]['test']
-            test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm)
+            if len(test_loader) > 0:
+                test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm)
+                n_tests += 1
+                test_acc_avg += test_acc
 
-            n_test_samples = len(test_loader.dataset)
+                n_test_samples = len(test_loader.dataset)
 
-            print('Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
-                prm.test_type, i_task, test_loss, test_acc, n_test_samples))
+                write_result('Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
+                    prm.test_type, i_task, test_loss, test_acc, n_test_samples))
+            else:
+                write_result('Train Task {}, Test set: {} - to Test data'.format(prm.test_type, i_task))
 
-            test_acc_avg += (1 / n_tasks) * test_acc
 
+        test_acc_avg /= n_tests
         return test_acc_avg
 
     # -----------------------------------------------------------------------------------------------------------#
