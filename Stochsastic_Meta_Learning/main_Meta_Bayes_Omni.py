@@ -58,10 +58,10 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 5, 'K': 5}
+    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model type (hypothesis class):
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.01}, 'Bayes-log-var': {'bias': -10, 'std': 0.01}}
@@ -87,7 +87,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
+prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-7 #  1e-5
@@ -103,8 +103,8 @@ prm.stage_1_ratio = 0.00  # 0.05
 prm.full_eps_ratio_in_stage_2 = 1.0
 # Note:
 
-prm.comp_train_start = 60
-prm.comp_train_interval = 10
+# prm.comp_train_start = 60
+# prm.comp_train_interval = 10
 
 
 # Test type:
