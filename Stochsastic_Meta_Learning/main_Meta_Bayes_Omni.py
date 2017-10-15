@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=10000)
+                    default=1000)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -64,7 +64,7 @@ if prm.data_source == 'Omniglot':
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.01}, 'Bayes-log-var': {'bias': -30, 'std': 0.01}}
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.01}, 'Bayes-log-var': {'bias': -10, 'std': 0.01}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
@@ -87,7 +87,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_McAllaster'
+prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
 prm.hyper_prior_factor = 1e-7 #  1e-5
@@ -102,6 +102,10 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.stage_1_ratio = 0.00  # 0.05
 prm.full_eps_ratio_in_stage_2 = 1.0
 # Note:
+
+prm.comp_train_start = 60
+prm.comp_train_interval = 10
+
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'

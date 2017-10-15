@@ -39,7 +39,7 @@ def run_meta_learning(train_tasks_data, prm):
 
     n_meta_batches = np.min(n_batch_list)
 
-    # Create an optimizer for each tasks' posterior params:
+    # Gather all tasks posterior params:
     all_post_param = []
     for i_task in range(n_tasks):
         post_params = list(posteriors_models[i_task].parameters())
@@ -49,6 +49,9 @@ def run_meta_learning(train_tasks_data, prm):
     prior_params = list(prior_model.parameters())
     all_params = all_post_param + prior_params
     all_optimizer = optim_func(all_params, **optim_args)
+
+    # Create optimizer for only the posteriors
+    posteriors_optimizer = optim_func(all_post_param, **optim_args)
 
     # number of training samples in each task :
     n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
@@ -104,8 +107,12 @@ def run_meta_learning(train_tasks_data, prm):
             # Total objective:
             total_objective = (1 / n_tasks) * (sum_empirical_loss + sum_intra_task_comp) + hyperprior
 
-            # Take gradient step with the shared prior and all tasks' posteriors:
-            grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+            if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
+                # Take gradient step with the shared prior and all tasks' posteriors:
+                grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+            else:
+                 # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+                 grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
 
             # Print status:
             log_interval = 500
