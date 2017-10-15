@@ -107,12 +107,16 @@ def run_meta_learning(train_tasks_data, prm):
             # Total objective:
             total_objective = (1 / n_tasks) * (sum_empirical_loss + sum_intra_task_comp) + hyperprior
 
-            if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
-                # Take gradient step with the shared prior and all tasks' posteriors:
-                grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
-            else:
-                 # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-                 grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
+            # ****************************************************************************
+            grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+
+            # if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
+            #     # Take gradient step with the shared prior and all tasks' posteriors:
+            #     grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+            # else:
+            #      # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+            #      grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
+            # ****************************************************************************
 
             # Print status:
             log_interval = 500

@@ -66,12 +66,16 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 prm.complexity_type, prior_model, post_model, n_train_samples, empirical_loss)
             total_objective = empirical_loss + intra_task_comp
 
-            # Take gradient step:
-            if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
-                grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
-            else:
-                # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-                grad_step(empirical_loss, optimizer, lr_schedule, prm.lr, i_epoch)
+            #****************************************************************************
+            grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
+
+            # # Take gradient step:
+            # if (i_epoch > prm.comp_train_start) and (i_epoch % prm.comp_train_interval == 0):
+            #     grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
+            # else:
+            #     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+            #     grad_step(empirical_loss, optimizer, lr_schedule, prm.lr, i_epoch)
+            # ****************************************************************************
 
             # Print status:
             if batch_idx % log_interval == 0:

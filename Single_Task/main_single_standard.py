@@ -59,10 +59,10 @@ set_random_seed(prm.seed)
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 5, 'K': 10}
+    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer
