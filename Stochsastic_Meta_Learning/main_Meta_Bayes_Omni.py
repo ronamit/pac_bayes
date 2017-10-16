@@ -41,7 +41,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
-                    default=1000)
+                    default=5)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
@@ -55,7 +55,7 @@ prm.data_source = 'Omniglot'
 
 set_random_seed(prm.seed)
 
-
+prm.meta_batch_size = 5
 
 #  Define model type (hypothesis class):
 prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
@@ -103,7 +103,6 @@ prm.full_eps_ratio_in_stage_2 = 1.0
 prm.complexity_train_start = 0
 prm.complexity_train_interval = 10
 prm.complexity_train_loss_thresh = 0.2
-prm.task_batch_size = 5
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
