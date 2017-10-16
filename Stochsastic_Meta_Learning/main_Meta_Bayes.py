@@ -55,6 +55,8 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
+
+
 # For Omniglot data - N = number of classes. K = number of train samples per class:
 # Note: number of test samples per class is 20-K
 if prm.data_source == 'Omniglot':
@@ -90,7 +92,7 @@ prm.lr_schedule = {} # No decay
 prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-8  #  1e-5
+prm.hyper_prior_factor = 1e-7  #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
@@ -102,6 +104,10 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.stage_1_ratio = 0.00  # 0.05
 prm.full_eps_ratio_in_stage_2 = 0.3
 # Note:
+
+prm.meta_batch_size = 5  # how many tasks in each meta-batch
+
+prm.complexity_train_loss_thresh = 0.2
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'

@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=800)
+                    default=600)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -55,7 +55,6 @@ prm.data_source = 'Omniglot'
 
 set_random_seed(prm.seed)
 
-prm.meta_batch_size = 5
 
 #  Define model type (hypothesis class):
 prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
@@ -80,7 +79,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300, 500]}
+prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300]}
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
@@ -97,11 +96,11 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 1.0
+prm.full_eps_ratio_in_stage_2 = 0.3
 # # Note:
 
-prm.complexity_train_start = 0
-prm.complexity_train_interval = 10
+prm.meta_batch_size = 5  # how many tasks in each meta-batch
+
 prm.complexity_train_loss_thresh = 0.2
 
 # Test type:
@@ -125,7 +124,7 @@ if mode == 'MetaTrain':
     # Note: number of test samples per class is 20-K
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 32
+    n_train_tasks = 5
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
 
     write_result('-' * 5 + 'Generating {} {}-Way {}-Shot meta-train tasks'.
