@@ -77,16 +77,16 @@ def run_meta_learning(train_tasks_data, prm):
             n_sample_batches = np.min(n_batch_list)
 
             # samples-batches loop
-            for i_batch in range(n_sample_batches):
+            for i_sample_batch in range(n_sample_batches):
 
                 sum_empirical_loss = 0
                 sum_intra_task_comp = 0
 
                 # In each meta-step, we draws batches from all tasks in batch to calculate the total empirical loss estimate:
-                for i_task, task_id in enumerate(task_id_batch):
+                for i_task_batch, task_id in enumerate(task_id_batch):
 
                     # get data from current task to calculate the empirical loss estimate:
-                    batch_data = task_train_loaders[i_task].next()
+                    batch_data = task_train_loaders[i_task_batch].next()
 
                     # The posterior model corresponding to the task in the batch:
                     post_model = posteriors_models[task_id]
@@ -122,6 +122,14 @@ def run_meta_learning(train_tasks_data, prm):
 
                 total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
 
+                # Print status:
+                if batch_start == 0 and i_sample_batch == 0:
+                    # TODO: average all batches and print at end of epoch... in addition to prints every number of sample batches
+                    batch_acc = correct_rate(outputs, targets)
+                    print(cmn.status_string_meta(i_epoch, prm, batch_acc, total_objective.data[0]) +
+                          'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                          format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
+
                 # ****************************************************************************
                 # grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
                 # ****************************************************************************
@@ -133,16 +141,9 @@ def run_meta_learning(train_tasks_data, prm):
                     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
                     grad_step(sum_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
                 # ****************************************************************************
-
-                # Print status:
-                log_interval = 500
-                if i_batch % log_interval == 0:
-                    batch_acc = correct_rate(outputs, targets)
-                    print(cmn.status_string(i_epoch, batch_start, n_tasks, prm, batch_acc, total_objective.data[0]) +
-                          'Eps-STD: {:.4}\t Avg-Empiric-Loss: {:.4}\t Avg-Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
-                          format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
             # end samples batches loop
         # end tasks batches loop
+
     # end run_epoch()
 
     # -------------------------------------------------------------------------------------------

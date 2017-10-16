@@ -147,6 +147,13 @@ def status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss_data):
     return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
         progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
 
+def status_string_meta(i_epoch, prm, batch_acc, loss_data):
+
+    progress_per = 100. * (i_epoch ) / ( prm.num_epochs)
+    return ('({:2.1f}%)\tEpoch: {:3} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
+        progress_per, i_epoch + 1, loss_data, batch_acc))
+
+
 def get_model_string(model):
     return str(model.model_type) + '-' + str(model.model_name) + ':' + '-> '.join([m.__str__() for m in model._modules.values()])
 

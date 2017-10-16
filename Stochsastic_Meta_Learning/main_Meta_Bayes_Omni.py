@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=600)
+                    default=800)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -80,7 +80,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300, 500]}
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300, 500]}
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
@@ -108,6 +108,8 @@ prm.task_batch_size = 5
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
+# For Omniglot data - N = number of classes.
+prm.n_way_k_shot = {'N': 5}
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
@@ -118,9 +120,10 @@ f_name='prior'
 
 
 if mode == 'MetaTrain':
-    # For Omniglot data - N = number of classes. K = number of train samples per class:
+
+    prm.n_way_k_shot['K'] = 20
+    # K = number of train samples per class:
     # Note: number of test samples per class is 20-K
-    prm.n_way_k_shot = {'N': 10, 'K': 20}
 
     # Generate the data sets of the training tasks:
     n_train_tasks = 32
@@ -153,9 +156,9 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 5
-prm.n_way_k_shot = {'N': 10, 'K': 5}
-
+# Meta-Test:
+n_test_tasks = 10
+prm.n_way_k_shot['K'] = 5
 
 write_result('-'*5 + 'Generating {} {}-Way {}-Shot meta-test tasks'.
              format(n_test_tasks, prm.n_way_k_shot['N'], prm.n_way_k_shot['K']) +'-'*5, prm.log_file)
