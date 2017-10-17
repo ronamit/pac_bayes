@@ -38,7 +38,6 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     def run_train_epoch(i_epoch):
         log_interval = 500
 
-
         model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 

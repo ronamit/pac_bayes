@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=600)
+                    default=1000)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -41,7 +41,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
-                    default=5)
+                    default=1000)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
@@ -79,7 +79,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300]}
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [300]}
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
@@ -124,7 +124,7 @@ if mode == 'MetaTrain':
     # Note: number of test samples per class is 20-K
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 5
+    n_train_tasks = 100
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
 
     write_result('-' * 5 + 'Generating {} {}-Way {}-Shot meta-train tasks'.
