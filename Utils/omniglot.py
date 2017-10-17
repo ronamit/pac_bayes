@@ -171,6 +171,7 @@ def maybe_download(root):
         zip_ref.extractall(file_processed)
         zip_ref.close()
     print("Download finished.")
+    return splits_dirs
 
 # ----------------   Resize images to 28x28
 # """
