@@ -132,7 +132,10 @@ def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(complexity_type, prior_model, post_model, n_samples, task_empirical_loss):
+def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss):
+
+    complexity_type = prm.complexity_type
+    n_samples *= prm.samples_mult
 
     kld = get_total_kld(prior_model, post_model)
 

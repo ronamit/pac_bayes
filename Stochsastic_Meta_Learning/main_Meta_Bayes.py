@@ -107,7 +107,7 @@ prm.full_eps_ratio_in_stage_2 = 0.3
 
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
-prm.complexity_train_loss_thresh = 0.2
+# prm.complexity_train_loss_thresh = 0.2
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'

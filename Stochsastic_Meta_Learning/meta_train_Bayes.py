@@ -49,7 +49,7 @@ def run_meta_learning(train_tasks_data, prm):
     posteriors_optimizer = optim_func(all_post_param, **optim_args)
 
     # number of training samples in each task :
-    n_samples_list = [data_loader['n_train_samples'] for data_loader in train_tasks_data]
+    n_samples_list = [ data_loader['n_train_samples'] for data_loader in train_tasks_data]
 
     # number of sample-batches in each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
@@ -122,7 +122,7 @@ def run_meta_learning(train_tasks_data, prm):
 
                 # Intra-task complexity of current task:
                 task_complexity = get_posterior_complexity_term(
-                    prm.complexity_type, prior_model, post_model,
+                    prm, prior_model, post_model,
                     n_samples_list[task_id], task_empirical_loss)
 
                 sum_empirical_loss += task_empirical_loss
@@ -139,14 +139,14 @@ def run_meta_learning(train_tasks_data, prm):
             total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
 
             # ****************************************************************************
-            # grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+            grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
             # ****************************************************************************
-            if (avg_empirical_loss.data[0] < prm.complexity_train_loss_thresh):
-                # Take gradient step with the shared prior and all tasks' posteriors:
-                grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
-            else:
-                # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-                grad_step(avg_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
+            # if (avg_empirical_loss.data[0] < prm.complexity_train_loss_thresh):
+            #     # Take gradient step with the shared prior and all tasks' posteriors:
+            #     grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
+            # else:
+            #     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
+            #     grad_step(avg_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
             # ****************************************************************************
 
             # Print status:

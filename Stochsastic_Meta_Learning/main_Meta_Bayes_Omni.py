@@ -60,7 +60,7 @@ set_random_seed(prm.seed)
 prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.01}, 'Bayes-log-var': {'bias': -10, 'std': 0.01}}
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
@@ -86,7 +86,7 @@ prm.lr_schedule = {} # No decay
 prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-6 #  1e-5
+prm.hyper_prior_factor = 1e-7 #  1e-5
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
@@ -96,12 +96,13 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.3
+prm.full_eps_ratio_in_stage_2 = 0.9
 # # Note:
 
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
-prm.complexity_train_loss_thresh = 0.2
+# prm.complexity_train_loss_thresh = 0.2
+prm.samples_mult = 100  # multiplies the number of samples for the complexity term calculation
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
