@@ -21,11 +21,11 @@ from Utils.common import save_model_state, load_model_state, write_result, set_r
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Omniglot'",
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='None')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -55,12 +55,6 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-
-
-# For Omniglot data - N = number of classes. K = number of train samples per class:
-# Note: number of test samples per class is 20-K
-if prm.data_source == 'Omniglot':
-    prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model type (hypothesis class):
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
@@ -102,12 +96,12 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 # In the stage 1 of the learning epochs, epsilon std == 0
 # In the second stage it increases linearly until reaching std==1 (full eps)
 prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.3
+prm.full_eps_ratio_in_stage_2 = 0.8
 # Note:
 
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
-# prm.complexity_train_loss_thresh = 0.2
+prm.samples_mult = 1  # multiplies the number of samples for the complexity term calculation
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'

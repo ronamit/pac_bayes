@@ -101,7 +101,6 @@ prm.full_eps_ratio_in_stage_2 = 0.9
 
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
-# prm.complexity_train_loss_thresh = 0.2
 prm.samples_mult = 100  # multiplies the number of samples for the complexity term calculation
 
 # Test type:
