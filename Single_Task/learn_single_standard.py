@@ -56,28 +56,6 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss.data[0]))
 
-
-    # -------------------------------------------------------------------------------------------
-    #  Test evaluation function
-    # --------------------------------------------------------------------------------------------
-    def run_test():
-        model.eval()
-        test_loss = 0
-        n_correct = 0
-        for batch_data in test_loader:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            outputs = model(inputs)
-            test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
-            n_correct += count_correct(outputs, targets)
-
-        n_test_samples = len(test_loader.dataset)
-        n_test_batches = len(test_loader)
-        test_loss = test_loss.data[0] / n_test_batches
-        test_acc = n_correct / n_test_samples
-        print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-            test_loss, test_acc, n_correct, n_test_samples))
-        return test_acc
-
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
@@ -98,10 +76,32 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc = run_test()
+    test_acc = run_test(model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose, result_name='Standard')
 
     test_err = 1-test_acc
     return test_err, model
+
+
+# -------------------------------------------------------------------------------------------
+#  Test evaluation function
+# --------------------------------------------------------------------------------------------
+def run_test(model, test_loader, loss_criterion, prm):
+    model.eval()
+    test_loss = 0
+    n_correct = 0
+    for batch_data in test_loader:
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        outputs = model(inputs)
+        test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
+        n_correct += count_correct(outputs, targets)
+
+    n_test_samples = len(test_loader.dataset)
+    n_test_batches = len(test_loader)
+    test_loss = test_loss.data[0] / n_test_batches
+    test_acc = n_correct / n_test_samples
+    print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
+        test_loss, test_acc, n_correct, n_test_samples))
+    return test_acc
