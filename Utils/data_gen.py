@@ -77,10 +77,14 @@ def load_MNIST(final_input_trans, target_trans, prm):
     transform = [transforms.ToTensor()]
 
     # Normalize values:
-    # Note: values are already in the range [0,1]
+    # Note: original values  in the range [0,1]
+
+
     # MNIST_MEAN = (0.1307,)  # (0.5,)
     # MNIST_STD = (0.3081,)  # (0.5,)
     # transform += transforms.Normalize(MNIST_MEAN, MNIST_STD)
+
+    transform += [transforms.Normalize((0.5,), (0.5,))] # transform to [-1,1]
 
     if final_input_trans:
         transform += final_input_trans
