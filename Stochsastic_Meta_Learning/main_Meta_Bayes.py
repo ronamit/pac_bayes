@@ -101,8 +101,6 @@ prm.full_eps_ratio_in_stage_2 = 0.8
 
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
-prm.samples_mult = 1  # multiplies the number of samples for the complexity term calculation
-
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
