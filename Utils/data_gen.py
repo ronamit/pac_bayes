@@ -32,6 +32,9 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
     if prm.data_source == 'MNIST':
         train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
 
+    elif prm.data_source == 'CIFAR10':
+        train_dataset, test_dataset = load_CIFAR(final_input_trans, target_trans, prm)
+
     elif prm.data_source == 'Sinusoid':
 
         task_param = create_sinusoid_task()
@@ -48,9 +51,9 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
     # Limit the training samples:
     n_train_samples_orig = len(train_dataset)
     if limit_train_samples and limit_train_samples < n_train_samples_orig:
-        sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples]
+        sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples].numpy()
         train_dataset.train_data = train_dataset.train_data[sampled_inds]
-        train_dataset.train_labels = train_dataset.train_labels[sampled_inds]
+        train_dataset.train_labels = np.asarray(train_dataset.train_labels)[sampled_inds]
 
     # Create data loaders:
     kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True} if prm.cuda else {}
@@ -79,12 +82,11 @@ def load_MNIST(final_input_trans, target_trans, prm):
     # Normalize values:
     # Note: original values  in the range [0,1]
 
-
     # MNIST_MEAN = (0.1307,)  # (0.5,)
     # MNIST_STD = (0.3081,)  # (0.5,)
     # transform += transforms.Normalize(MNIST_MEAN, MNIST_STD)
 
-    transform += [transforms.Normalize((0.5,), (0.5,))] # transform to [-1,1]
+    transform += [transforms.Normalize((0.5,), (0.5,))]  # transform to [-1,1]
 
     if final_input_trans:
         transform += final_input_trans
@@ -102,6 +104,33 @@ def load_MNIST(final_input_trans, target_trans, prm):
 
     return train_dataset, test_dataset
 
+
+
+def load_CIFAR(final_input_trans, target_trans, prm):
+
+    # Data transformations list:
+    transform = [transforms.ToTensor()]
+
+    # Normalize values:
+    # Note: original values  in the range [0,1]
+    transform += [transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))]  # transform to [-1,1]
+
+    if final_input_trans:
+        transform += final_input_trans
+
+    root_path = os.path.join(prm.data_path, 'CIFAR10')
+
+    # Train set:
+    train_dataset = datasets.CIFAR10(root_path, train=True, download=True,
+                                   transform=transforms.Compose(transform), target_transform=transforms.Compose(target_trans))
+
+    # Test set:
+    test_dataset = datasets.CIFAR10(root_path, train=False,
+                                  transform=transforms.Compose(transform), target_transform=transforms.Compose(target_trans))
+
+
+    return train_dataset, test_dataset
+
 # -------------------------------------------------------------------------------------------
 #  Data sets parameters
 # -------------------------------------------------------------------------------------------
@@ -110,6 +139,8 @@ def load_MNIST(final_input_trans, target_trans, prm):
 def get_info(prm):
     if prm.data_source == 'MNIST':
         info = {'input_shape': (1, 28, 28),  'n_classes': 10}
+    elif prm.data_source == 'CIFAR10':
+        info = {'input_shape': (3, 32, 32), 'n_classes': 10}
     elif prm.data_source == 'Omniglot':
         info = {'input_shape': (1, 28, 28), 'n_classes': prm.n_way_k_shot['N']}
 

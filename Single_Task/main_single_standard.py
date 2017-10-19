@@ -19,20 +19,20 @@ from Single_Task import learn_single_standard
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='MNIST')
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
+                    default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='L2_SVM')
+                    default='CrossEntropy')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)
+                    default=200)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -41,7 +41,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
-                    default=1000)
+                    default=128)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
@@ -62,7 +62,7 @@ if prm.data_source == 'Omniglot':
     prm.n_way_k_shot = {'N': 20, 'K': 5}
 
 #  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
+prm.model_name = 'WideResNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer
@@ -70,10 +70,10 @@ prm.init_override = None # None = use default initializer
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
-# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
-#lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
+# lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {} # No decay
 
 # Generate task data set:

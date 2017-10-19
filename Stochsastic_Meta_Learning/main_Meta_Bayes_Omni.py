@@ -38,7 +38,7 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=11)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -57,7 +57,7 @@ set_random_seed(prm.seed)
 
 
 #  Define model type (hypothesis class):
-prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
+prm.model_name = 'Conv3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'  / 'Conv3'
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}

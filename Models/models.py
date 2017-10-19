@@ -7,7 +7,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from Utils import data_gen
 from Models.layers import StochasticLinear, StochasticConv2d
-
+import torchvision.models
+from Models.WideResNet import WideResNet
 
 
 # -------------------------------------------------------------------------------------------
@@ -169,28 +170,28 @@ def get_model(prm, model_type, init_override=None):
             super(OmniglotNet, self).__init__()
             self.model_type = model_type
             self.model_name = model_name
-            n_filt1 = 64
-            n_filt2 = 64
-            n_filt3 = 64
+            n_filt1 = 64  # 64
+            n_filt2 = 64  # 64
+            n_filt3 = 64  # 64
 
             self.conv1 = conv2d_layer(color_channels, n_filt1, kernel_size=3)
             self.bn1 = nn.BatchNorm2d(n_filt1, momentum=1, affine=True)
-            self.relu1 = nn.ReLU(inplace=True)
+            # self.relu1 = nn.ReLU(inplace=True)
             self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=3)
             self.bn2 = nn.BatchNorm2d(n_filt2, momentum=1, affine=True)
-            self.relu2 = nn.ReLU(inplace=True)
+            # self.relu2 = nn.ReLU(inplace=True)
             self.conv3 = conv2d_layer(n_filt2, n_filt3, kernel_size=3)
             self.bn3 = nn.BatchNorm2d(n_filt3, momentum=1, affine=True)
-            self.relu3 = nn.ReLU(inplace=True)
+            # self.relu3 = nn.ReLU(inplace=True)
             conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
             self.fc_out = linear_layer(conv_feat_size, n_classes)
 
         def _forward_features(self, x, *a):
-            x = self.relu1(self.bn1(self.conv1(x, *a)))
+            x = F.elu(self.bn1(self.conv1(x, *a)))
             x = F.max_pool2d(x, kernel_size=2, stride=2)
-            x = self.relu2(self.bn2(self.conv2(x, *a)))
+            x = F.elu(self.bn2(self.conv2(x, *a)))
             x = F.max_pool2d(x, kernel_size=2, stride=2)
-            x = self.relu3(self.bn3(self.conv3(x, *a)))
+            x = F.elu(self.bn3(self.conv3(x, *a)))
             x = F.max_pool2d(x, kernel_size=2, stride=2)
             return x
 
@@ -199,6 +200,42 @@ def get_model(prm, model_type, init_override=None):
             x = x.view(x.size(0), -1)
             x = self.fc_out(x, *a)
             return x
+
+            # -------------------------------------------------------------------------------------------
+            #  ConvNet for Omniglot
+            # -------------------------------------------------------------------------------------------
+            # based on https://github.com/katerakelly/pytorch-maml/blob/master/src/omniglot_net.py
+
+    class Conv3(nn.Module):
+        def __init__(self):
+            super(Conv3, self).__init__()
+            self.model_type = model_type
+            self.model_name = model_name
+            n_filt1 = 64  # 64
+            n_filt2 = 64  # 64
+            n_filt3 = 64  # 64
+
+            self.conv1 = conv2d_layer(color_channels, n_filt1, kernel_size=3)
+            self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=3)
+            self.conv3 = conv2d_layer(n_filt2, n_filt3, kernel_size=3)
+            conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
+            self.fc_out = linear_layer(conv_feat_size, n_classes)
+
+        def _forward_features(self, x, *a):
+            x = F.elu((self.conv1(x, *a)))
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.elu((self.conv2(x, *a)))
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.elu((self.conv3(x, *a)))
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            return x
+
+        def forward(self, x, *a):
+            x = self._forward_features(x)
+            x = x.view(x.size(0), -1)
+            x = self.fc_out(x, *a)
+            return x
+
     # -------------------------------------------------------------------------------------------
     #  Return selected model:
     # -------------------------------------------------------------------------------------------
@@ -213,6 +250,12 @@ def get_model(prm, model_type, init_override=None):
         model = ConvNet_Dropout()
     elif model_name == 'OmniglotNet':
         model = OmniglotNet()
+    elif model_name == 'Conv3':
+        model = Conv3()
+    elif model_name == 'WideResNet':
+        model = WideResNet(depth=22, num_classes=n_classes, widen_factor=4, dropRate=0.0)
+        model.model_type = 'Standard'
+        model.model_name = model_name
     else:
         raise ValueError('Invalid model_name')
 

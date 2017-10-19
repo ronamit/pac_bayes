@@ -181,7 +181,7 @@ def run_meta_learning(train_tasks_data, prm):
                 write_result('Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
                     prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm.log_file)
             else:
-                write_result('Train Task {}, Test set: {} - No test data'.format(prm.test_type, i_task), prm.log_file)
+                print('Train Task {}, Test set: {} - No test data'.format(prm.test_type, i_task))
 
         if n_tests > 0:
             test_acc_avg /= n_tests
