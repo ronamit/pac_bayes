@@ -9,6 +9,7 @@ from Utils import data_gen
 from Models.layers import StochasticLinear, StochasticConv2d
 import torchvision.models
 from Models.WideResNet import WideResNet
+from Models.densenet import DenseNet3
 
 
 # -------------------------------------------------------------------------------------------
@@ -252,10 +253,17 @@ def get_model(prm, model_type, init_override=None):
         model = OmniglotNet()
     elif model_name == 'Conv3':
         model = Conv3()
+
     elif model_name == 'WideResNet':
         model = WideResNet(depth=22, num_classes=n_classes, widen_factor=4, dropRate=0.0)
         model.model_type = 'Standard'
         model.model_name = model_name
+
+    elif model_name == 'DenseNet':
+        model = DenseNet3(depth=40, num_classes=n_classes)
+        model.model_type = 'Standard'
+        model.model_name = model_name
+
     else:
         raise ValueError('Invalid model_name')
 
