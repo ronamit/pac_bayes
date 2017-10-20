@@ -268,7 +268,10 @@ def get_model(prm, model_type, init_override=None):
         model.model_type = 'Standard'
         model.model_name = model_name
 
-
+    elif model_name == 'DenseNet100':
+        model = DenseNet3(depth=100, num_classes=n_classes)
+        model.model_type = 'Standard'
+        model.model_name = model_name
 
     else:
         raise ValueError('Invalid model_name')
