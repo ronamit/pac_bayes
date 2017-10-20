@@ -131,7 +131,7 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
 def get_loss_criterion(loss_type):
 # Note: the loss use the un-normalized net outputs (scores, not probabilities)
 
-    criterion_dict = {'CrossEntropy':nn.CrossEntropyLoss(size_average=True),
+    criterion_dict = {'CrossEntropy':nn.CrossEntropyLoss(size_average=True).cuda(),
                  'L2_SVM':nn.MultiMarginLoss(p=2, margin=1, weight=None, size_average=True)}
 
     return criterion_dict[loss_type]
