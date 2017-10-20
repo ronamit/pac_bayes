@@ -62,7 +62,7 @@ if prm.data_source == 'Omniglot':
     prm.n_way_k_shot = {'N': 20, 'K': 5}
 
 #  Define model:
-prm.model_name = 'DenseNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet
+prm.model_name = 'DenseNet60'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer
@@ -70,10 +70,10 @@ prm.init_override = None # None = use default initializer
 
 #  Define optimizer:
 # prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr, 'weight_decay':5e-4}
-prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9, 'weight_decay':5e-4}
 
 # Learning rate decay schedule:
-prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
+prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150, 225]}
 # prm.lr_schedule = {} # No decay
 
 # Generate task data set:

@@ -11,7 +11,6 @@ import torchvision.models
 from Models.WideResNet import WideResNet
 from Models.densenet import DenseNet3
 
-
 # -------------------------------------------------------------------------------------------
 # Auxiliary functions
 # -------------------------------------------------------------------------------------------
@@ -263,6 +262,13 @@ def get_model(prm, model_type, init_override=None):
         model = DenseNet3(depth=40, num_classes=n_classes)
         model.model_type = 'Standard'
         model.model_name = model_name
+
+    elif model_name == 'DenseNet60':
+        model = DenseNet3(depth=60, num_classes=n_classes)
+        model.model_type = 'Standard'
+        model.model_name = model_name
+
+
 
     else:
         raise ValueError('Invalid model_name')
