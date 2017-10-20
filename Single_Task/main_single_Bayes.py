@@ -10,7 +10,7 @@ from Utils import common as cmn, data_gen
 from Utils.common import set_random_seed
 from Single_Task import learn_single_Bayes
 
-# torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
