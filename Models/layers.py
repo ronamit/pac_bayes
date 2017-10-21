@@ -20,6 +20,17 @@ def get_randn_param(shape, mean, std):
         shape = (shape,)
     return nn.Parameter(torch.FloatTensor(*shape).normal_(mean, std))
 
+
+class general_model(nn.Module):
+    def __init__(self):
+        super(general_model, self).__init__()
+
+    def set_eps_std(self, eps_std):
+        for m in self.modules():
+            if isinstance(m, StochasticLayer):
+                old_eps_std = m.set_eps_std(eps_std)
+        return old_eps_std
+
 # -------------------------------------------------------------------------------------------
 #  Stochastic linear layer
 # -------------------------------------------------------------------------------------------
@@ -45,7 +56,7 @@ class StochasticLayer(nn.Module):
             self.b = {'mean': self.b_mu, 'log_var': self.b_log_var}
 
 
-    def forward(self, x, eps_std=1.0):
+    def forward(self, x):
 
         # Layer computations (based on "Variational Dropout and the Local
         # Reparameterization Trick", Kingma et.al 2015)
@@ -60,7 +71,7 @@ class StochasticLayer(nn.Module):
 
         out_mean = self.operation(x, self.w['mean'], bias=bias_mean)
 
-
+        eps_std = self.eps_std
         if eps_std == 0.0:
             layer_out = out_mean
         else:
@@ -76,6 +87,11 @@ class StochasticLayer(nn.Module):
             layer_out = out_mean + noise * torch.sqrt(out_var)
 
         return layer_out
+
+    def set_eps_std(self, eps_std):
+        old_eps_std = self.eps_std
+        self.eps_std = eps_std
+        return old_eps_std
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic linear layer
@@ -95,6 +111,7 @@ class StochasticLinear(StochasticLayer):
         else:
             bias_size = None
         self.init_stochastic_layer(weights_size, bias_size, prm)
+        self.eps_std = 1.0
 
 
     def __str__(self):
@@ -126,6 +143,7 @@ class StochasticConv2d(StochasticLayer):
         else:
             bias_size = None
         self.init_stochastic_layer(weights_size, bias_size, prm)
+        self.eps_std = 1.0
 
 
     def __str__(self):

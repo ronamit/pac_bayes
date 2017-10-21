@@ -6,7 +6,7 @@ import timeit
 
 from Models.models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_eps_std, run_test_Bayes
+from Utils.Bayes_utils import run_test_Bayes
 from Utils.common import grad_step, correct_rate, get_loss_criterion
 
 

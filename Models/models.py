@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from Utils import data_gen
-from Models.layers import StochasticLinear, StochasticConv2d
+from Models.layers import StochasticLinear, StochasticConv2d, general_model
 import torchvision.models
 from Models.WideResNet import WideResNet
 from Models.densenet import get_densenet_model_class
@@ -54,7 +54,7 @@ def get_model(prm, model_type, init_override=None):
     # -------------------------------------------------------------------------------------------
     #  2-hidden-layer Fully-Connected Net
     # -------------------------------------------------------------------------------------------
-    class FcNet2(nn.Module):
+    class FcNet2(general_model):
         def __init__(self):
             super(FcNet2, self).__init__()
             self.model_type = model_type
@@ -77,7 +77,7 @@ def get_model(prm, model_type, init_override=None):
     # -------------------------------------------------------------------------------------------
     #  3-hidden-layer Fully-Connected Net
     # -------------------------------------------------------------------------------------------
-    class FcNet3(nn.Module):
+    class FcNet3(general_model):
         def __init__(self):
             super(FcNet3, self).__init__()
             self.model_type = model_type
@@ -103,7 +103,7 @@ def get_model(prm, model_type, init_override=None):
     #  ConvNet
     # -------------------------------------------------------------------------------- -----------
 
-    class ConvNet(nn.Module):
+    class ConvNet(general_model):
         def __init__(self):
             super(ConvNet, self).__init__()
             self.model_type = model_type
@@ -133,7 +133,7 @@ def get_model(prm, model_type, init_override=None):
     # -------------------------------------------------------------------------------------------
     #  ConvNet with dropout
     # -------------------------------------------------------------------------------------------
-    class ConvNet_Dropout(nn.Module):
+    class ConvNet_Dropout(general_model):
         def __init__(self):
             super(ConvNet_Dropout, self).__init__()
             self.model_type = model_type
@@ -166,7 +166,7 @@ def get_model(prm, model_type, init_override=None):
     #  ConvNet for Omniglot
     # -------------------------------------------------------------------------------------------
     # based on https://github.com/katerakelly/pytorch-maml/blob/master/src/omniglot_net.py
-    class OmniglotNet(nn.Module):
+    class OmniglotNet(general_model):
         def __init__(self):
             super(OmniglotNet, self).__init__()
             self.model_type = model_type
@@ -207,7 +207,7 @@ def get_model(prm, model_type, init_override=None):
             # -------------------------------------------------------------------------------------------
             # based on https://github.com/katerakelly/pytorch-maml/blob/master/src/omniglot_net.py
 
-    class Conv3(nn.Module):
+    class Conv3(general_model):
         def __init__(self):
             super(Conv3, self).__init__()
             self.model_type = model_type

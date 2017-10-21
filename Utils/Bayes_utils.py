@@ -31,8 +31,9 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
-        eps_std = 0.0  # test with max-posterior
-        outputs = model(inputs, eps_std)
+        old_eps_std = model.set_eps_std(0.0)   # test with max-posterior
+        outputs = model(inputs)
+        model.set_eps_std(old_eps_std)  # return model to normal behaviour
         test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
         n_correct += count_correct(outputs, targets)
 
@@ -58,8 +59,8 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
         for i_vote in range(n_votes):
-            eps_std = 1.0
-            outputs = model(inputs, eps_std)
+
+            outputs = model(inputs)
             test_loss += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
             for i_sample in range(batch_size):
@@ -91,8 +92,8 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
         for i_vote in range(n_votes):
-            eps_std = 1.0
-            outputs = model(inputs, eps_std)
+
+            outputs = model(inputs)
             test_loss += loss_criterion(outputs, targets)
             votes += outputs.data
 
@@ -105,27 +106,27 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         test_acc, n_correct, n_test_samples))
     return test_acc, test_loss
 
-
-def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
-
-    total_iter = prm.num_epochs * n_meta_batches
-    n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
-    n_iter_stage_2 = total_iter - n_iter_stage_1
-    n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
-    full_eps_std = 1.0
-
-    # We gradually increase epsilon'PermuteLabels_Seeger.out STD from 0 to 1.
-    # The reason is that using 1 from the start results in high variance gradients.
-    iter_idx = i_epoch * n_meta_batches + batch_idx
-    if iter_idx >= n_iter_stage_1:
-        if n_iter_stage_2 == n_iter_with_full_eps_std:
-            eps_std = 1.0
-        else:
-            eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
-    else:
-        eps_std = 0.0
-    eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
-    return eps_std
+#
+# def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
+#
+#     total_iter = prm.num_epochs * n_meta_batches
+#     n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
+#     n_iter_stage_2 = total_iter - n_iter_stage_1
+#     n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
+#     full_eps_std = 1.0
+#
+#     # We gradually increase epsilon'PermuteLabels_Seeger.out STD from 0 to 1.
+#     # The reason is that using 1 from the start results in high variance gradients.
+#     iter_idx = i_epoch * n_meta_batches + batch_idx
+#     if iter_idx >= n_iter_stage_1:
+#         if n_iter_stage_2 == n_iter_with_full_eps_std:
+#             eps_std = 1.0
+#         else:
+#             eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
+#     else:
+#         eps_std = 0.0
+#     eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
+#     return eps_std
 
 
 #  -------------------------------------------------------------------------------------------
