@@ -258,6 +258,11 @@ def get_model(prm, model_type, init_override=None):
         model.model_type = 'Standard'
         model.model_name = model_name
 
+    elif model_name == 'DenseNet20':
+        model = DenseNet3(depth=20, num_classes=n_classes)
+        model.model_type = 'Standard'
+        model.model_name = model_name
+
     elif model_name == 'DenseNet':
         model = DenseNet3(depth=40, num_classes=n_classes)
         model.model_type = 'Standard'

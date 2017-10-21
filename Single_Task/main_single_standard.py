@@ -62,7 +62,7 @@ if prm.data_source == 'Omniglot':
     prm.n_way_k_shot = {'N': 20, 'K': 5}
 
 #  Define model:
-prm.model_name = 'DenseNet100'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100
+prm.model_name = 'DenseNet20'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer
