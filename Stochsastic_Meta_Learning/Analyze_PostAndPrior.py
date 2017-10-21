@@ -8,7 +8,7 @@ import torch
 import torch.optim as optim
 
 from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
-from Models import models_Bayes
+from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
@@ -37,7 +37,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=300) # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -59,16 +59,17 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
+prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
-# Weights initialization:
-prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
-           'Bayes-log-var': {'bias': -10, 'std': 0.1},
-           'Standard-Net': {'bias': None, 'std': None}}
-# None = use default initializer
+# Weights initialization (for Bayesian net):
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
+
+# Weights initialization (for standard comparision net):
+prm.init_override = None # None = use default initializer
+# prm.init_override = {'mean': 0, 'std': 0.1}
 
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
@@ -83,21 +84,10 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'Variational_Bayes'
+prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
-print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-6  #  1e-5
-# Note: Hyper-prior is important to keep the sigma not too low.
-# Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
-
-# Learning parameters:
-# In the stage 1 of the learning epochs, epsilon std == 0
-# In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.3
-# Note:
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
@@ -107,15 +97,15 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 dir_path = './saved'
-f_name = 'Permute_Lables_CNN'  #  / 'PermuteLabels_Seeger2' / Permute_Pixels_VB
+f_name = 'pror_Permuted_labels_MNIST_ConvNet'  #  /
+
 
 # Loads  previously training prior.
 # First, create the model:
-prior_model = models_Bayes.get_bayes_model(model_type, prm)
+prior_model = get_model(prm, 'Stochastic')
 # Then load the weights:
 load_model_state(prior_model, dir_path, name=f_name)
 print('Pre-trained  prior loaded from ' + dir_path)
-
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
@@ -131,8 +121,8 @@ test_task_data = data_gen.get_data_loader(prm, limit_train_samples)
 # -------------------------------------------------------------------------------
 print('Meta-Testing with transferred prior....')
 
-test_err, post_model = meta_test_Bayes.run_learning(test_task_data, prior_model, prm,
-                                        model_type, init_from_prior, verbose=0)
+test_err, post_model = meta_test_Bayes.run_learning(
+    test_task_data, prior_model, prm, init_from_prior, verbose=0)
 
 # --------------------------------------------------------------------------------
 #  Analyze
