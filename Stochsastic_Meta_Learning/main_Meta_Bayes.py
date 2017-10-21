@@ -25,7 +25,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Pixels')
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -79,7 +79,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
 
 # Learning rate decay schedule:
-# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [20, 50]}
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
