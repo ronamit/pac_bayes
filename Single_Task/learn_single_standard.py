@@ -28,8 +28,17 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     if initial_model:
         model.load_state_dict(initial_model.state_dict())
 
+    if hasattr(prm, 'freeze_list'):
+        freeze_list = prm.freeze_list
+        optimized_modules = [named_module[1]
+                             for named_module in model.named_children()
+                             if not named_module[0] in freeze_list]
+        optimized_params = sum([list(mo.parameters()) for mo in optimized_modules], [])
+    else:
+        optimized_params = model.parameters()
+
     #  Get optimizer:
-    optimizer = optim_func(model.parameters(), **optim_args)
+    optimizer = optim_func(optimized_params, **optim_args)
 
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function

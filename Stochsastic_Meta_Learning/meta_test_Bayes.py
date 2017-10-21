@@ -5,7 +5,7 @@ import timeit
 
 from Models.models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
+from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
 from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
 
 
@@ -48,17 +48,15 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
         post_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 
-            eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
-
             # Monte-Carlo iterations:
-            n_MC = prm.n_MC if eps_std > 0 else 1
+            n_MC = prm.n_MC
             empirical_loss = 0
             for i_MC in range(n_MC):
                 # get batch:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # Calculate empirical loss:
-                outputs = post_model(inputs, eps_std)
+                outputs = post_model(inputs)
                 empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
 
             # Total objective:
@@ -81,8 +79,8 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
-                      'Eps-STD: {:.4}\t Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
-                      format(eps_std, empirical_loss.data[0], intra_task_comp.data[0]))
+                      ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
+                      format(empirical_loss.data[0], intra_task_comp.data[0]))
 
 
     # -----------------------------------------------------------------------------------------------------------#

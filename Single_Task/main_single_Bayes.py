@@ -20,7 +20,7 @@ torch.backends.cudnn.benchmark=True # For speed improvement with convnets with f
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
-                    default='CIFAR10')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
                     default='None')
@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300) # 300
+                    default=200) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -59,7 +59,7 @@ if prm.data_source == 'Omniglot':
     prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model:
-prm.model_name = 'DenseNet20'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
+prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
 
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}

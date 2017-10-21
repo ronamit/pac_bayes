@@ -7,7 +7,7 @@ import numpy as np
 
 from Models.models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, get_eps_std, run_test_Bayes
+from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
 from Utils.common import grad_step, net_L1_norm, correct_rate, get_loss_criterion, write_result
 
 
@@ -81,8 +81,6 @@ def run_meta_learning(train_tasks_data, prm):
 
         for i_meta_batch in range(n_meta_batches):
 
-            eps_std = get_eps_std(i_epoch, i_meta_batch, n_meta_batches, prm)
-
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]
             n_inner_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
@@ -109,14 +107,14 @@ def run_meta_learning(train_tasks_data, prm):
                 post_model.train()
 
                 # Monte-Carlo iterations:
-                n_MC = prm.n_MC if eps_std > 0 else 1
+                n_MC = prm.n_MC
                 task_empirical_loss = 0
                 for i_MC in range(n_MC):
                 # get batch variables:
                     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                     # Empirical Loss on current task:
-                    outputs = post_model(inputs, eps_std)
+                    outputs = post_model(inputs)
                     task_empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
                 # end MC loop
 
@@ -155,8 +153,8 @@ def run_meta_learning(train_tasks_data, prm):
                 # TODO: average all batches and print at end of epoch... in addition to prints every number of sample batches
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, i_meta_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
-                      'Eps-STD: {:.4}\t Empiric-Loss: {:.4}\t Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
-                      format(eps_std, avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
+                      ' Empiric-Loss: {:.4}\t Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
+                      format(avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
         # end  meta-batches loop
 
     # end run_epoch()

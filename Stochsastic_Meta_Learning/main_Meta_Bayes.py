@@ -92,13 +92,6 @@ prm.hyper_prior_factor = 1e-7  #  1e-5
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
-# Learning parameters:
-# In the stage 1 of the learning epochs, epsilon std == 0
-# In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0.00  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.8
-# Note:
-
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
 # Test type:

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-
+from copy import deepcopy
 import torch
 import torch.optim as optim
 
@@ -35,13 +35,13 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 200
+                    default=100) # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=55)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
@@ -49,6 +49,8 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 parser.add_argument('--log-file', type=str, help='Name of file to save log (default: no save)',
                     default='log')
 
+
+n_expirements = 10  # 10
 
 prm = parser.parse_args()
 prm.cuda = True
@@ -72,13 +74,25 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
 prm.lr_schedule = {} # No decay
 
-n_expirements = 10
+
+# For L2 regularization experiment:
+prm_reg = deepcopy(prm)
+prm.optim_args['weight_decay'] = 1e-3
+
+
+# For freez lower layers experiment:
+prm_freeze = deepcopy(prm)
+prm_freeze.freeze_list = ['conv1', 'conv2']
+
+
 test_err_orig_avg = 0
 test_err_scratch_avg = 0
 test_err_transfer_avg = 0
+test_err_scratch_reg_avg = 0
+test_err_freeze_avg = 0
 
 for i_exp in range(n_expirements):
-    write_result('-' * 5 + ' Expirement #{} out of {}'.format(i_exp, n_expirements), prm.log_file)
+    write_result('-' * 5 + ' Expirement #{} out of {}'.format(i_exp+1, n_expirements), prm.log_file)
 
     # Generate the task #1 data set:
     task1_data = data_gen.get_data_loader(prm)
@@ -101,19 +115,39 @@ for i_exp in range(n_expirements):
     write_result('-'*5 + 'Standard learning of task #2 using transferred weights as initial point' + '-'*5, prm.log_file)
     test_err_transfer, _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transfered_model, verbose=0)
 
+    #  Run learning of task 2 using transferred initial point:
+    write_result('-'*5 + 'Standard learning of task #2 using transferred weights as initial point + freeze lower layers' + '-'*5, prm_freeze.log_file)
+    test_err_freeze, _ = learn_single_standard.run_learning(task2_data, prm_freeze, initial_model=transfered_model, verbose=0)
+
+    #  Run learning of task 2 from scratch + weight regularization:
+    write_result('-' * 5 + 'Standard learning of task #2 from scratch' + '-' * 5, prm_reg.log_file)
+    test_err_scratch_reg, _ = learn_single_standard.run_learning(task2_data, prm_reg, verbose=0)
+
     test_err_orig_avg += (1 / n_expirements) * test_err_orig
     test_err_scratch_avg += (1 / n_expirements) * test_err_scratch
     test_err_transfer_avg += (1 / n_expirements) * test_err_transfer
+    test_err_scratch_reg_avg += (1 / n_expirements) * test_err_scratch_reg
+    test_err_freeze_avg += (1 / n_expirements) * test_err_freeze
+
 
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
 write_result('Averaging of {} expirements...'.format(n_expirements), prm.log_file)
 
-write_result('Standard learning of task #1 ({} samples), average test error: {}'.
+write_result('Standard learning of task #1 ({} samples), average test error: {:.3}%'.
              format(n_samples_orig, 100*test_err_orig_avg), prm.log_file)
 
-write_result('Standard learning of task #2  (at most {} samples) from scratch, average test error: {}'.
+write_result('Standard learning of task #2  (at most {} samples)'
+             ' from scratch, average test error: {:.3}%'.
              format(limit_train_samples, 100*test_err_scratch_avg), prm.log_file)
 
-write_result('Standard learning of task #2  (at most {} samples) using transferred weights as initial point, average test error: {}'.
+write_result('Standard learning of task #2  (at most {} samples) '
+             'from scratch with L2 regularizer, average test error: {:.3}%'.
+             format(limit_train_samples, 100*test_err_scratch_reg_avg), prm_reg.log_file)
+
+write_result('Standard learning of task #2  (at most {} samples)'
+             ' using transferred weights as initial point, average test error: {:.3}%'.
              format(limit_train_samples, 100*test_err_transfer_avg), prm.log_file)
 
+write_result('Standard learning of task #2  (at most {} samples) using transferred weights as initial point '
+             ' + freeze lower layers, average test error: {:.3}%'.
+             format(limit_train_samples, 100*test_err_freeze_avg), prm_freeze.log_file)
