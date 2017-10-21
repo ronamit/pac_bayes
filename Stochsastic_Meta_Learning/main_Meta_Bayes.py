@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-
+import numpy as np
 import torch
 import torch.optim as optim
 
@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200)
+                    default=1)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -100,7 +100,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 f_name='prior'
 
@@ -147,15 +147,11 @@ test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples,
 # -------------------------------------------------------------------------------
 write_result('Meta-Testing with transferred prior....', prm.log_file)
 
-test_err_bayes_avg = 0
+test_err_bayes = np.zeros(n_test_tasks)
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    if mode == 'FromScratch':
-        test_err = learn_single_Bayes.run_learning(task_data, prm, verbose=0)
-    else:
-        test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
-    test_err_bayes_avg += test_err / n_test_tasks
+    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------
@@ -163,17 +159,19 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 
 write_result('Run standard learning from scratch....', prm.log_file)
-test_err_avg_standard = 0
+
+test_err_standard = np.zeros(n_test_tasks)
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err, _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
-    test_err_avg_standard += test_err / n_test_tasks
+    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {0}%'.format(100 * test_err_bayes_avg), prm.log_file)
-write_result('Standard - Avg test err: {0}%'.format(100 * test_err_avg_standard), prm.log_file)
+write_result('Meta-Testing - Avg test err: {0}%'
+             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+write_result('Standard - Avg test err: {:.3}, STD: {:.3}%'.
+             format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)

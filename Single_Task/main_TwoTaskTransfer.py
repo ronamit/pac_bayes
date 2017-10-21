@@ -128,21 +128,21 @@ write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
 write_result('Averaging of {} expirements...'.format(n_expirements), prm.log_file)
 
 
-write_result('Standard learning of task #1 ({} samples), average test error: {:.3}, STD: {}%'.
+write_result('Standard learning of task #1 ({} samples), average test error: {:.3}, STD: {:.3}%'.
              format(n_samples_orig, 100*test_err_orig.mean(), 100*test_err_orig.std()), prm.log_file)
 
 write_result('Standard learning of task #2  (at most {} samples)'
-             ' from scratch, average test error: {:.3}, STD: {}%'.
+             ' from scratch, average test error: {:.3}, STD: {:.3}%'.
              format(limit_train_samples, 100*test_err_scratch.mean(), 100*test_err_scratch.std()), prm.log_file)
 
-write_result('Standard learning of task #2  (at most {} samples) '
+write_result('Standard learning of task #2  (at most {:.3} samples) '
              'from scratch with L2 regularizer, average test error: {:.3}, STD: {}}%'.
              format(limit_train_samples, 100*test_err_scratch_reg.mean(), 100*test_err_scratch_reg.std() ), prm_reg.log_file)
 
 write_result('Standard learning of task #2  (at most {} samples)'
-             ' using transferred weights as initial point, average test error: {:.3}, STD: {}%'.
+             ' using transferred weights as initial point, average test error: {:.3}, STD: {:.3}%'.
              format(limit_train_samples, 100*test_err_transfer.mean(), 100*test_err_transfer.std()), prm.log_file)
 
 write_result('Standard learning of task #2  (at most {} samples) using transferred weights as initial point '
-             ' + freeze lower layers, average test error: {:.3}, STD: {}%'.
+             ' + freeze lower layers, average test error: {:.3}, STD: {:.3}%'.
              format(limit_train_samples, 100*test_err_freeze.mean(), 100*test_err_freeze.std()), prm_freeze.log_file)
