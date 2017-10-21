@@ -51,9 +51,9 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
     # Limit the training samples:
     n_train_samples_orig = len(train_dataset)
     if limit_train_samples and limit_train_samples < n_train_samples_orig:
-        sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples].numpy()
+        sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples]
         train_dataset.train_data = train_dataset.train_data[sampled_inds]
-        train_dataset.train_labels = np.asarray(train_dataset.train_labels)[sampled_inds]
+        train_dataset.train_labels = np.asarray(train_dataset.train_labels)[sampled_inds.numpy()]
 
     # Create data loaders:
     kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True} if prm.cuda else {}

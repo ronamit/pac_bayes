@@ -186,9 +186,10 @@ def get_total_kld(prior_model, post_model):
     total_kld = 0
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
-
-        total_kld += kld_element(post_layer.w, prior_layer.w)
-        total_kld += kld_element(post_layer.b, prior_layer.b)
+        if hasattr(prior_layer, 'w'):
+            total_kld += kld_element(post_layer.w, prior_layer.w)
+        if hasattr(prior_layer, 'b'):
+            total_kld += kld_element(post_layer.b, prior_layer.b)
 
     return total_kld
 

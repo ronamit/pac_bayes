@@ -44,17 +44,16 @@ def run_learning(data_loader, prm, verbose=1):
 
         for batch_idx, batch_data in enumerate(train_loader):
 
-            eps_std = get_eps_std(i_epoch, batch_idx, n_batches, prm)
 
             # Monte-Carlo iterations:
             empirical_loss = 0
-            n_MC = prm.n_MC if eps_std > 0 else 1
+            n_MC = prm.n_MC
             for i_MC in range(n_MC):
                 # get batch:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # calculate objective:
-                outputs = model(inputs, eps_std)
+                outputs = model(inputs)
                 empirical_loss_c = loss_criterion(outputs, targets)
                 empirical_loss += (1 / n_MC) * empirical_loss_c
 
@@ -67,8 +66,7 @@ def run_learning(data_loader, prm, verbose=1):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]) +
-                      '\t eps-std: {:.4}'.format(eps_std))
+                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]))
 
 
     # -------------------------------------------------------------------------------------------

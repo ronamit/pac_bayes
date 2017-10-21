@@ -19,8 +19,8 @@ torch.backends.cudnn.benchmark=True # For speed improvement with convnets with f
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / Omniglot",
-                    default='MNIST')
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
+                    default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
                     default='None')
@@ -32,7 +32,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 300
+                    default=300) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -59,7 +59,7 @@ if prm.data_source == 'Omniglot':
     prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model:
-prm.model_name = 'OmniglotNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet'
+prm.model_name = 'DenseNet20'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
 
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -79,12 +79,6 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # Learning rate decay schedule:
 # lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
 prm.lr_schedule = {} # No decay
-
-# Learning parameters:
-# In the stage 1 of the learning epochs, epsilon std == 0
-# In the second stage it increases linearly until reaching std==1 (full eps)
-prm.stage_1_ratio = 0  # 0.05
-prm.full_eps_ratio_in_stage_2 = 0.5 # 0.5
 
 
 # Test type:
