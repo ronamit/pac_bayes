@@ -241,11 +241,9 @@ def get_model(prm, model_type, init_override=None):
     #  Return selected model:
     # -------------------------------------------------------------------------------------------
     if model_type == 'Standard':
-        DenseNet = get_densenet_model_class(prm)
+        DenseNet = get_densenet_model_class(prm, input_channels=color_channels)
     else:
-        DenseNet = get_densenet_model_class(prm)
-
-
+        DenseNet = get_densenet_model_class(prm, input_channels=color_channels)
 
     if model_name == 'FcNet2':
         model = FcNet2()

@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 # from: https://github.com/andreasveit/densenet-pytorch
 
-def get_densenet_model_class(prm):
+def get_densenet_model_class(prm, input_channels=3):
 
     class BasicBlock(nn.Module):
         def __init__(self, in_planes, out_planes, dropRate=0.0):
@@ -82,7 +82,7 @@ def get_densenet_model_class(prm):
                 block = BasicBlock
             n = int(n)
             # 1st conv before any dense block
-            self.conv1 = nn.Conv2d(3, in_planes, kernel_size=3, stride=1,
+            self.conv1 = nn.Conv2d(input_channels, in_planes, kernel_size=3, stride=1,
                                    padding=1, bias=False)
             # 1st block
             self.block1 = DenseBlock(n, in_planes, growth_rate, block, dropRate)
