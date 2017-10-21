@@ -75,8 +75,7 @@ prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
-# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
-# Note: the best optimizer I tried is ADAM + LR = 1e-3, no weight decay
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
@@ -101,7 +100,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \ 'FromScratch'
 dir_path = './saved'
 f_name='prior'
 
@@ -135,7 +134,7 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 5
+n_test_tasks = 10
 limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.

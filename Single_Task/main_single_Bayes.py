@@ -73,7 +73,7 @@ prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
-# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 
 # Learning rate decay schedule:
