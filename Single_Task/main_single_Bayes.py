@@ -2,11 +2,9 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-
 import torch
 import torch.optim as optim
-
-from Utils import common as cmn, data_gen
+from Utils import  data_gen
 from Utils.common import set_random_seed
 from Single_Task import learn_single_Bayes
 
