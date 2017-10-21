@@ -100,7 +100,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 f_name='prior'
 
@@ -171,7 +171,7 @@ for i_task in range(n_test_tasks):
 #  Print results
 # -------------------------------------------------------------------------------------------
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {0}%'
+write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
-write_result('Standard - Avg test err: {:.3}, STD: {:.3}%'.
+write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
