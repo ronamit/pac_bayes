@@ -10,7 +10,7 @@ from Models.layers import StochasticLinear, StochasticConv2d, general_model
 import torchvision.models
 from Models.WideResNet import WideResNet
 from Models.densenet import get_densenet_model_class
-# from Models.densenetBayes import get_bayes_densenet_model_class
+from Models.densenetBayes import get_bayes_densenet_model_class
 
 # -------------------------------------------------------------------------------------------
 # Auxiliary functions
@@ -243,7 +243,7 @@ def get_model(prm, model_type, init_override=None):
     if model_type == 'Standard':
         DenseNet = get_densenet_model_class(prm, input_channels=color_channels)
     else:
-        DenseNet = get_densenet_model_class(prm, input_channels=color_channels)
+        DenseNet = get_bayes_densenet_model_class(prm, input_channels=color_channels)
 
     if model_name == 'FcNet2':
         model = FcNet2()

@@ -36,7 +36,7 @@ def get_bayes_densenet_model_class(prm, input_channels=3):
             self.relu = nn.ReLU(inplace=True)
             self.conv1 = StochasticConv2d(in_planes, inter_planes, kernel_size=1, prm=prm, use_bias=False, stride=1, padding=0)
             self.bn2 = nn.BatchNorm2d(inter_planes)
-            self.conv2 = StochasticConv2d(in_planes, out_planes, kernel_size=3, prm=prm, use_bias=False, stride=1, padding=1)
+            self.conv2 = StochasticConv2d(inter_planes, out_planes, kernel_size=3, prm=prm, use_bias=False, stride=1, padding=1)
             self.droprate = dropRate
 
         def forward(self, x):

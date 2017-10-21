@@ -26,6 +26,7 @@ class general_model(nn.Module):
         super(general_model, self).__init__()
 
     def set_eps_std(self, eps_std):
+        old_eps_std = None
         for m in self.modules():
             if isinstance(m, StochasticLayer):
                 old_eps_std = m.set_eps_std(eps_std)
