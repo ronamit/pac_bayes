@@ -108,11 +108,12 @@ for i_exp in range(n_expirements):
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
 write_result('Averaging of {} expirements...'.format(n_expirements), prm.log_file)
 
+write_result('Standard learning of task #1 ({} samples), average test error: {}'.
+             format(n_samples_orig, 100*test_err_orig_avg), prm.log_file)
+
 write_result('Standard learning of task #2  (at most {} samples) from scratch, average test error: {}'.
              format(limit_train_samples, 100*test_err_scratch_avg), prm.log_file)
 
 write_result('Standard learning of task #2  (at most {} samples) using transferred weights as initial point, average test error: {}'.
              format(limit_train_samples, 100*test_err_transfer_avg), prm.log_file)
 
-write_result('Standard learning of task #1 ({} samples), average test error: {}'.
-             format(n_samples_orig, 100*test_err_orig_avg), prm.log_file)
