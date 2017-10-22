@@ -136,16 +136,8 @@ def run_meta_learning(train_tasks_data, prm):
             # Approximated total objective:
             total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
 
-            # ****************************************************************************
+            # Take gradient step with the shared prior and all tasks' posteriors:
             grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
-            # ****************************************************************************
-            # if (avg_empirical_loss.data[0] < prm.complexity_train_loss_thresh):
-            #     # Take gradient step with the shared prior and all tasks' posteriors:
-            #     grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
-            # else:
-            #     # Take gradient step with only tasks' posteriors to minimize the empirical loss:
-            #     grad_step(avg_empirical_loss, posteriors_optimizer, lr_schedule, prm.lr, i_epoch)
-            # ****************************************************************************
 
             # Print status:
             log_interval = 200
