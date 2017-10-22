@@ -59,7 +59,7 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -97,7 +97,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 dir_path = './saved'
-file_name_prior = 'pror_Permuted_labels_MNIST_ConvNet'  #  /
+file_name_prior = 'prior_PermutedPixels_MNIST_FCNet3'  #  /
 file_name_posterior = file_name_prior + '_posterior'
 
 # Loads  previously training prior.
