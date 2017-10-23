@@ -80,13 +80,20 @@ prm_reg = deepcopy(prm)
 prm.optim_args['weight_decay'] = 1e-3
 
 
-# For freez lower layers experiment:
+# For freeze lower layers experiment:
 prm_freeze = deepcopy(prm)
 prm_freeze.freeze_list = ['fc_out']
+
+# For bayes experiment -
+# Weights initialization:
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+prm.n_MC = 3 # Number of Monte-Carlo iterations
+prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 
 test_err_orig = np.zeros(n_expirements)
 test_err_scratch = np.zeros(n_expirements)
+test_err_scratch_bayes = np.zeros(n_expirements)
 test_err_transfer = np.zeros(n_expirements)
 test_err_scratch_reg = np.zeros(n_expirements)
 test_err_freeze = np.zeros(n_expirements)
@@ -111,6 +118,12 @@ for i in range(n_expirements):
     write_result('-'*5 + 'Standard learning of task #2 from scratch' + '-'*5, prm.log_file)
     test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
 
+
+    #  Run Bayesian-learning of task 2 from scratch:
+    write_result('-'*5 + 'Bayesian learning of task #2 from scratch' + '-'*5, prm.log_file)
+    test_err_scratch_bayes[i], _ = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
+
+
     #  Run learning of task 2 using transferred initial point:
     write_result('-'*5 + 'Standard learning of task #2 using transferred weights as initial point' + '-'*5, prm.log_file)
     test_err_transfer[i], _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transfered_model, verbose=0)
@@ -134,6 +147,11 @@ write_result('Standard learning of task #1 ({} samples), average test error: {:.
 write_result('Standard learning of task #2  (at most {} samples)'
              ' from scratch, average test error: {:.3}%, STD: {:.3}%'.
              format(limit_train_samples, 100*test_err_scratch.mean(), 100*test_err_scratch.std()), prm.log_file)
+
+write_result('Bayesian learning of task #2  (at most {} samples)'
+             ' from scratch, average test error: {:.3}%, STD: {:.3}%'.
+             format(limit_train_samples, 100*test_err_scratch_bayes.mean(), 100*test_err_scratch.std()), prm.log_file)
+
 
 write_result('Standard learning of task #2  (at most {} samples) '
              'from scratch with L2 regularizer, average test error: {:.3}%, STD: {:.3}%'.

@@ -95,4 +95,4 @@ def run_learning(data_loader, prm, verbose=1):
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
     test_err = 1 - test_acc
-    return test_err
+    return test_err, model

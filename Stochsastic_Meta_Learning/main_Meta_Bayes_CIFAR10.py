@@ -134,24 +134,13 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 10
+n_test_tasks = 1
 limit_train_samples = 10000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
-
-# -------------------------------------------------------------------------------------------
-#  Run Meta-Testing
-# -------------------------------------------------------------------------------
-write_result('Meta-Testing with transferred prior....', prm.log_file)
-
-test_err_bayes = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------
@@ -165,6 +154,18 @@ for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
+
+
+# -------------------------------------------------------------------------------------------
+#  Run Meta-Testing
+# -------------------------------------------------------------------------------
+write_result('Meta-Testing with transferred prior....', prm.log_file)
+
+test_err_bayes = np.zeros(n_test_tasks)
+for i_task in range(n_test_tasks):
+    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
+    task_data = test_tasks_data[i_task]
+    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------

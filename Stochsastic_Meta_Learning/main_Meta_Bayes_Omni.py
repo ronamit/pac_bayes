@@ -172,10 +172,7 @@ test_err_bayes_avg = 0
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    if mode == 'FromScratch':
-        test_err = learn_single_Bayes.run_learning(task_data, prm, verbose=0)
-    else:
-        test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+    test_err, _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
     test_err_bayes_avg += test_err / n_test_tasks
 
 
