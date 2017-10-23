@@ -76,7 +76,7 @@ def learn(data_set, complexity_type):
                 raise ValueError('Invalid complexity_type')
 
 
-        hyper_prior_factor =  0.000001 * np.sqrt(1 / n_tasks)
+        hyper_prior_factor =  1e-6 * np.sqrt(1 / n_tasks)
         hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2))  * hyper_prior_factor
 
         # Total objective:
@@ -112,15 +112,17 @@ def learn(data_set, complexity_type):
     for i_task in range(n_tasks):
         # plot task data points:
         plt.plot(data_set[i_task][:, 0], data_set[i_task][:, 1], '.',
-                 label='Task {0}'.format(i_task))
+                 label='Task {0} samples'.format(1+i_task))
         # plot posterior:
-        plt.plot(w_mu[i_task][0], w_mu[i_task][1], 'o', label='posterior mean {0}'.format(i_task))
+        plt.plot(w_mu[i_task][0], w_mu[i_task][1], 'o', label='posterior {0} mean'.format(1+i_task))
         ell = Ellipse(xy=(w_mu[i_task][0], w_mu[i_task][1]),
                       width=w_sigma[i_task][0], height=w_sigma[i_task][1],
                       angle=0, color='black')
         ell.set_facecolor('none')
         ax.add_artist(ell)
 
-    plt.plot(0, 0, 'x', label='hyper-prior ')
+    # plt.plot(0, 0, 'x', label='hyper-prior ')
 
     plt.legend()
+    # plt.xticks( np.arange(1, 5) )
+    # plt.yticks( np.arange(0, 2, 0.5) )

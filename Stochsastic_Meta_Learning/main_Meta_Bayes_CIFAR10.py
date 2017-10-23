@@ -12,7 +12,7 @@ from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -100,7 +100,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 f_name='prior'
 
@@ -135,7 +135,7 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 10
-limit_train_samples = 2000
+limit_train_samples = 10000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)

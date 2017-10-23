@@ -82,7 +82,7 @@ prm.optim_args['weight_decay'] = 1e-3
 
 # For freez lower layers experiment:
 prm_freeze = deepcopy(prm)
-prm_freeze.freeze_list = ['conv1', 'conv2']
+prm_freeze.freeze_list = ['conv1', 'conv2', 'fc1']
 
 
 test_err_orig = np.zeros(n_expirements)

@@ -25,6 +25,18 @@ def set_random_seed(seed):
     random.seed(seed)
 
 
+def slice_array(arr, inds):
+    # Slice along the first dimension according to indexes
+    # might change the type of arr
+
+    # # arr = arr.numpy()[inds.numpy()]
+    # if type(arr) is np.ndarray:
+    #     arr = arr[inds.numpy()]
+    # else:
+    if isinstance(arr, list):
+        arr = np.array(arr)
+    arr = arr[inds]
+    return arr
 
 # Get the parameters from a model:
 def get_param_from_model(model, param_name):
@@ -76,8 +88,11 @@ def save_model_state(model, dir_path, name):
 def load_model_state(model, dir_path, name):
 
     f_path = os.path.join(dir_path, name + '.pt')
+    if not os.path.exists(f_path):
+        return False
     with open(f_path, 'rb') as f_pointer:
         model.load_state_dict(torch.load(f_pointer))
+    return True
 
 
 # -------------------------------------------------------------------------------------------

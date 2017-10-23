@@ -28,7 +28,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' 
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Pixels')
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -97,32 +97,41 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 dir_path = './saved'
-f_name = 'pror_Permuted_labels_MNIST_ConvNet'  #  /
-
+file_name_prior = 'pror_Permuted_labels_MNIST'  #  /
+file_name_posterior = file_name_prior + '_posterior'
 
 # Loads  previously training prior.
 # First, create the model:
 prior_model = get_model(prm, 'Stochastic')
 # Then load the weights:
-load_model_state(prior_model, dir_path, name=f_name)
+is_loaded = load_model_state(prior_model, dir_path, name=file_name_prior)
+if not is_loaded:
+    raise ValueError('No prior found in the name: ' + file_name_prior)
 print('Pre-trained  prior loaded from ' + dir_path)
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-limit_train_samples = 2000
+# Loads  previously training posterior.
+# First, create the model:
+post_model = get_model(prm, 'Stochastic')
+is_loaded = load_model_state(post_model, dir_path, file_name_posterior)
 
-print('-'*5 + 'Generating 1 test-task with at most {} training samples'.format(limit_train_samples)+'-'*5)
+if not is_loaded:
+    # --------------------------------------------------------------------------------
+    #  Run Meta-Testing
+    # -------------------------------------------------------------------------------
+    limit_train_samples = 2000
+    print('-' * 5 + 'Generating 1 test-task with at most {} training samples'.format(limit_train_samples) + '-' * 5)
+    test_task_data = data_gen.get_data_loader(prm, limit_train_samples)
 
-test_task_data = data_gen.get_data_loader(prm, limit_train_samples)
+    print('Meta-Testing with transferred prior....')
+    test_err, post_model = meta_test_Bayes.run_learning(
+        test_task_data, prior_model, prm, init_from_prior, verbose=0)
 
-# --------------------------------------------------------------------------------
-#  Run Meta-Testing
-# -------------------------------------------------------------------------------
-print('Meta-Testing with transferred prior....')
-
-test_err, post_model = meta_test_Bayes.run_learning(
-    test_task_data, prior_model, prm, init_from_prior, verbose=0)
+    # save learned posterior:
+    f_path = save_model_state(post_model, dir_path, name=file_name_posterior)
+    print('Trained posterior saved in ' + f_path)
 
 # --------------------------------------------------------------------------------
 #  Analyze
@@ -132,27 +141,31 @@ test_err, post_model = meta_test_Bayes.run_learning(
 prior_layers_list = list(prior_model.children())
 post_layers_list = list(post_model.children())
 n_layer = len(prior_layers_list)
-w_kld_per_layer = np.zeros(n_layer)
-b_kld_per_layer = np.zeros(n_layer)
-all_weight_kld_per_layer = np.zeros(n_layer)
+kld_per_layer = np.zeros(n_layer)
+n_weights_per_layer = np.zeros(n_layer)
+
+print(prior_layers_list)
+
+def weights_count(layer):
+    weights_size = post_layer.w['mean'].size()
+    return np.prod(weights_size)
 
 
 total_kld = 0
 for i_layer, prior_layer in enumerate(prior_layers_list):
     post_layer = post_layers_list[i_layer]
 
-    w_kld_per_layer[i_layer] = kld_element(post_layer.w, prior_layer.w).data[0]
-    b_kld_per_layer[i_layer] = kld_element(post_layer.b, prior_layer.b).data[0]
+    if hasattr(post_layer, 'w'):
+        kld_per_layer[i_layer] += kld_element(post_layer.w, prior_layer.w).data[0]
+        n_weights_per_layer[i_layer] += weights_count(post_layer.w)
 
-    all_weight_kld_per_layer[i_layer] = w_kld_per_layer[i_layer] + b_kld_per_layer[i_layer]
+    if hasattr(post_layer, 'b'):
+        kld_per_layer[i_layer] += kld_element(post_layer.b, prior_layer.b).data[0]
+        n_weights_per_layer[i_layer] += weights_count(post_layer.b)
 
-    # normalize by the number of weights:
-    w_numel = prior_layer.in_dim * prior_layer.out_dim
-    b_numel = prior_layer.out_dim
-    w_kld_per_layer[i_layer] /= w_numel
-    b_kld_per_layer[i_layer] /= b_numel
-    all_weight_kld_per_layer[i_layer] /= w_numel + b_numel
 
+# normalize by the number of weights:
+normalized_kld_per_layer = kld_per_layer / n_weights_per_layer
 
 
 def plot_layes_kld(kld_per_layer, title_str):
@@ -164,7 +177,7 @@ def plot_layes_kld(kld_per_layer, title_str):
     plt.ylabel('value')
 
 
-plot_layes_kld(all_weight_kld_per_layer, "Mean KLD between posterior and prior per layer")
+plot_layes_kld(normalized_kld_per_layer, "Mean normalized KLD between posterior and prior per layer")
 
 
 plt.show()
