@@ -82,7 +82,7 @@ prm.optim_args['weight_decay'] = 1e-3
 
 # For freeze lower layers experiment:
 prm_freeze = deepcopy(prm)
-prm_freeze.freeze_list = ['fc_out']
+prm_freeze.freeze_list = ['fc1', 'fc2', 'fc3']
 
 # For bayes experiment -
 # Weights initialization:
