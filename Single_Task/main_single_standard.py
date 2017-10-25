@@ -50,7 +50,6 @@ parser.add_argument('--no-cuda', action='store_true', default=False, help='disab
 
 
 prm = parser.parse_args()
-prm.cuda = True
 
 prm.data_path = '../data'
 

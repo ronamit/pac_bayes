@@ -120,8 +120,6 @@ def get_model(model_name, model_type, prm, init_type='Standard-Net'):
     models_dict = {'FcNet2':FcNet(), 'ConvNet':ConvNet(), 'FcNet3':FcNet3()}
     model = models_dict[model_type]
 
-
-    if prm.cuda:
-        model.cuda()
+    model.cuda()
 
     return model

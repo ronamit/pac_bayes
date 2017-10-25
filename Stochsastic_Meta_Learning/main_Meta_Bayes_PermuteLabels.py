@@ -49,12 +49,10 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (None
                     default='log')
 
 prm = parser.parse_args()
-prm.cuda = True
 
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
-
 
 #  Define model type (hypothesis class):
 prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'

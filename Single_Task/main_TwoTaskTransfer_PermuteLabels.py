@@ -53,7 +53,6 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
 n_expirements = 10  # 10
 
 prm = parser.parse_args()
-prm.cuda = True
 
 prm.data_path = '../data'
 

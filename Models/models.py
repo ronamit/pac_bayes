@@ -291,7 +291,7 @@ def get_model(prm, model_type, init_override=None):
         for param in model.parameters():
             param.data.normal_(mean=init_override['mean'], std=init_override['std'])
 
-    if prm.cuda:
-        model.cuda()
+
+    model.cuda()
 
     return model

@@ -123,6 +123,7 @@ def learn(data_set, complexity_type):
 
     # plt.plot(0, 0, 'x', label='hyper-prior ')
 
+    # plt.legend(loc='upper left')
     plt.legend()
     plt.xlabel('Dimension 1')
     plt.ylabel('Dimension 2')
