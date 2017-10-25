@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Models import models_Bayes
+from Models.models import get_model
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
 #  settings
@@ -27,24 +27,41 @@ prm = parser.parse_args()
 set_random_seed(prm.seed)
 
 
+# Weights initialization (for Bayesian net):
+prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+
+
+# -------------------------------------------------------------------------------------------
+#  Load pr-trained prior
+# -------------------------------------------------------------------------------------------
+
 dir_path = './saved'
-f_name='PermuteLabels_Seeger' # PermuteLabels_VB \ prior_PermuteLabels_MA \ PermutePixels_VB \ PermuteLabels_Seeger
 
-model_type = 'BayesNN'  # 'BayesNN' \ 'BigBayesNN'
-#  TODO: get prm from file
+name =  'Permuted_labels'  # 'PermutedPixels' / Permuted_labels
+
+if name == 'PermutedPixels':
+    # Permute Pixels:
+    file_name_prior = 'prior_PermutedPixels_MNIST_FCNet3'  #
+    prm.model_name = 'FcNet3'
+    layers_names = ('FC1', 'FC2', 'FC3', 'FC_out')
+    # ***************
+else:
+    # Permute Labels:
+    file_name_prior = 'pror_Permuted_labels_MNIST'
+    prm.model_name = 'ConvNet'
+    layers_names = ('conv1', 'conv2', 'FC1', 'FC_out')
 
 
-# Weights initialization:
-prm.inits ={'Bayes-Mu': {'bias': 0, 'std': 0.1},
-           'Bayes-log-var': {'bias': -10, 'std': 0.1},
-           'Standard-Net': {'bias': None, 'std': None}}
-# None = use default initializer
 
 # Loads  previously training prior.
 # First, create the model:
-prior_model = models_Bayes.get_bayes_model(model_type, prm)
+prior_model = get_model(prm, 'Stochastic')
 # Then load the weights:
-load_model_state(prior_model, dir_path, name=f_name)
+is_loaded = load_model_state(prior_model, dir_path, name=file_name_prior)
+if not is_loaded:
+    raise ValueError('No prior found in the name: ' + file_name_prior)
+print('Pre-trained  prior loaded from ' + dir_path)
+# -------------------------------------------------------------------------------------------
 
 
 def extract_param_list(model, name1, name2):
@@ -59,7 +76,7 @@ b_log_var_params = extract_param_list(prior_model,'_log_var', '.b_')
 n_layers = len(w_mu_params)
 
 def log_var_to_sigma(log_var_params):
-    return  [(named_param[0].replace('_log_var', '_sigma'),
+    return [(named_param[0].replace('_log_var', '_sigma'),
               0.5 * torch.exp(named_param[1]))
              for named_param in log_var_params]
 
@@ -78,24 +95,9 @@ def get_params_statistics(param_list):
         param_std = param_vals.std().data[0]
         mean_list[i_param] = param_mean
         std_list[i_param] = param_std
-        print('Parameter name: {}, mean value: {}, STD: {}'.format(param_name, param_mean, param_std))
+        print('Parameter name: {}, mean value: {:.3}, STD: {:.3}'.format(param_name, param_mean, param_std))
     return mean_list, std_list
 
-
-get_params_statistics(w_sigma_params)
-get_params_statistics(w_mu_params)
-
-def calc_SNR(mu_params, sigma_params):
-    w_snr = []
-    for i_layer in range(n_layers):
-        named_param = (mu_params[i_layer][0].replace('_mean', '_SNR'),
-                       torch.abs(mu_params[i_layer][1] / sigma_params[i_layer][1]))
-        w_snr.append(named_param)
-    return w_snr
-
-get_params_statistics(calc_SNR(w_mu_params, w_sigma_params))
-
-get_params_statistics(calc_SNR(b_mu_params, b_sigma_params))
 
 def plot_statistics(mean_list, std_list, name):
     plt.figure()
@@ -107,5 +109,21 @@ def plot_statistics(mean_list, std_list, name):
     plt.ylabel('value')
 
 plot_statistics(*get_params_statistics(w_log_var_params), name='weights log-var')
+plt.xticks( np.arange(len(layers_names)), layers_names)
 
 plt.show()
+
+
+# get_params_statistics(w_sigma_params)
+# get_params_statistics(w_mu_params)
+
+# def calc_SNR(mu_params, sigma_params):
+#     w_snr = []
+#     for i_layer in range(n_layers):
+#         named_param = (mu_params[i_layer][0].replace('_mean', '_SNR'),
+#                        torch.abs(mu_params[i_layer][1] / sigma_params[i_layer][1]))
+#         w_snr.append(named_param)
+#     return w_snr
+
+# get_params_statistics(calc_SNR(w_mu_params, w_sigma_params))
+# get_params_statistics(calc_SNR(b_mu_params, b_sigma_params))

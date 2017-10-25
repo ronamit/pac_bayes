@@ -134,6 +134,7 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 10
+
 limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.

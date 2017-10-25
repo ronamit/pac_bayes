@@ -57,7 +57,8 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
 
 
     # Create data loaders:
-    kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True}
+    # kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True}   # this might cause "connection refuse" problems
+    kwargs = {'num_workers': 0, 'pin_memory': True}
 
     train_loader = data_utils.DataLoader(train_dataset, batch_size=prm.batch_size, shuffle=True, **kwargs)
     test_loader = data_utils.DataLoader(test_dataset, batch_size=prm.test_batch_size, shuffle=True, **kwargs)
@@ -156,8 +157,7 @@ def get_info(prm):
 # -------------------------------------------------------------------------------------------
 def get_batch_vars(batch_data, args, is_test=False):
     inputs, targets = batch_data
-    if args.cuda:
-        inputs, targets = inputs.cuda(), targets.cuda(async=True)
+    inputs, targets = inputs.cuda(), targets.cuda(async=True)
     inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
     return inputs, targets
 
