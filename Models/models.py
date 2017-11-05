@@ -8,7 +8,6 @@ from torch.autograd import Variable
 from Utils import data_gen
 from Models.layers import StochasticLinear, StochasticConv2d, general_model
 import torchvision.models
-from Models.WideResNet import WideResNet
 from Models.densenet import get_densenet_model_class
 from Models.densenetBayes import get_bayes_densenet_model_class
 
@@ -257,11 +256,6 @@ def get_model(prm, model_type, init_override=None):
         model = OmniglotNet()
     elif model_name == 'Conv3':
         model = Conv3()
-
-    elif model_name == 'WideResNet':
-        model = WideResNet(depth=22, num_classes=n_classes, widen_factor=4, dropRate=0.0)
-        model.model_type = 'Standard'
-        model.model_name = model_name
 
     elif model_name == 'DenseNet20':
         model = DenseNet(depth=20, num_classes=n_classes)

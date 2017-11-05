@@ -81,6 +81,18 @@ def load_model_state(model, dir_path, name):
         model.load_state_dict(torch.load(f_pointer))
     return True
 
+#
+# def get_data_path():
+#     data_path_file = '../DataPath'
+#     pth = '../data' #  default path
+#     lines = open(data_path_file, "r").readlines()
+#     if len(lines) > 1:
+#         read_pth = lines[1]
+#         father_dir = os.path.dirname(read_pth)
+#         if father_dir is '~' or os.path.exists(father_dir):
+#             pth = read_pth
+#     print('Data path: ', pth)
+#     return pth
 
 # -------------------------------------------------------------------------------------------
 #  Regularization
@@ -191,5 +203,6 @@ def write_final_result(test_acc,run_time, log_file_name, result_name='', verbose
         write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
     write_result(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
                      .format(100 * (1 - test_acc), run_time), log_file_name)
+
 
 

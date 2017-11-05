@@ -127,32 +127,19 @@ elif mode == 'LoadPrior':
     load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
-    prior_model = None
+    raise ValueError('Invalid mode')
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 1
-limit_train_samples = 10000
+limit_train_samples = 20000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
-
-
-# -------------------------------------------------------------------------------------------
-#  Compare to standard learning
-# -------------------------------------------------------------------------------------------
-
-write_result('Run standard learning from scratch....', prm.log_file)
-
-test_err_standard = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------
@@ -166,6 +153,17 @@ for i_task in range(n_test_tasks):
     task_data = test_tasks_data[i_task]
     test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
 
+# -------------------------------------------------------------------------------------------
+#  Compare to standard learning
+# -------------------------------------------------------------------------------------------
+
+write_result('Run standard learning from scratch....', prm.log_file)
+
+test_err_standard = np.zeros(n_test_tasks)
+for i_task in range(n_test_tasks):
+    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
+    task_data = test_tasks_data[i_task]
+    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 
 # -------------------------------------------------------------------------------------------
 #  Print results

@@ -147,8 +147,7 @@ elif mode == 'LoadPrior':
     load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
-    prior_model = None
-
+    raise ValueError('Invalid mode')
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------

@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
+                    default=1)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -127,7 +127,7 @@ elif mode == 'LoadPrior':
     load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
-    prior_model = None
+    raise ValueError('Invalid mode')
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
@@ -175,3 +175,9 @@ write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
 write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
+
+# -------------------------------------------------------------------------------------------
+#  Print prior analysis
+# -------------------------------------------------------------------------------------------
+from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
+run_prior_analysis(prior_model)
