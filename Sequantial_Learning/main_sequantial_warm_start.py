@@ -11,7 +11,7 @@ from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen
 from Utils.common import  write_result, set_random_seed
-from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
+
 
 torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -65,20 +65,13 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # Learning rate decay schedule:
 prm.lr_schedule = {} # No decay
 
-# Stochastic learning parameters -
 # Weights initialization:
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-prm.n_MC = 3 # Number of Monte-Carlo iterations
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
-
-prm.complexity_type = 'PAC_Bayes_McAllaster'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
-
-init_from_prior = True  #  False \ True . init posterior from prior
+prm.init_override = None # None = use default initializer
+# prm.init_override = {'mean': 0, 'std': 0.1}
 
 # Create initial prior:
-# prior_model = get_model(prm, 'Stochastic')
-prior_model = None # Start with no prior
+prev_model = get_model(prm, 'Standard', prm.init_override)
+
 
 n_tasks = 50
 limit_train_samples = 100
@@ -89,8 +82,8 @@ for i_task in range(n_tasks):
 
     write_result('-'*5 + 'Learning task #{} out of {}...'.format(i_task, n_tasks), prm.log_file)
     task_data = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
-    test_err, posterior_model = learn_single_Bayes.run_learning(task_data, prm, prior_model=prior_model, init_from_prior=init_from_prior, verbose=0)
-    prior_model = deepcopy(posterior_model)
+    test_err, new_model = learn_single_standard.run_learning(task_data, prm, initial_model=prev_model, verbose=0)
+    prev_model = deepcopy(new_model)
     test_err_per_task[i_task] = test_err
     write_result('-' * 5 + ' Task {}, test error: '.format(test_err), prm.log_file)
 
@@ -100,11 +93,10 @@ plt.figure()
 plt.plot(1+np.arange(n_tasks),  100 * test_err_per_task)
 plt.xlabel('Task')
 plt.ylabel('Test Error %')
-plt.title('PAC-Bayes Sequential Transfer')
+plt.title('Warm-Start Sequential Transfer')
 plt.show()
 plt.savefig('Figure.png')
 
-run_prior_analysis(prior_model, layers_names=None)
 
 
 

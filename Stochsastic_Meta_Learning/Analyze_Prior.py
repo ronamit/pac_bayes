@@ -51,7 +51,7 @@ def plot_statistics(mean_list, std_list, name):
 # Analysis function:
 #----------------------------------------------------------------------------------------------
 
-def run_prior_analysis(prior_model, layers_names = None):
+def run_prior_analysis(prior_model, layers_names=None):
 
     # w_mu_params = extract_param_list(prior_model,'_mean', '.w_')
     # b_mu_params = extract_param_list(prior_model,'_mean', '.b_')

@@ -18,6 +18,13 @@ import random
 # -----------------------------------------------------------------------------------------------------------#
 
 
+def get_value(x):
+    if isinstance(x, Variable):
+        return x.data[0]
+    else:
+        return x
+
+
 def set_random_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)

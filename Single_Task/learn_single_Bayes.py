@@ -7,7 +7,7 @@ from copy import deepcopy
 from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_test_Bayes, get_posterior_complexity_term
-from Utils.common import grad_step, correct_rate, get_loss_criterion
+from Utils.common import grad_step, correct_rate, get_loss_criterion, get_value
 
 
 def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbose=1):
@@ -67,8 +67,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             if prior_model:
                 complexity_term = get_posterior_complexity_term(
                     prm, prior_model, post_model, n_train_samples, empirical_loss)
+            else:
+                complexity_term = 0.0
 
-            # Total objective:
+                # Total objective:
             objective = empirical_loss + complexity_term
 
             # Take gradient step:
@@ -78,7 +80,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]) +
-                      ' Loss: {:.4}\t Comp.: {:.4}'.format(empirical_loss.data[0], complexity_term.data[0]))
+                      ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(empirical_loss), get_value(complexity_term)))
     # -------------------------------------------------------------------------------------------
     #  Main Script
     # -------------------------------------------------------------------------------------------
