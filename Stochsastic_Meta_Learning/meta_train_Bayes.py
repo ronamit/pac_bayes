@@ -183,7 +183,7 @@ def run_meta_learning(train_tasks_data, prm):
 
     # Update Log file
     run_name = cmn.gen_run_name('Meta-Training')
-    write_result('-'*10+run_name+'-'*10, prm.log_file)
+    write_result('-'*10 + run_name + '-'*10, prm.log_file)
     write_result(str(prm), prm.log_file)
     write_result(cmn.get_model_string(prior_model), prm.log_file)
 

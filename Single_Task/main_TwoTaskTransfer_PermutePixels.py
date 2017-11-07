@@ -12,7 +12,7 @@ from Utils import data_gen
 from Utils.common import save_model_state, load_model_state, get_loss_criterion, write_result, set_random_seed
 
 import Single_Task.learn_single_standard
-# torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 
 # -------------------------------------------------------------------------------------------
@@ -50,13 +50,13 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
                     default='log')
 
 
-n_expirements = 10  # 10
-
 prm = parser.parse_args()
 
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
+
+n_experiments = 10  # 10
 
 #  Define model:
 prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
@@ -90,15 +90,15 @@ prm.n_MC = 3 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 
-test_err_orig = np.zeros(n_expirements)
-test_err_scratch = np.zeros(n_expirements)
-test_err_scratch_bayes = np.zeros(n_expirements)
-test_err_transfer = np.zeros(n_expirements)
-test_err_scratch_reg = np.zeros(n_expirements)
-test_err_freeze = np.zeros(n_expirements)
+test_err_orig = np.zeros(n_experiments)
+test_err_scratch = np.zeros(n_experiments)
+test_err_scratch_bayes = np.zeros(n_experiments)
+test_err_transfer = np.zeros(n_experiments)
+test_err_scratch_reg = np.zeros(n_experiments)
+test_err_freeze = np.zeros(n_experiments)
 
-for i in range(n_expirements):
-    write_result('-' * 5 + ' Expirement #{} out of {}'.format(i+1, n_expirements), prm.log_file)
+for i in range(n_experiments):
+    write_result('-' * 5 + ' Expirement #{} out of {}'.format(i+1, n_experiments), prm.log_file)
 
     # Generate the task #1 data set:
     task1_data = data_gen.get_data_loader(prm)
@@ -117,11 +117,9 @@ for i in range(n_expirements):
     write_result('-'*5 + 'Standard learning of task #2 from scratch' + '-'*5, prm.log_file)
     test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
 
-
     #  Run Bayesian-learning of task 2 from scratch:
     write_result('-'*5 + 'Bayesian learning of task #2 from scratch' + '-'*5, prm.log_file)
     test_err_scratch_bayes[i], _ = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
-
 
     #  Run learning of task 2 using transferred initial point:
     write_result('-'*5 + 'Standard learning of task #2 using transferred weights as initial point' + '-'*5, prm.log_file)
@@ -137,7 +135,7 @@ for i in range(n_expirements):
 
 
 write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Averaging of {} expirements...'.format(n_expirements), prm.log_file)
+write_result('Averaging of {} experiments...'.format(n_experiments), prm.log_file)
 
 
 write_result('Standard learning of task #1 ({} samples), average test error: {:.3}%, STD: {:.3}%'.

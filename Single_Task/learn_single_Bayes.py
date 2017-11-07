@@ -3,14 +3,14 @@
 from __future__ import absolute_import, division, print_function
 
 import timeit
-
+from copy import deepcopy
 from Models.models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import run_test_Bayes
+from Utils.Bayes_utils import run_test_Bayes, get_posterior_complexity_term
 from Utils.common import grad_step, correct_rate, get_loss_criterion
 
 
-def run_learning(data_loader, prm, verbose=1):
+def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -26,12 +26,17 @@ def run_learning(data_loader, prm, verbose=1):
     train_loader = data_loader['train']
     test_loader = data_loader['test']
     n_batches = len(train_loader)
+    n_train_samples = data_loader['n_train_samples']
 
     # get model:
-    model = get_model(prm, 'Stochastic')
+    if prior_model and init_from_prior:
+        # init from prior model:
+        post_model = deepcopy(prior_model)
+    else:
+        post_model = get_model(prm, 'Stochastic')
 
     #  Get optimizer:
-    optimizer = optim_func(model.parameters(), **optim_args)
+    optimizer = optim_func(post_model.parameters(), **optim_args)
 
     # -------------------------------------------------------------------------------------------
     #  Training epoch  function
@@ -40,10 +45,11 @@ def run_learning(data_loader, prm, verbose=1):
     def run_train_epoch(i_epoch):
         log_interval = 500
 
-        model.train()
+        complexity_term = 0
+
+        post_model.train()
 
         for batch_idx, batch_data in enumerate(train_loader):
-
 
             # Monte-Carlo iterations:
             empirical_loss = 0
@@ -53,12 +59,17 @@ def run_learning(data_loader, prm, verbose=1):
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # calculate objective:
-                outputs = model(inputs)
+                outputs = post_model(inputs)
                 empirical_loss_c = loss_criterion(outputs, targets)
                 empirical_loss += (1 / n_MC) * empirical_loss_c
 
+            #  complexity/prior term:
+            if prior_model:
+                complexity_term = get_posterior_complexity_term(
+                    prm, prior_model, post_model, n_train_samples, empirical_loss)
+
             # Total objective:
-            objective = empirical_loss # TODO: add prior term
+            objective = empirical_loss + complexity_term
 
             # Take gradient step:
             grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
@@ -66,9 +77,8 @@ def run_learning(data_loader, prm, verbose=1):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]))
-
-
+                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, objective.data[0]) +
+                      ' Loss: {:.4}\t Comp.: {:.4}'.format(empirical_loss.data[0], complexity_term.data[0]))
     # -------------------------------------------------------------------------------------------
     #  Main Script
     # -------------------------------------------------------------------------------------------
@@ -79,7 +89,7 @@ def run_learning(data_loader, prm, verbose=1):
     if verbose == 1:
         cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
         cmn.write_result(str(prm), prm.log_file)
-        cmn.write_result(cmn.get_model_string(model), prm.log_file)
+        cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
         cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
 
     start_time = timeit.default_timer()
@@ -89,10 +99,10 @@ def run_learning(data_loader, prm, verbose=1):
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm)
+    test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
     test_err = 1 - test_acc
-    return test_err, model
+    return test_err, post_model

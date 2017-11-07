@@ -71,7 +71,6 @@ prm.n_MC = 3
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 # prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
-
 # Learning rate decay schedule:
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
 prm.lr_schedule = {} # No decay

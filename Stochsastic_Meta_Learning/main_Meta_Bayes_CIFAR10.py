@@ -133,8 +133,8 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 1
-limit_train_samples = 20000
+n_test_tasks = 10
+limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
