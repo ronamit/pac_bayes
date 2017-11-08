@@ -85,7 +85,7 @@ for i_task in range(n_tasks):
     test_err, new_model = learn_single_standard.run_learning(task_data, prm, initial_model=prev_model, verbose=0)
     prev_model = deepcopy(new_model)
     test_err_per_task[i_task] = test_err
-    write_result('-' * 5 + ' Task {}, test error: '.format(test_err), prm.log_file)
+    write_result('-' * 5 + ' Task {}, test error: {}'.format(i_task, test_err), prm.log_file)
 
 
 # Figure
