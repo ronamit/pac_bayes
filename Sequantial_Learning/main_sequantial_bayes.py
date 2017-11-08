@@ -68,7 +68,7 @@ prm.lr_schedule = {} # No decay
 # Stochastic learning parameters -
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-prm.n_MC = 3 # Number of Monte-Carlo iterations
+prm.n_MC = 1 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 prm.complexity_type = 'PAC_Bayes_McAllaster'
@@ -80,7 +80,7 @@ init_from_prior = True  #  False \ True . init posterior from prior
 # prior_model = get_model(prm, 'Stochastic')
 prior_model = None # Start with no prior
 
-n_tasks = 20
+n_tasks = 100
 limit_train_samples = 100
 
 test_err_per_task= np.zeros(n_tasks)
@@ -102,9 +102,9 @@ plt.xlabel('Task')
 plt.ylabel('Test Error %')
 plt.title('PAC-Bayes Sequential Transfer')
 plt.savefig('Figure.png')
-plt.show()
 
 run_prior_analysis(prior_model, layers_names=None)
 
+plt.show()
 
 

@@ -73,7 +73,7 @@ prm.init_override = None # None = use default initializer
 prev_model = get_model(prm, 'Standard', prm.init_override)
 
 
-n_tasks = 50
+n_tasks = 20
 limit_train_samples = 100
 
 test_err_per_task= np.zeros(n_tasks)
@@ -86,7 +86,6 @@ for i_task in range(n_tasks):
     prev_model = deepcopy(new_model)
     test_err_per_task[i_task] = test_err
     write_result('-' * 5 + ' Task {}, test error: {}'.format(i_task, test_err), prm.log_file)
-
 
 # Figure
 plt.figure()
