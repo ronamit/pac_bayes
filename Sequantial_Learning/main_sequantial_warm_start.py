@@ -94,9 +94,10 @@ plt.plot(1+np.arange(n_tasks),  100 * test_err_per_task)
 plt.xlabel('Task')
 plt.ylabel('Test Error %')
 plt.title('Warm-Start Sequential Transfer')
-plt.show()
+
 plt.savefig('Figure.png')
 
+plt.show()
 
 
 

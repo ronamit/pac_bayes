@@ -101,8 +101,8 @@ plt.plot(1+np.arange(n_tasks),  100 * test_err_per_task)
 plt.xlabel('Task')
 plt.ylabel('Test Error %')
 plt.title('PAC-Bayes Sequential Transfer')
-plt.show()
 plt.savefig('Figure.png')
+plt.show()
 
 run_prior_analysis(prior_model, layers_names=None)
 
