@@ -73,7 +73,7 @@ prm.init_override = None # None = use default initializer
 prev_model = get_model(prm, 'Standard', prm.init_override)
 
 
-n_tasks = 20
+n_tasks = 200
 limit_train_samples = 100
 
 test_err_per_task= np.zeros(n_tasks)
