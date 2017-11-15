@@ -30,7 +30,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 300
+                    default=50) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
