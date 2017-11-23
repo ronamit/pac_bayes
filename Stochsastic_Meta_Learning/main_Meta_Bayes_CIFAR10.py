@@ -90,7 +90,7 @@ prm.hyper_prior_factor = 1e-7  #  1e-5
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
-prm.meta_batch_size = 2  # how many tasks in each meta-batch
+prm.meta_batch_size = 5 # how many tasks in each meta-batch
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
