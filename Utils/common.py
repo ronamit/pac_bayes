@@ -105,12 +105,17 @@ def load_model_state(model, dir_path, name):
 #  Regularization
 # -------------------------------------------------------------------------------------------
 
-def net_L1_norm(model):
-    l1_crit = torch.nn.L1Loss(size_average=False)
+def net_norm(model, p=2):
+    if p == 1:
+        loss_crit = torch.nn.L1Loss(size_average=False)
+    elif p == 2:
+        loss_crit = torch.nn.MSELoss(size_average=False)
+    else:
+        raise ValueError('Unsupported p')
     total_norm = 0
     for param in model.parameters():
         target = Variable(zeros_gpu(param.size()), requires_grad=False)  # dummy target
-        total_norm += l1_crit(param, target)
+        total_norm += loss_crit(param, target)
     return total_norm
 
 

@@ -6,13 +6,13 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_MAML
 from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -21,11 +21,11 @@ torch.backends.cudnn.benchmark = True # For speed improvement with convnets with
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
-                    default='CIFAR10')
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+                    default='Permute_Pixels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -37,7 +37,7 @@ parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
-                    default=1e-1)
+                    default=1e-3)
 
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
@@ -55,8 +55,8 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 
-#  Define model:
-prm.model_name = 'DenseNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
+#  Define model type (hypothesis class):
+prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -70,28 +70,27 @@ prm.init_override = None # None = use default initializer
 
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
+prm.n_MC = 3
 
 #  Define optimizer:
-# prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
-prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
+# prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
-prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150, 225]}
-# prm.lr_schedule = {} # No decay
+# prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
+prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
 prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
+prm.kappa_factor = 1e7  #  1e-5
 prm.hyperprior_factor = 1e-7  #  1e-5
-# Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
-prm.kappa_factor = 0  #  1e-5
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
-prm.meta_batch_size = 3  # how many tasks in each meta-batch
+prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
@@ -113,7 +112,7 @@ if mode == 'MetaTrain':
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
+    prior_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)
@@ -135,13 +134,13 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 10
+
 limit_train_samples = 2000
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
-
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
@@ -153,6 +152,7 @@ for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
     test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+
 
 # -------------------------------------------------------------------------------------------
 #  Compare to standard learning
@@ -166,6 +166,7 @@ for i_task in range(n_test_tasks):
     task_data = test_tasks_data[i_task]
     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 
+
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
@@ -174,3 +175,9 @@ write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
 write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
+
+# -------------------------------------------------------------------------------------------
+#  Print prior analysis
+# -------------------------------------------------------------------------------------------
+from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
+run_prior_analysis(prior_model)

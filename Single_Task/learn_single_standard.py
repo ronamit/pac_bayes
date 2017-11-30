@@ -34,6 +34,12 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
                              for named_module in model.named_children()
                              if not named_module[0] in freeze_list]
         optimized_params = sum([list(mo.parameters()) for mo in optimized_modules], [])
+    elif hasattr(prm, 'not_freeze_list'):
+        not_freeze_list = prm.not_freeze_list
+        optimized_modules = [named_module[1]
+                             for named_module in model.named_children()
+                             if named_module[0] in not_freeze_list]
+        optimized_params = sum([list(mo.parameters()) for mo in optimized_modules], [])
     else:
         optimized_params = model.parameters()
 

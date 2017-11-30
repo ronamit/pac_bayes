@@ -5,7 +5,7 @@ import timeit
 
 from Models.models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
+from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, add_noise_to_model
 from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
 
 
@@ -26,6 +26,19 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
     if init_from_prior:
         post_model.load_state_dict(prior_model.state_dict())
+
+        # prior_model_dict = prior_model.state_dict()
+        # post_model_dict = post_model.state_dict()
+        #
+        # # filter out unnecessary keys:
+        # prior_model_dict = {k: v for k, v in prior_model_dict.items() if '_log_var' in k or '_mu' in k}
+        # # overwrite entries in the existing state dict:
+        # post_model_dict.update(prior_model_dict)
+        #
+        # # #  load the new state dict
+        # post_model.load_state_dict(post_model_dict)
+
+        # add_noise_to_model(post_model, prm.kappa_factor)
 
     # The data-sets of the new task:
     train_loader = task_data['train']
@@ -50,19 +63,24 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
             # Monte-Carlo iterations:
             n_MC = prm.n_MC
-            empirical_loss = 0
+            task_empirical_loss = 0
+            task_complexity = 0
             for i_MC in range(n_MC):
                 # get batch:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # Calculate empirical loss:
                 outputs = post_model(inputs)
-                empirical_loss += (1 / n_MC) * loss_criterion(outputs, targets)
+                curr_empirical_loss = loss_criterion(outputs, targets)
+                task_empirical_loss += (1 / n_MC) * curr_empirical_loss
+
+                curr_complexity = get_posterior_complexity_term(
+                    prm, prior_model, post_model, n_train_samples, curr_empirical_loss, noised_prior=False)
+                task_complexity += (1 / n_MC) * curr_complexity
 
             # Total objective:
-            intra_task_comp = get_posterior_complexity_term(
-                prm, prior_model, post_model, n_train_samples, empirical_loss)
-            total_objective = empirical_loss + intra_task_comp
+
+            total_objective = task_empirical_loss + task_complexity
 
             # Take gradient step with the posterior:
             grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
@@ -73,7 +91,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
                       ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
-                      format(empirical_loss.data[0], intra_task_comp.data[0]))
+                      format(task_empirical_loss.data[0], task_complexity.data[0]))
 
 
     # -----------------------------------------------------------------------------------------------------------#

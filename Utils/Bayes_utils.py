@@ -133,31 +133,31 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss):
+def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, noised_prior=True):
 
     complexity_type = prm.complexity_type
 
     if hasattr(prm, 'samples_mult'):
         n_samples *= prm.samples_mult
 
-    kld = get_total_kld(prior_model, post_model)
+    tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)
 
     if complexity_type == 'KLD':
-        complex_term = kld
+        complex_term = tot_kld
 
     elif complexity_type == 'PAC_Bayes_McAllaster':
         delta = 0.99
-        complex_term = torch.sqrt((1 / (2 * n_samples)) * (kld + math.log(2*math.sqrt(n_samples) / delta)))
+        complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
-        complex_term = math.sqrt(1 / n_samples) * kld
+        complex_term = math.sqrt(1 / n_samples) * tot_kld
 
     elif complexity_type == 'PAC_Bayes_Seeger':
         # Seeger complexity is unique since it requires the empirical loss
         # small_num = 1e-9 # to avoid nan due to numerical errors
         delta = 0.99
         # seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
-        seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
+        seeger_eps = (1 / n_samples) * (tot_kld + math.log(2 * math.sqrt(n_samples) / delta))
         sqrt_arg = 2 * seeger_eps * task_empirical_loss
         sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
@@ -168,7 +168,7 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
         # Since we approximate the expectation of the likelihood of all samples,
         # we need to multiply by the average_loss by total number of samples
         # Then we normalize the objective by n_samples
-        complex_term = (1 / n_samples) * kld
+        complex_term = (1 / n_samples) * tot_kld
 
     elif complexity_type == 'NoComplexity':
         complex_term = Variable(cmn.zeros_gpu(1), requires_grad=False)
@@ -181,33 +181,57 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     return complex_term
 
 
-def get_total_kld(prior_model, post_model):
+def get_total_kld(prior_model, post_model, prm, noised_prior):
 
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
-    post_layers_list =  [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
+    post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
 
     total_kld = 0
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
         if hasattr(prior_layer, 'w'):
-            total_kld += kld_element(post_layer.w, prior_layer.w)
+            total_kld += kld_element(post_layer.w, prior_layer.w, prm, noised_prior)
         if hasattr(prior_layer, 'b'):
-            total_kld += kld_element(post_layer.b, prior_layer.b)
+            total_kld += kld_element(post_layer.b, prior_layer.b, prm, noised_prior)
 
     return total_kld
 
 
-def kld_element(post, prior):
+def kld_element(post, prior, prm, noised_prior):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
-    post_var = torch.exp(post['log_var'])
-    prior_var = torch.exp(prior['log_var'])
-    #  TODO: maybe the exp can be done once for the KL and forward pass operations for efficiency
+    if noised_prior and prm.kappa_factor > 0:
+        prior_log_var = add_noise(prior['log_var'], prm.kappa_factor)
+        prior_mean = add_noise(prior['mean'], prm.kappa_factor)
+    else:
+        prior_log_var = prior['log_var']
+        prior_mean = prior['mean']
 
-    numerator = (post['mean'] - prior['mean']).pow(2) + post_var
+    post_var = torch.exp(post['log_var'])
+    prior_var = torch.exp(prior_log_var)
+
+    numerator = (post['mean'] - prior_mean).pow(2) + post_var
     denominator = prior_var
-    kld = 0.5 * torch.sum(prior['log_var'] - post['log_var'] + numerator / denominator - 1)
+    kld = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
 
     # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 
     return kld
+
+
+def add_noise(param, std):
+    return param + Variable(param.data.new(param.size()).normal_(0, std), requires_grad=False)
+
+
+def add_noise_to_model(model, std):
+
+    layers_list = [layer for layer in model.children() if isinstance(layer, StochasticLayer)]
+
+    for i_layer, layer in enumerate(layers_list):
+        if hasattr(layer, 'w'):
+            add_noise(layer.w['log_var'], std)
+            add_noise(layer.w['mean'], std)
+        if hasattr(layer, 'b'):
+            add_noise(layer.b['log_var'], std)
+            add_noise(layer.b['mean'], std)
+

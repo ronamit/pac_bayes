@@ -120,7 +120,7 @@ class StochasticLinear(StochasticLayer):
         return 'StochasticLinear({0} -> {1})'.format(self.in_dim, self.out_dim)
 
     def operation(self, x, weight, bias):
-        return  F.linear(x, weight, bias)
+        return F.linear(x, weight, bias)
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic conv2d layer

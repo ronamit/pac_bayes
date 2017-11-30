@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1)
+                    default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -84,8 +84,8 @@ prm.lr_schedule = {} # No decay
 prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
-prm.hyper_prior_factor = 1e-7  #  1e-5
-# Note: Hyper-prior is important to keep the sigma not too low.
+prm.kappa_factor = 1e-5  #  1e-5
+prm.hyperprior_factor = 1e-7  #  1e-5
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
