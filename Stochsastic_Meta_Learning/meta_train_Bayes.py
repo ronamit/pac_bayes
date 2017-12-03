@@ -80,6 +80,8 @@ def run_meta_learning(train_tasks_data, prm):
         n_meta_batches = len(meta_batch_starts)
 
         for i_meta_batch in range(n_meta_batches):
+            correct_count = 0
+            sample_count = 0
 
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]
@@ -119,6 +121,9 @@ def run_meta_learning(train_tasks_data, prm):
                     curr_empirical_loss = loss_criterion(outputs, targets)
                     task_empirical_loss += (1 / n_MC) * curr_empirical_loss
 
+                    correct_count += count_correct(outputs, targets)
+                    sample_count += inputs.size(0)
+
                     # Intra-task complexity of current task:
                     curr_complexity = get_posterior_complexity_term(
                         prm, prior_model, post_model,
@@ -147,7 +152,7 @@ def run_meta_learning(train_tasks_data, prm):
             log_interval = 200
             if i_meta_batch % log_interval == 0:
                 # TODO: average all batches and print at end of epoch... in addition to prints every number of sample batches
-                batch_acc = correct_rate(outputs, targets)
+                batch_acc = correct_count / sample_count
                 print(cmn.status_string(i_epoch, i_meta_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
                       ' Empiric-Loss: {:.4}\t Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
                       format(avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))

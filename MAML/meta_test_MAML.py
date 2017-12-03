@@ -1,15 +1,17 @@
 
+#
+# the code is inspired by: https://github.com/katerakelly/pytorch-maml
+
 from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models import get_model
+from Models.func_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, add_noise_to_model
-from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
+from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result, count_correct
+from torch.optim import SGD
 
-
-def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
+def run_learning(task_data, meta_model, prm, init_from_prior=True, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -21,24 +23,11 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
 
-    # Create posterior model for the new task:
-    post_model = get_model(prm, 'Stochastic')
-
-    if init_from_prior:
-        post_model.load_state_dict(prior_model.state_dict())
-
-        # prior_model_dict = prior_model.state_dict()
-        # post_model_dict = post_model.state_dict()
-        #
-        # # filter out unnecessary keys:
-        # prior_model_dict = {k: v for k, v in prior_model_dict.items() if '_log_var' in k or '_mu' in k}
-        # # overwrite entries in the existing state dict:
-        # post_model_dict.update(prior_model_dict)
-        #
-        # # #  load the new state dict
-        # post_model.load_state_dict(post_model_dict)
-
-        # add_noise_to_model(post_model, prm.kappa_factor)
+    # Create model for task:
+    task_model = get_model(prm)
+    
+    #  Load initial point from meta-parameters:
+    task_model.load_state_dict(meta_model.state_dict())
 
     # The data-sets of the new task:
     train_loader = task_data['train']
@@ -46,53 +35,52 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     n_train_samples = len(train_loader.dataset)
     n_batches = len(train_loader)
 
-    #  Get optimizer:
-    optimizer = optim_func(post_model.parameters(), **optim_args)
-
+    #  Get task optimizer:
+    task_optimizer = SGD(task_model.parameters(), lr=prm.alpha)
 
     # -------------------------------------------------------------------------------------------
-    #  Training epoch  function
+    #  Training  function
     # -------------------------------------------------------------------------------------------
 
-    def run_train_epoch(i_epoch):
-        log_interval = 500
+    def run_meta_test_learning(task_model, train_loader):      
 
-
-        post_model.train()
+        task_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 
-            # Monte-Carlo iterations:
-            n_MC = prm.n_MC
-            task_empirical_loss = 0
-            task_complexity = 0
-            for i_MC in range(n_MC):
+
+            for i_step in range(prm.n_meta_test_grad_steps):
                 # get batch:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # Calculate empirical loss:
-                outputs = post_model(inputs)
-                curr_empirical_loss = loss_criterion(outputs, targets)
-                task_empirical_loss += (1 / n_MC) * curr_empirical_loss
+                outputs = task_model(inputs)
+                task_objective = loss_criterion(outputs, targets)
 
-                curr_complexity = get_posterior_complexity_term(
-                    prm, prior_model, post_model, n_train_samples, curr_empirical_loss, noised_prior=False)
-                task_complexity += (1 / n_MC) * curr_complexity
+                # Take gradient step with the task weights:
+                grad_step(task_objective, task_optimizer)
+        return task_model
 
-            # Total objective:
+    # -------------------------------------------------------------------------------------------
+    #  Test evaluation function
+    # --------------------------------------------------------------------------------------------
+    def run_test(model, test_loader):
+        model.eval()
+        test_loss = 0
+        n_correct = 0
+        for batch_data in test_loader:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+            outputs = model(inputs)
+            test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
+            n_correct += count_correct(outputs, targets)
 
-            total_objective = task_empirical_loss + task_complexity
-
-            # Take gradient step with the posterior:
-            grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
-
-
-            # Print status:
-            if batch_idx % log_interval == 0:
-                batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
-                      ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
-                      format(task_empirical_loss.data[0], task_complexity.data[0]))
-
+        n_test_samples = len(test_loader.dataset)
+        n_test_batches = len(test_loader)
+        test_loss = test_loss.data[0] / n_test_batches
+        test_acc = n_correct / n_test_samples
+        print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
+            test_loss, test_acc, n_correct, n_test_samples))
+        return test_acc
+          
 
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
@@ -109,14 +97,13 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     start_time = timeit.default_timer()
 
     # Training loop:
-    for i_epoch in range(prm.num_epochs):
-        run_train_epoch(i_epoch)
+    task_model = run_meta_test_learning(task_model, train_loader)
 
     # Test:
-    test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
+    test_acc = run_test(task_model, test_loader)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
 
     test_err = 1 - test_acc
-    return test_err, post_model
+    return test_err, task_model

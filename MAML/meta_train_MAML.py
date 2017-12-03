@@ -15,7 +15,7 @@ from torch.autograd import Variable
 from Models.func_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
-from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_result
+from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_result, count_correct
 
 
 # -------------------------------------------------------------------------------------------
@@ -97,10 +97,9 @@ def run_meta_learning(train_tasks_data, prm):
                     task_train_loaders[task_id] = iter(train_tasks_data[task_id]['train'])
                     batch_data = task_train_loaders[task_id].next()
 
-                n_grad_steps = 1
                 fast_weights = OrderedDict((name, param) for (name, param) in model.named_parameters())
 
-                for i_step in range(n_grad_steps):
+                for i_step in range(prm.n_meta_train_grad_steps):
 
                     # get batch variables:
                     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
@@ -121,9 +120,8 @@ def run_meta_learning(train_tasks_data, prm):
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
                 outputs = model(inputs, fast_weights)
                 total_objective += loss_criterion(outputs, targets)
-                batch_samples = inputs.size(0)
-                correct_count += batch_samples * correct_rate(outputs, targets)
-                sample_count += batch_samples
+                correct_count += count_correct(outputs, targets)
+                sample_count += inputs.size(0)
             # end inner-loop
 
             # Take gradient step with the meta-parameters (theta) based on validation data:
@@ -164,9 +162,8 @@ def run_meta_learning(train_tasks_data, prm):
 
     stop_time = timeit.default_timer()
 
-
     # Update Log file:
-    cmn.write_final_result(0, stop_time - start_time, prm.log_file, result_name=prm.test_type)
+    cmn.write_final_result(0.0, stop_time - start_time, prm.log_file)
 
     # Return learned meta-parameters:
     return model

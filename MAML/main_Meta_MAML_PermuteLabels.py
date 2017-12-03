@@ -6,9 +6,8 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_MAML
+from MAML import meta_train_MAML, meta_test_MAML
 from Models.func_models import get_model
-from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
@@ -34,7 +33,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
+                    default=50)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -59,7 +58,10 @@ set_random_seed(prm.seed)
 prm.model_name = 'ConvNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 prm.func_model = True
 
+# MAML hyper-parameters:
 prm.alpha = 0.01
+prm.n_meta_train_grad_steps = 2
+prm.n_meta_test_grad_steps = 100
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}

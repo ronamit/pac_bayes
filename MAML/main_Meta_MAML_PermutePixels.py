@@ -6,11 +6,11 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_MAML
-from Models.models import get_model
-from Single_Task import learn_single_Bayes, learn_single_standard
+from MAML import meta_train_MAML, meta_test_MAML
+from Models.func_models import get_model
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
+
 
 torch.backends.cudnn.benchmark=False # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
@@ -59,7 +59,11 @@ set_random_seed(prm.seed)
 prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 prm.func_model = True
 
+# MAML hyper-parameters:
 prm.alpha = 0.01
+prm.n_meta_train_grad_steps = 2
+prm.n_meta_test_grad_steps = 100
+
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -123,6 +127,7 @@ elif mode == 'LoadPrior':
 else:
     raise ValueError('Invalid mode')
 
+
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
@@ -135,38 +140,38 @@ write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
-
+#
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
 # -------------------------------------------------------------------------------
-write_result('Meta-Testing with transferred prior....', prm.log_file)
+write_result('Meta-Testing with transferred meta-params....', prm.log_file)
 
 test_err_bayes = np.zeros(n_test_tasks)
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+    test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
 
-
-# -------------------------------------------------------------------------------------------
-#  Compare to standard learning
-# -------------------------------------------------------------------------------------------
-
-write_result('Run standard learning from scratch....', prm.log_file)
-
-test_err_standard = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
-
-
-# -------------------------------------------------------------------------------------------
-#  Print results
-# -------------------------------------------------------------------------------------------
-write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
-write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
-             format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
-
+#
+# # -------------------------------------------------------------------------------------------
+# #  Compare to standard learning
+# # -------------------------------------------------------------------------------------------
+#
+# write_result('Run standard learning from scratch....', prm.log_file)
+#
+# test_err_standard = np.zeros(n_test_tasks)
+# for i_task in range(n_test_tasks):
+#     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
+#     task_data = test_tasks_data[i_task]
+#     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
+#
+#
+# # -------------------------------------------------------------------------------------------
+# #  Print results
+# # -------------------------------------------------------------------------------------------
+# write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+# write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
+#              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+# write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
+#              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
+#
