@@ -33,7 +33,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)
+                    default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -149,11 +149,11 @@ for i_task in range(n_test_tasks):
     task_data = test_tasks_data[i_task]
     test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
 
-#
-# # -------------------------------------------------------------------------------------------
-# #  Compare to standard learning
-# # -------------------------------------------------------------------------------------------
-#
+
+# -------------------------------------------------------------------------------------------
+#  Compare to standard learning
+# -------------------------------------------------------------------------------------------
+
 # write_result('Run standard learning from scratch....', prm.log_file)
 #
 # test_err_standard = np.zeros(n_test_tasks)
@@ -162,13 +162,13 @@ for i_task in range(n_test_tasks):
 #     task_data = test_tasks_data[i_task]
 #     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 #
-#
-# # -------------------------------------------------------------------------------------------
-# #  Print results
-# # -------------------------------------------------------------------------------------------
-# write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-# write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-#              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+
+# -------------------------------------------------------------------------------------------
+#  Print results
+# -------------------------------------------------------------------------------------------
+write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
+             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
 # write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
 #              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
 #

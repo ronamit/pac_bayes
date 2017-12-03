@@ -11,7 +11,6 @@ from Models.func_models import get_model
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-
 torch.backends.cudnn.benchmark=False # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
@@ -64,7 +63,6 @@ prm.alpha = 0.01
 prm.n_meta_train_grad_steps = 2
 prm.n_meta_test_grad_steps = 100
 
-
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 # Note:
@@ -99,7 +97,7 @@ prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-f_name='prior'
+f_name='meta_model'
 
 
 if mode == 'MetaTrain':
@@ -109,24 +107,23 @@ if mode == 'MetaTrain':
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
-    # Meta-training to learn prior:
-    prior_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
-    # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=f_name)
-    print('Trained prior saved in ' + f_path)
+    # Meta-training to learn meta-model (theta params):
+    meta_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
+    # save learned meta-model:
+    f_path = save_model_state(meta_model, dir_path, name=f_name)
+    print('Trained meta-model saved in ' + f_path)
 
 
 elif mode == 'LoadPrior':
 
     # Loads  previously training prior.
     # First, create the model:
-    prior_model = get_model(prm, 'Stochastic')
+    meta_model = get_model(prm)
     # Then load the weights:
-    load_model_state(prior_model, dir_path, name=f_name)
-    print('Pre-trained  prior loaded from ' + dir_path)
+    load_model_state(meta_model, dir_path, name=f_name)
+    print('Pre-trained  meta-model loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')
-
 
 # -------------------------------------------------------------------------------------------
 # Generate the data sets of the test tasks:
@@ -152,11 +149,11 @@ for i_task in range(n_test_tasks):
     task_data = test_tasks_data[i_task]
     test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
 
-#
-# # -------------------------------------------------------------------------------------------
-# #  Compare to standard learning
-# # -------------------------------------------------------------------------------------------
-#
+
+# -------------------------------------------------------------------------------------------
+#  Compare to standard learning
+# -------------------------------------------------------------------------------------------
+
 # write_result('Run standard learning from scratch....', prm.log_file)
 #
 # test_err_standard = np.zeros(n_test_tasks)
@@ -165,13 +162,13 @@ for i_task in range(n_test_tasks):
 #     task_data = test_tasks_data[i_task]
 #     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
 #
-#
-# # -------------------------------------------------------------------------------------------
-# #  Print results
-# # -------------------------------------------------------------------------------------------
-# write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-# write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-#              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+
+# -------------------------------------------------------------------------------------------
+#  Print results
+# -------------------------------------------------------------------------------------------
+write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
+             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
 # write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
 #              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
 #
