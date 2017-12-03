@@ -168,5 +168,5 @@ def run_meta_learning(train_tasks_data, prm):
     # Update Log file:
     cmn.write_final_result(0, stop_time - start_time, prm.log_file, result_name=prm.test_type)
 
-    # Return learned prior:
-    return meta_model
+    # Return learned meta-parameters:
+    return model

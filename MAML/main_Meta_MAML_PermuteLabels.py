@@ -119,7 +119,7 @@ elif mode == 'LoadPrior':
     meta_model = get_model(prm)
     # Then load the weights:
     load_model_state(meta_model, dir_path, name=f_name)
-    print('Pre-trained  prior loaded from ' + dir_path)
+    print('Pre-trained  meta-model loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')
 
@@ -136,17 +136,17 @@ write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
 #
-# # -------------------------------------------------------------------------------------------
-# #  Run Meta-Testing
-# # -------------------------------------------------------------------------------
-# write_result('Meta-Testing with transferred prior....', prm.log_file)
-#
-# test_err_bayes = np.zeros(n_test_tasks)
-# for i_task in range(n_test_tasks):
-#     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
-#     task_data = test_tasks_data[i_task]
-#     test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
-#
+# -------------------------------------------------------------------------------------------
+#  Run Meta-Testing
+# -------------------------------------------------------------------------------
+write_result('Meta-Testing with transferred meta-params....', prm.log_file)
+
+test_err_bayes = np.zeros(n_test_tasks)
+for i_task in range(n_test_tasks):
+    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
+    task_data = test_tasks_data[i_task]
+    test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
+
 #
 # # -------------------------------------------------------------------------------------------
 # #  Compare to standard learning
