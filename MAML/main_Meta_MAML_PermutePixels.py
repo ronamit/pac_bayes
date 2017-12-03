@@ -60,7 +60,7 @@ prm.func_model = True
 
 # MAML hyper-parameters:
 prm.alpha = 0.01
-prm.n_meta_train_grad_steps = 2
+prm.n_meta_train_grad_steps = 1
 prm.n_meta_test_grad_steps = 100
 
 # Weights initialization (for Bayesian net):

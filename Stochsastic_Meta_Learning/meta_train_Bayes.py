@@ -8,7 +8,7 @@ import numpy as np
 from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
-from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_result
+from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result
 
 
 # -------------------------------------------------------------------------------------------

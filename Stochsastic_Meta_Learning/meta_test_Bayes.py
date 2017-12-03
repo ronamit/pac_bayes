@@ -6,7 +6,7 @@ import timeit
 from Models.models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, add_noise_to_model
-from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result
+from Utils.common import grad_step, count_correct, get_loss_criterion, write_result
 
 
 def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
@@ -61,6 +61,9 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
         post_model.train()
         for batch_idx, batch_data in enumerate(train_loader):
 
+            correct_count = 0
+            sample_count = 0
+
             # Monte-Carlo iterations:
             n_MC = prm.n_MC
             task_empirical_loss = 0
@@ -78,6 +81,9 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                     prm, prior_model, post_model, n_train_samples, curr_empirical_loss, noised_prior=False)
                 task_complexity += (1 / n_MC) * curr_complexity
 
+                correct_count += count_correct(outputs, targets)
+                sample_count += inputs.size(0)
+
             # Total objective:
 
             total_objective = task_empirical_loss + task_complexity
@@ -88,7 +94,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
             # Print status:
             if batch_idx % log_interval == 0:
-                batch_acc = correct_rate(outputs, targets)
+                batch_acc = correct_count / sample_count
                 print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, total_objective.data[0]) +
                       ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
                       format(task_empirical_loss.data[0], task_complexity.data[0]))
