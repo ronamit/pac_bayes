@@ -112,7 +112,7 @@ def get_model(prm, model_type, init_override=None):
             n_hidden_fc1 = 50
             self.conv1 = conv2d_layer(color_channels, n_filt1, kernel_size=5)
             self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=5)
-            conv_feat_size =  get_size_of_conv_output(input_shape, self._forward_features)
+            conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
             self.fc1 = linear_layer(conv_feat_size, n_hidden_fc1)
             self.fc_out = linear_layer(n_hidden_fc1, n_classes)
 
