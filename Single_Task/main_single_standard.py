@@ -60,7 +60,8 @@ set_random_seed(prm.seed)
 # prm.n_way_k_shot = {'N': 10, 'K': 5}
 
 #  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
+prm.model_name = 'ConvNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
+prm.func_model = True
 
 # Weights initialization:
 prm.init_override = None # None = use default initializer

@@ -24,10 +24,17 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     n_batches = len(train_loader)
 
     # Create  model:
-    model = get_model(prm, 'Standard', prm.init_override)
+    if hasattr(prm, 'func_model') and prm.func_model:
+        import Models.func_models as func_models
+        model = func_models.get_model(prm)
+    else:
+        model = get_model(prm, 'Standard')
+
+
     if initial_model:
         model.load_state_dict(initial_model.state_dict())
 
+    # Determine which parameters are optimized and which are frozen:
     if hasattr(prm, 'freeze_list'):
         freeze_list = prm.freeze_list
         optimized_modules = [named_module[1]

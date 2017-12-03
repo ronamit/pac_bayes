@@ -6,13 +6,13 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
-from Models.models import get_model
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_MAML
+from Models.func_models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark=False # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -25,7 +25,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Pixels')
+                    default='Permute_Labels')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
@@ -56,7 +56,10 @@ set_random_seed(prm.seed)
 
 
 #  Define model type (hypothesis class):
-prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.model_name = 'ConvNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.func_model = True
+
+prm.alpha = 0.01
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -65,12 +68,8 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 2.  don't init with too much std so that complexity term won't be too large
 
 # Weights initialization (for standard comparision net):
-prm.init_override = None # None = use default initializer
+# prm.init_override = None # None = use default initializer
 # prm.init_override = {'mean': 0, 'std': 0.1}
-
-
-# Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -81,11 +80,6 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
-
-prm.hyperprior_factor = 1e-7  #
-prm.kappa_factor = 1e-3  #
 
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
@@ -94,7 +88,6 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
 # Test type:
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -102,7 +95,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-f_name='prior'
+f_name='meta_model'
 
 
 if mode == 'MetaTrain':
@@ -112,20 +105,20 @@ if mode == 'MetaTrain':
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
-    # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
-    # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=f_name)
-    print('Trained prior saved in ' + f_path)
+    # Meta-training to learn meta-model (theta params):
+    meta_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
+    # save learned meta-model:
+    f_path = save_model_state(meta_model, dir_path, name=f_name)
+    print('Trained meta-model saved in ' + f_path)
 
 
 elif mode == 'LoadPrior':
 
     # Loads  previously training prior.
     # First, create the model:
-    prior_model = get_model(prm, 'Stochastic')
+    meta_model = get_model(prm)
     # Then load the weights:
-    load_model_state(prior_model, dir_path, name=f_name)
+    load_model_state(meta_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')
@@ -142,43 +135,38 @@ write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
 
 test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
-
-# -------------------------------------------------------------------------------------------
-#  Run Meta-Testing
-# -------------------------------------------------------------------------------
-write_result('Meta-Testing with transferred prior....', prm.log_file)
-
-test_err_bayes = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
-
-
-# -------------------------------------------------------------------------------------------
-#  Compare to standard learning
-# -------------------------------------------------------------------------------------------
-
-write_result('Run standard learning from scratch....', prm.log_file)
-
-test_err_standard = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
-
-
-# -------------------------------------------------------------------------------------------
-#  Print results
-# -------------------------------------------------------------------------------------------
-write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
-write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
-             format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
-
-# -------------------------------------------------------------------------------------------
-#  Print prior analysis
-# -------------------------------------------------------------------------------------------
-from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
-run_prior_analysis(prior_model)
+#
+# # -------------------------------------------------------------------------------------------
+# #  Run Meta-Testing
+# # -------------------------------------------------------------------------------
+# write_result('Meta-Testing with transferred prior....', prm.log_file)
+#
+# test_err_bayes = np.zeros(n_test_tasks)
+# for i_task in range(n_test_tasks):
+#     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
+#     task_data = test_tasks_data[i_task]
+#     test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
+#
+#
+# # -------------------------------------------------------------------------------------------
+# #  Compare to standard learning
+# # -------------------------------------------------------------------------------------------
+#
+# write_result('Run standard learning from scratch....', prm.log_file)
+#
+# test_err_standard = np.zeros(n_test_tasks)
+# for i_task in range(n_test_tasks):
+#     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
+#     task_data = test_tasks_data[i_task]
+#     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
+#
+#
+# # -------------------------------------------------------------------------------------------
+# #  Print results
+# # -------------------------------------------------------------------------------------------
+# write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+# write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
+#              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+# write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
+#              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
+#

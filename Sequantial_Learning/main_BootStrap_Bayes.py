@@ -2,7 +2,9 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
+from copy import deepcopy
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 
@@ -31,7 +33,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=50)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=300)
@@ -70,7 +72,7 @@ prm.init_override = None # None = use default initializer
 
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
+prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -81,17 +83,16 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
+prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
-prm.hyperprior_factor = 1e-7  #
-prm.kappa_factor = 1e-3  #
-
+prm.hyper_prior_factor = 1e-7  #  1e-5
+# Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
-prm.meta_batch_size = 5  # how many tasks in each meta-batch
+prm.meta_batch_size = 30  # how many tasks in each meta-batch
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
@@ -102,15 +103,16 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-f_name='prior'
+f_name = 'prior'
 
 
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
     n_train_tasks = 5
+    limit_train_samples = 10000
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
+    train_tasks_data = [get_data_loader(prm, meta_split='meta_train', limit_train_samples=limit_train_samples) for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
@@ -135,8 +137,7 @@ else:
 # -------------------------------------------------------------------------------------------
 
 n_test_tasks = 10
-
-limit_train_samples = 2000
+limit_train_samples = 100
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
@@ -181,4 +182,44 @@ write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
 #  Print prior analysis
 # -------------------------------------------------------------------------------------------
 from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
+run_prior_analysis(prior_model, showPlt=False)
+
+
+# -------------------------------------------------------------------------------------------
+#  Run sequential learning, initialized by learned prior
+# -------------------------------------------------------------------------------------------
+
+
+n_tasks = 200
+limit_train_samples = 100
+
+test_err_per_task= np.zeros(n_tasks)
+
+for i_task in range(n_tasks):
+
+    write_result('-'*5 + 'Learning task #{} out of {}...'.format(1+i_task, n_tasks), prm.log_file)
+    task_data = get_data_loader(prm, limit_train_samples=limit_train_samples)
+    test_err, posterior_model = learn_single_Bayes.run_learning(task_data, prm, prior_model=prior_model, init_from_prior=init_from_prior, verbose=0)
+    prior_model = deepcopy(posterior_model)
+    test_err_per_task[i_task] = test_err
+    write_result('-' * 5 + ' Task {}, test error: {}'.format(1+i_task, test_err), prm.log_file)
+
+
+# Figure
+plt.figure()
+plt.plot(1+np.arange(n_tasks),  100 * test_err_per_task)
+plt.xlabel('Task')
+plt.ylabel('Test Error %')
+plt.title('PAC-Bayes Sequential Transfer')
+plt.savefig('Figure.png')
+
+run_prior_analysis(prior_model, layers_names=None)
+
+
+
+# -------------------------------------------------------------------------------------------
+#  Print prior analysis
+# -------------------------------------------------------------------------------------------
 run_prior_analysis(prior_model)
+
+plt.show()

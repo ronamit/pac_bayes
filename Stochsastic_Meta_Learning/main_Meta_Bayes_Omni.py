@@ -84,8 +84,10 @@ prm.lr_schedule = {} # No decay
 # Meta-alg params:
 prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
-print(prm.complexity_type)
-prm.hyper_prior_factor = 1e-7 #  1e-5
+
+prm.hyperprior_factor = 1e-7  #
+prm.kappa_factor = 1e-3  #
+
 # Note: Hyper-prior is important to keep the sigma not too low.
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 

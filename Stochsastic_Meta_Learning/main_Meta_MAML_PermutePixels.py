@@ -12,7 +12,7 @@ from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark=False # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -57,6 +57,9 @@ set_random_seed(prm.seed)
 
 #  Define model type (hypothesis class):
 prm.model_name = 'FcNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.func_model = True
+
+prm.alpha = 0.01
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -65,12 +68,8 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 2.  don't init with too much std so that complexity term won't be too large
 
 # Weights initialization (for standard comparision net):
-prm.init_override = None # None = use default initializer
+# prm.init_override = None # None = use default initializer
 # prm.init_override = {'mean': 0, 'std': 0.1}
-
-
-# Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -81,11 +80,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
-prm.kappa_factor = 1e7  #  1e-5
-prm.hyperprior_factor = 1e-7  #  1e-5
 # Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
@@ -93,7 +88,6 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.meta_batch_size = 5  # how many tasks in each meta-batch
 
 # Test type:
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -176,8 +170,3 @@ write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
 write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
 
-# -------------------------------------------------------------------------------------------
-#  Print prior analysis
-# -------------------------------------------------------------------------------------------
-from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
-run_prior_analysis(prior_model)

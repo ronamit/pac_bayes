@@ -9,7 +9,7 @@ import torch.optim as optim
 from Models.models import get_model
 
 from Single_Task import learn_single_Bayes, learn_single_standard
-from Utils import data_gen
+from Utils.data_gen import get_data_loader
 from Utils.common import  write_result, set_random_seed
 from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
 
@@ -88,7 +88,7 @@ test_err_per_task= np.zeros(n_tasks)
 for i_task in range(n_tasks):
 
     write_result('-'*5 + 'Learning task #{} out of {}...'.format(1+i_task, n_tasks), prm.log_file)
-    task_data = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
+    task_data = get_data_loader(prm, limit_train_samples=limit_train_samples)
     test_err, posterior_model = learn_single_Bayes.run_learning(task_data, prm, prior_model=prior_model, init_from_prior=init_from_prior, verbose=0)
     prior_model = deepcopy(posterior_model)
     test_err_per_task[i_task] = test_err

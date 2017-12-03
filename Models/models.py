@@ -125,7 +125,7 @@ def get_model(prm, model_type, init_override=None):
             x = self._forward_features(x)
             x = x.view(x.size(0), -1)
             x = F.elu(self.fc1(x))
-            x = F.dropout(x, training=self.training)
+            # x = F.dropout(x, training=self.training)
             x = self.fc_out(x)
             return x
 

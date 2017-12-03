@@ -22,7 +22,7 @@ torch.backends.cudnn.benchmark=True # For speed improvement with convnets with f
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' ",
-                    default='MNIST')
+                    default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
                     default='Permute_Labels')
@@ -34,10 +34,10 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=300) # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
-                    default=1e-3)
+                    default=1e-1)
 
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
@@ -57,19 +57,20 @@ set_random_seed(prm.seed)
 n_experiments = 10  # 10
 
 #  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
+prm.model_name = 'DenseNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
 
 # Weights initialization:
 prm.init_override = None # {'bias': 0, 'std': 0.1}
 # None = use default initializer
 
 #  Define optimizer:
-prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
-# optim_func, optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
+# prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
+prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
 # lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10]}
-prm.lr_schedule = {} # No decay
+prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [150, 225]}
+# prm.lr_schedule = {} # No decay
 
 
 # For L2 regularization experiment:
@@ -79,7 +80,7 @@ prm.optim_args['weight_decay'] = 1e-3
 
 # For freeze lower layers experiment:
 prm_freeze = deepcopy(prm)
-prm_freeze.freeze_list = ['conv1', 'conv2', 'fc1']
+prm_freeze.not_freeze_list = ['fc1']
 
 # For bayes experiment -
 # Weights initialization:
