@@ -61,7 +61,7 @@ prm.func_model = True
 # MAML hyper-parameters:
 prm.alpha = 0.01
 prm.n_meta_train_grad_steps = 1
-prm.n_meta_test_grad_steps = 100
+prm.n_meta_test_grad_steps = 1000
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -95,7 +95,7 @@ prm.meta_batch_size = 5  # how many tasks in each meta-batch
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
+mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 f_name='meta_model'
 
