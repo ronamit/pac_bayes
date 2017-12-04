@@ -6,7 +6,7 @@
 
 - Computer with NVIDIA GPU and Linux or OSX
 - Python 3.5+ or 2.7+
-- [PyTorch 0.2+ with CUDA](http://pytorch.org)
+- [PyTorch 0.4+ with CUDA](http://pytorch.org)
 - NumPy and Matplotlib
 
 
