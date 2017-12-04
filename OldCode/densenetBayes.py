@@ -2,8 +2,8 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from Models.layers import StochasticConv2d, StochasticLinear
-from Models.layers import general_model
+from Models.stochastic_layers import StochasticConv2d, StochasticLinear
+from Models.stochastic_layers import base_class_stochastic_model
 
 # from: https://github.com/andreasveit/densenet-pytorch
 
@@ -75,7 +75,7 @@ def get_bayes_densenet_model_class(prm, input_channels=3):
         def forward(self, x):
             return self.layer(x)
 
-    class BayesDenseNet3(general_model):
+    class BayesDenseNet3(base_class_stochastic_model):
         def __init__(self, depth, num_classes, growth_rate=12,
                      reduction=0.5, bottleneck=True, dropRate=0.0):
             super(BayesDenseNet3, self).__init__()

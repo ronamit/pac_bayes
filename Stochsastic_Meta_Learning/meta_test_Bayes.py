@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models import get_model
+from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, add_noise_to_model
 from Utils.common import grad_step, count_correct, get_loss_criterion, write_result
@@ -22,7 +22,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     loss_criterion = get_loss_criterion(prm.loss_type)
 
     # Create posterior model for the new task:
-    post_model = get_model(prm, 'Stochastic')
+    post_model = get_model(prm)
 
     if init_from_prior:
         post_model.load_state_dict(prior_model.state_dict())

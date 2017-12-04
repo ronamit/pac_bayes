@@ -12,7 +12,7 @@ from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -29,6 +29,9 @@ parser.add_argument('--data-transform', type=str, help="Data transformation: 'No
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
+
+parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
+                    default='ConvNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -55,22 +58,14 @@ prm.data_path = '../data'
 set_random_seed(prm.seed)
 
 
-#  Define model type (hypothesis class):
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
-
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 # Note:
 # 1. start with small sigma - so gradients variance estimate will be low
 # 2.  don't init with too much std so that complexity term won't be too large
 
-# Weights initialization (for standard comparision net):
-prm.init_override = None # None = use default initializer
-# prm.init_override = {'mean': 0, 'std': 0.1}
-
-
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 3
+prm.n_MC = 1
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -78,13 +73,13 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 
 # Learning rate decay schedule:
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
-prm.lr_schedule = {} # No decay
+prm.lr_schedule = {}  # No decay
 
 # Meta-alg params:
 prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
-prm.hyperprior_factor = 1e-7  #
+prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
 prm.kappa_factor = 1e-3  #
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior

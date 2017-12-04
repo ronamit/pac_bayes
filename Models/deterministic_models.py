@@ -54,7 +54,7 @@ class base_model(nn.Module):
         self.model_type = 'Standard'
 
     def net_forward(self, x, weights=None):
-        return self.forward(x, weights) # forward is defined in dervied classes
+        return self.forward(x, weights) # forward is defined in derived classes
 
     def _init_weights(self):
         ''' Set weights to Gaussian, biases to zero '''

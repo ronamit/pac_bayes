@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.func_models import get_model
+from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result, count_correct
 from torch.optim import SGD

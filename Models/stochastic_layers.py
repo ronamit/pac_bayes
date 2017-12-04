@@ -7,32 +7,6 @@ from torch.autograd import Variable
 from Utils.common import randn_gpu
 
 # -------------------------------------------------------------------------------------------
-#  Auxilary functions
-# -------------------------------------------------------------------------------------------
-def make_pair(x):
-    if isinstance(x, int):
-        return (x, x)
-    else:
-        return x
-
-def get_randn_param(shape, mean, std):
-    if isinstance(shape, int):
-        shape = (shape,)
-    return nn.Parameter(torch.FloatTensor(*shape).normal_(mean, std))
-
-
-class general_model(nn.Module):
-    def __init__(self):
-        super(general_model, self).__init__()
-
-    def set_eps_std(self, eps_std):
-        old_eps_std = None
-        for m in self.modules():
-            if isinstance(m, StochasticLayer):
-                old_eps_std = m.set_eps_std(eps_std)
-        return old_eps_std
-
-# -------------------------------------------------------------------------------------------
 #  Stochastic linear layer
 # -------------------------------------------------------------------------------------------
 class StochasticLayer(nn.Module):
@@ -153,3 +127,16 @@ class StochasticConv2d(StochasticLayer):
 
     def operation(self, x, weight, bias):
         return F.conv2d(x, weight, bias, self.stride, self.padding, self.dilation)
+
+
+# -------------------------------------------------------------------------------------------
+#  Auxilary functions
+# -------------------------------------------------------------------------------------------
+def make_pair(x):
+    if isinstance(x, int):
+        return (x, x)
+    else:
+        return x
+
+def get_randn_param(shape, mean, std):
+    return nn.Parameter(randn_gpu(shape, mean, std))

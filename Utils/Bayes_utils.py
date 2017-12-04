@@ -8,7 +8,7 @@ import math
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct
 import torch.nn.functional as F
-from Models.layers import StochasticLayer
+from Models.stochastic_layers import StochasticLayer
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm):
     if prm.test_type == 'MaxPosterior':

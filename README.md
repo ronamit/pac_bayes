@@ -23,3 +23,5 @@ run alternative tranfer methods.
 
 * Single_Task/main_single_standard.py         - Learn standard neural network in a single task.
 * Single_Task/main_single_Bayes.py            - Learn stochastic neural network in a single task.
+
+MAML code is based on https://github.com/katerakelly/pytorch-maml

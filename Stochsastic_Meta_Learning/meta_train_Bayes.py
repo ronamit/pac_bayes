@@ -5,7 +5,7 @@ import timeit
 import random
 import numpy as np
 
-from Models.models import get_model
+from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
 from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result
@@ -29,10 +29,10 @@ def run_meta_learning(train_tasks_data, prm):
     n_tasks = len(train_tasks_data)
 
     # Create posterior models for each task:
-    posteriors_models = [get_model(prm, 'Stochastic') for _ in range(n_tasks)]
+    posteriors_models = [get_model(prm) for _ in range(n_tasks)]
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
-    prior_model = get_model(prm, 'Stochastic')
+    prior_model = get_model(prm)
 
     # Gather all tasks posterior params:
     all_post_param = []

@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 
 from MAML import meta_train_MAML, meta_test_MAML
-from Models.func_models import get_model
+from Models.deterministic_models import get_model
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 

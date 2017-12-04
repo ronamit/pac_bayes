@@ -25,7 +25,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
 
     # Create  model:
     if hasattr(prm, 'func_model') and prm.func_model:
-        import Models.func_models as func_models
+        import Models.deterministic_models as func_models
         model = func_models.get_model(prm)
     else:
         model = get_model(prm, 'Standard')
