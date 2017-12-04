@@ -11,14 +11,11 @@ from Utils import common as cmn, data_gen
 from Utils.common import grad_step, correct_rate, get_loss_criterion, write_result, count_correct
 from torch.optim import SGD
 
-def run_learning(task_data, meta_model, prm, init_from_prior=True, verbose=1):
+def run_learning(task_data, meta_model, prm, verbose=1):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
-    # Unpack parameters:
-    optim_func, optim_args, lr_schedule =\
-        prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
