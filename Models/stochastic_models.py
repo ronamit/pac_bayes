@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from Utils import data_gen
+from Utils.common import randn_gpu
 
 from Models.stochastic_layers import StochasticLinear, StochasticConv2d, StochasticLayer
 
@@ -42,7 +43,8 @@ def get_model(prm):
 # generate dummy input sample and forward to get shape after conv layers
 def get_size_of_conv_output(input_shape, conv_func):
     batch_size = 1
-    input = Variable(torch.rand(batch_size, *input_shape))
+    batch_shape = (batch_size, *input_shape)
+    input = Variable(randn_gpu(batch_shape))
     output_feat = conv_func(input)
     conv_out_size = output_feat.data.view(batch_size, -1).size(1)
     return conv_out_size
@@ -54,6 +56,7 @@ def get_size_of_conv_output(input_shape, conv_func):
 class base_stochastic_model(nn.Module):
     def __init__(self, prm, *args, **kwargs):
         super(base_stochastic_model, self).__init__()
+        self.cuda()  # always use GPU
         self.model_type = 'Stochastic'
 
         #  Stochastic Layers Wrappers
@@ -131,7 +134,6 @@ class FcNet3(base_stochastic_model):
                 ]))
         # Initialize weights
         # self._init_weights()
-        self.cuda()  # always use GPU
 
     def forward(self, x):
         ''' Define what happens to data in the net '''
@@ -166,7 +168,6 @@ class ConvNet3(base_stochastic_model):
 
         # Initialize weights
         # self._init_weights()
-        self.cuda()  # always use GPU
 
     def _forward_conv_layers(self, x):
         x = self.conv_layers(x)

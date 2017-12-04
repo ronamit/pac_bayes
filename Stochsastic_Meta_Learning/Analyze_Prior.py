@@ -6,9 +6,8 @@ import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 
-from Models.models import get_model
+from Models.stochastic_models import get_model
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
 # -------------------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ if __name__ == "__main__":
 
     # Loads  previously training prior.
     # First, create the model:
-    prior_model = get_model(prm, 'Stochastic')
+    prior_model = get_model(prm)
     # Then load the weights:
     is_loaded = load_model_state(prior_model, dir_path, name=file_name_prior)
     if not is_loaded:

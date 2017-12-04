@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 from copy import deepcopy
-from Models.models import get_model
+from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_test_Bayes, get_posterior_complexity_term
 from Utils.common import grad_step, correct_rate, get_loss_criterion, get_value
@@ -33,7 +33,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         # init from prior model:
         post_model = deepcopy(prior_model)
     else:
-        post_model = get_model(prm, 'Stochastic')
+        post_model = get_model(prm)
 
     #  Get optimizer:
     optimizer = optim_func(post_model.parameters(), **optim_args)

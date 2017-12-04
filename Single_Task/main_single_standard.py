@@ -6,12 +6,11 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Utils import common as cmn, data_gen
+from Utils import data_gen
 from Utils.common import set_random_seed, save_model_state
 from Single_Task import learn_single_standard
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
-
+torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -27,6 +26,9 @@ parser.add_argument('--data-transform', type=str, help="Data transformation:  'N
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
+
+parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
+                    default='ConvNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -48,7 +50,6 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (None
 
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
 
-
 prm = parser.parse_args()
 
 prm.data_path = '../data'
@@ -59,13 +60,6 @@ set_random_seed(prm.seed)
 # Note: number of test samples per class is 20-K
 # prm.n_way_k_shot = {'N': 10, 'K': 5}
 
-#  Define model:
-prm.model_name = 'ConvNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
-prm.func_model = True
-
-# Weights initialization:
-prm.init_override = None # None = use default initializer
-# prm.init_override = {'mean': 0, 'std': 0.1}
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #  'weight_decay':5e-4

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 
-from Models.models import get_model
+from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct, grad_step, correct_rate, get_loss_criterion
 
@@ -28,7 +28,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
         import Models.deterministic_models as func_models
         model = func_models.get_model(prm)
     else:
-        model = get_model(prm, 'Standard')
+        model = get_model(prm)
 
 
     if initial_model:
@@ -103,7 +103,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose, result_name='Standard')
 
-    test_err = 1-test_acc
+    test_err = 1 - test_acc
     return test_err, model
 
 

@@ -7,13 +7,12 @@ import torch
 import torch.optim as optim
 
 from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
-from Models.models import get_model
-from Single_Task import learn_single_Bayes, learn_single_standard
+from Models.stochastic_models import get_model
+from Single_Task import learn_single_standard
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
-torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
-
+torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -116,7 +115,7 @@ elif mode == 'LoadPrior':
 
     # Loads  previously training prior.
     # First, create the model:
-    prior_model = get_model(prm, 'Stochastic')
+    prior_model = get_model(prm)
     # Then load the weights:
     load_model_state(prior_model, dir_path, name=f_name)
     print('Pre-trained  prior loaded from ' + dir_path)

@@ -8,7 +8,7 @@ from Utils import data_gen
 from Utils.common import set_random_seed
 from Single_Task import learn_single_Bayes
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
@@ -25,6 +25,9 @@ parser.add_argument('--data-transform', type=str, help="Data transformation:  'N
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
                     default='CrossEntropy')
+
+parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
+                    default='ConvNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -54,9 +57,6 @@ set_random_seed(prm.seed)
 # Note: number of test samples per class is 20-K
 # prm.n_way_k_shot = {'N': 10, 'K': 5}
 
-#  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout' / 'OmniglotNet' / WideResNet / DenseNet  / DenseNet60 / DenseNet100/ DenseNet20
-
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 
@@ -65,7 +65,7 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 1. start with small sigma - so gradients variance estimate will be low
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 3
+prm.n_MC = 1
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
