@@ -97,7 +97,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-f_name='prior'
+file_name = 'prior'
 
 
 if mode == 'MetaTrain':
@@ -110,7 +110,7 @@ if mode == 'MetaTrain':
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
     # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=f_name)
+    f_path = save_model_state(prior_model, dir_path, name=file_name)
     print('Trained prior saved in ' + f_path)
 
 

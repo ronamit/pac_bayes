@@ -87,7 +87,7 @@ prm.lr_schedule = {} # No decay
 # -------------------------------------------------------------------------------------------
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-f_name='meta_model'
+file_name = 'meta_mode_Omniglot' #'meta_model'
 
 
 if mode == 'MetaTrain':
@@ -100,7 +100,7 @@ if mode == 'MetaTrain':
     # Meta-training to learn meta-model (theta params):
     meta_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
     # save learned meta-model:
-    f_path = save_model_state(meta_model, dir_path, name=f_name)
+    f_path = save_model_state(meta_model, dir_path, name=file_name)
     print('Trained meta-model saved in ' + f_path)
 
 
@@ -110,7 +110,7 @@ elif mode == 'LoadPrior':
     # First, create the model:
     meta_model = get_model(prm)
     # Then load the weights:
-    load_model_state(meta_model, dir_path, name=f_name)
+    load_model_state(meta_model, dir_path, name=file_name)
     print('Pre-trained  meta-model loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')
