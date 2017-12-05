@@ -43,7 +43,7 @@ def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
 
     elif prm.data_source == 'Omniglot':
         train_dataset, test_dataset = get_omniglot_task(prm.data_path, meta_split,
-            n_labels=prm.n_way_k_shot['N'], k_train_shot=prm.n_way_k_shot['K'],
+            n_labels=prm.N_Way, k_train_shot=prm.K_Shot,
             final_input_trans=final_input_trans, target_transform=target_trans)
     else:
         raise ValueError('Invalid data_source')
@@ -138,10 +138,12 @@ def load_CIFAR(final_input_trans, target_trans, prm):
 def get_info(prm):
     if prm.data_source == 'MNIST':
         info = {'input_shape': (1, 28, 28),  'n_classes': 10}
+
     elif prm.data_source == 'CIFAR10':
         info = {'input_shape': (3, 32, 32), 'n_classes': 10}
+
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (1, 28, 28), 'n_classes': prm.n_way_k_shot['N']}
+        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
 
     else:
         raise ValueError('Invalid data_source')
