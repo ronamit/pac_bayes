@@ -23,6 +23,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help='Data set',
                     default='Omniglot') # 'MNIST' / 'Omniglot'
 
+parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
+                    default=5)
+parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
+                    default=1)  # Note: number of test samples per class is 20-K (the rest of the data)
+
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
                     default=64)
 
@@ -66,10 +71,6 @@ prm = parser.parse_args()
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
-
-# For Omniglot data - N = number of classes. K = number of train samples per class:
-# Note: number of test samples per class is 20-K
-prm.n_way_k_shot = {'N': 5, 'K': 1}
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4

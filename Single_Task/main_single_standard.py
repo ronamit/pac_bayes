@@ -56,11 +56,6 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-# For Omniglot data - N = number of classes. K = number of train samples per class:
-# Note: number of test samples per class is 20-K
-# prm.n_way_k_shot = {'N': 10, 'K': 5}
-
-
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #  'weight_decay':5e-4
 # prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9, 'weight_decay':5e-4}

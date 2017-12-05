@@ -53,10 +53,6 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-# For Omniglot data - N = number of classes. K = number of train samples per class:
-# Note: number of test samples per class is 20-K
-# prm.n_way_k_shot = {'N': 10, 'K': 5}
-
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
 
