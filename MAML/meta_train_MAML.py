@@ -28,7 +28,6 @@ def run_meta_learning(train_tasks_data, prm):
     # Unpack parameters:
     optim_func, optim_args, lr_schedule =\
         prm.optim_func, prm.optim_args, prm.lr_schedule
-    num_epochs = prm.n_meta_train_epochs
 
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
@@ -153,8 +152,10 @@ def run_meta_learning(train_tasks_data, prm):
     # -------------------------------------------------------------------------------------------
     start_time = timeit.default_timer()
 
+    num_epochs = int(np.ceil(prm.n_meta_train_iterations / np.ceil(n_tasks / prm.meta_batch_size)))
+
     # Training loop:
-    for i_epoch in range(prm.n_meta_train_epochs):
+    for i_epoch in range(num_epochs):
         run_train_epoch(i_epoch)
 
     stop_time = timeit.default_timer()

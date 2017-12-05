@@ -20,8 +20,11 @@ torch.backends.cudnn.benchmark = True # For speed improvement with convnets with
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data set'",
+parser.add_argument('--data-source', type=str, help='Data set',
                     default='Omniglot') # 'MNIST' / 'Omniglot'
+
+parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
+                    default=64)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='None') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
@@ -52,10 +55,10 @@ parser.add_argument('--alpha', type=float, help='Step size for gradient step',
                     default=0.1)
 parser.add_argument('--n_meta_train_grad_steps', type=int, help='Number of gradient steps in meta-training',
                     default=5)
-parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
+parser.add_argument('--n_meta_train_iterations', type=int, help='number of iterations in meta-training',
                     default=15000)
-parser.add_argument('--n_meta_test_epochs', type=int, help='Number of gradient steps in meta-testing',
-                    default=3)
+parser.add_argument('--n_meta_test_grad_steps', type=int, help='Number of gradient steps in meta-testing',
+                    default=5)
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=32)
 
@@ -81,7 +84,6 @@ prm.lr_schedule = {} # No decay
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
-
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 f_name='meta_model'
@@ -90,7 +92,7 @@ f_name='meta_model'
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 5
+    n_train_tasks = prm.n_train_tasks
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
