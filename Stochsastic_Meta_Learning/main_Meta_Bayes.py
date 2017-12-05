@@ -23,6 +23,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
+parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
+                    default=64)
+
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
 
@@ -100,7 +103,7 @@ f_name='prior'
 if mode == 'MetaTrain':
 
     # Generate the data sets of the training tasks:
-    n_train_tasks = 5
+    n_train_tasks = prm.n_train_tasks
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 

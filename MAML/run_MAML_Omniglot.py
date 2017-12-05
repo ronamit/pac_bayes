@@ -2,6 +2,7 @@ from subprocess import call
 
 call(['python', 'main_MAML.py',
       '--data-source', 'Omniglot',
+      '--n_train_tasks', '64',
       '--data-transform', 'None',
       '--model-name', 'OmConvNet',
       # MAML hyper-parameters:
