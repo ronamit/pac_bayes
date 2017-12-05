@@ -20,20 +20,20 @@ torch.backends.cudnn.benchmark = True # For speed improvement with convnets with
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
-                    default='MNIST')
+parser.add_argument('--data-source', type=str, help="Data set'",
+                    default='Omniglot') # 'MNIST' / 'Omniglot'
 
-parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+parser.add_argument('--data-transform', type=str, help="Data transformation",
+                    default='None') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
 
-parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='CrossEntropy')
+parser.add_argument('--loss-type', type=str, help="Loss function",
+                    default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
+
+parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
+                    default='OmConvNet')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
-
-parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -47,31 +47,26 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
 
-prm = parser.parse_args()
+# MAML hyper-parameters:
+parser.add_argument('--alpha', type=float, help='Step size for gradient step',
+                    default=0.1)
+parser.add_argument('--n_meta_train_grad_steps', type=int, help='Number of gradient steps in meta-training',
+                    default=5)
+parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
+                    default=15000)
+parser.add_argument('--n_meta_test_epochs', type=int, help='Number of gradient steps in meta-testing',
+                    default=3)
+parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
+                    default=32)
 
+prm = parser.parse_args()
 prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-
-#  Define model type (hypothesis class):
-prm.model_name = 'ConvNet3'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
-prm.func_model = True
-
-# MAML hyper-parameters:
-prm.alpha = 0.1
-prm.n_meta_train_grad_steps = 2
-prm.n_meta_test_grad_steps = 100
-
-# Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-# Note:
-# 1. start with small sigma - so gradients variance estimate will be low
-# 2.  don't init with too much std so that complexity term won't be too large
-
-# Weights initialization (for standard comparision net):
-# prm.init_override = None # None = use default initializer
-# prm.init_override = {'mean': 0, 'std': 0.1}
+# For Omniglot data - N = number of classes. K = number of train samples per class:
+# Note: number of test samples per class is 20-K
+prm.n_way_k_shot = {'N': 5, 'K': 1}
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -81,15 +76,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {} # No decay
 
-# Meta-alg params:
 
-# Choose the factor  so that the Hyper-prior  will be in the same order of the other terms.
-
-init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
-
-prm.meta_batch_size = 5  # how many tasks in each meta-batch
-
-# Test type:
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -147,7 +134,7 @@ test_err_bayes = np.zeros(n_test_tasks)
 for i_task in range(n_test_tasks):
     print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, init_from_prior, verbose=0)
+    test_err_bayes[i_task], _ = meta_test_MAML.run_learning(task_data, meta_model, prm, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------

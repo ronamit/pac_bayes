@@ -23,11 +23,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation: 'None' / 'Permute_Pixels' / 'Permute_Labels'",
-                    default='Permute_Labels')
+parser.add_argument('--data-transform', type=str, help="Data transformation",
+                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
 
-parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='CrossEntropy')
+parser.add_argument('--loss-type', type=str, help="Loss function",
+                    default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
                     default='ConvNet3')  # ConvNet3 / 'FcNet3'

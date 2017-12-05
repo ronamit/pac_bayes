@@ -28,6 +28,8 @@ def get_model(prm):
         model = FcNet3(input_size=input_size, n_classes=n_classes)
     elif model_name == 'ConvNet3':
         model = ConvNet3(input_shape=input_shape, n_classes=n_classes)
+    elif model_name == 'OmConvNet':
+        model = OmConvNet(input_shape=input_shape, n_classes=n_classes)
     else:
         raise ValueError('Invalid model_name')
     return model
@@ -43,7 +45,6 @@ def get_size_of_conv_output(input_shape, conv_func):
     output_feat = conv_func(input)
     conv_out_size = output_feat.data.view(batch_size, -1).size(1)
     return conv_out_size
-
 
 # -------------------------------------------------------------------------------------------
 #  Base class for models
@@ -87,6 +88,10 @@ class base_model(nn.Module):
                 m_to.weight.data = m_from.weight.data.clone()
                 if m_to.bias is not None:
                     m_to.bias.data = m_from.bias.data.clone()
+
+# -------------------------------------------------------------------------------------------
+#  Models collection
+# -------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------
 #  3-hidden-layer Fully-Connected Net
@@ -180,3 +185,59 @@ class ConvNet3(base_model):
             x = F.elu(x)
             x = F.linear(x, weights['fc_out.weight'], weights['fc_out.bias'])
         return x
+
+
+# -------------------------------------------------------------------------------------------
+#  OmConvNet -  ConvNet for Omniglot
+# -------------------------------------------------------------------------------- -----------
+class OmConvNet(base_model):
+    def __init__(self, input_shape, n_classes):
+        super(OmConvNet, self).__init__()
+        self.model_name = 'OmConv'
+        n_in_channels = input_shape[0]
+        n_filt1 = 64
+        n_filt2 = 64
+        n_filt3 = 64
+        n_hidden_fc1 = 50
+        self.conv_layers = nn.Sequential(OrderedDict([
+                ('conv1',  nn.Conv2d(n_in_channels, n_filt1, kernel_size=3)),
+                ('relu1',  nn.ReLU(inplace=True)),
+                ('pool1', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('conv2', nn.Conv2d(n_filt1, n_filt2, kernel_size=3)),
+                ('relu2', nn.ReLU(inplace=True)),
+                ('pool2', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('conv3', nn.Conv2d(n_filt2, n_filt3, kernel_size=3)),
+                ('relu3', nn.ReLU(inplace=True)),
+                ('pool3', nn.MaxPool2d(kernel_size=2, stride=2)),
+                 ]))
+        conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
+        self.add_module('fc_out', nn.Linear(conv_out_size, n_classes))
+
+        # Initialize weights
+        self._init_weights()
+        self.cuda()  # always use GPU
+
+    def _forward_conv_layers(self, x, weights=None):
+        if weights is None:
+            x = self.conv_layers(x)
+        else:
+            x = F.conv2d(x, weights['conv_layers.conv1.weight'], weights['conv_layers.conv1.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.conv2d(x, weights['conv_layers.conv2.weight'], weights['conv_layers.conv2.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.conv2d(x, weights['conv_layers.conv3.weight'], weights['conv_layers.conv3.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+        return x
+
+    def forward(self, x, weights=None):
+        x = self._forward_conv_layers(x, weights)
+        x = x.view(x.size(0), -1)
+        if weights is None:
+            x = self.fc_out(x)
+        else:
+            x = F.linear(x, weights['fc_out.weight'], weights['fc_out.bias'])
+        return x
+

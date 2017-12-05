@@ -54,7 +54,7 @@ def run_meta_learning(train_tasks_data, prm):
     # number of sample-batches in each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
 
-    n_batches_per_task = np.min(n_batch_list)
+    n_batches_per_task = np.max(n_batch_list)
     # note: if some tasks have less data that other tasks - it may be sampled more than once in an epoch
 
 
@@ -73,9 +73,9 @@ def run_meta_learning(train_tasks_data, prm):
             random.shuffle(task_ids_list)
             task_order += task_ids_list
 
-        # meta-batches loop
-        # each meta-batch includes summing over several tasks batches
-        # take a grad step after each meta-batch
+        # ----------- meta-batches loop (batches of tasks) -----------------------------------#
+        # each meta-batch includes several tasks
+        # we take a grad step with theta after each meta-batch
         meta_batch_starts = list(range(0, len(task_order), prm.meta_batch_size))
         n_meta_batches = len(meta_batch_starts)
 
@@ -91,10 +91,10 @@ def run_meta_learning(train_tasks_data, prm):
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
 
-            # samples-batches loop (inner loop)
-            for i_inner_batch in range(n_inner_batch):
+            # ----------- loop over tasks in batch -----------------------------------#
+            for i_task_in_batch in range(n_inner_batch):
 
-                task_id = task_ids_in_meta_batch[i_inner_batch]
+                task_id = task_ids_in_meta_batch[i_task_in_batch]
 
                 # get sample-batch data from current task to calculate the empirical loss estimate:
                 try:
@@ -112,6 +112,7 @@ def run_meta_learning(train_tasks_data, prm):
                 n_MC = prm.n_MC
                 task_empirical_loss = 0
                 task_complexity = 0
+                # ----------- Monte-Carlo loop  -----------------------------------#
                 for i_MC in range(n_MC):
                 # get batch variables:
                     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
@@ -129,8 +130,7 @@ def run_meta_learning(train_tasks_data, prm):
                         prm, prior_model, post_model,
                         n_samples_list[task_id], curr_empirical_loss, noised_prior=True)
                     task_complexity += (1 / n_MC) * curr_complexity
-                # end MC loop
-
+                # end Monte-Carlo loop
 
                 sum_empirical_loss += task_empirical_loss
                 sum_intra_task_comp += task_complexity
@@ -151,9 +151,8 @@ def run_meta_learning(train_tasks_data, prm):
             # Print status:
             log_interval = 200
             if i_meta_batch % log_interval == 0:
-                # TODO: average all batches and print at end of epoch... in addition to prints every number of sample batches
                 batch_acc = correct_count / sample_count
-                print(cmn.status_string(i_epoch, i_meta_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]) +
+                print(cmn.status_string(i_epoch,  prm.num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]) +
                       ' Empiric-Loss: {:.4}\t Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
                       format(avg_empirical_loss.data[0], avg_intra_task_comp.data[0], hyperprior.data[0]))
         # end  meta-batches loop

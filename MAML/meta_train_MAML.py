@@ -14,7 +14,6 @@ import torch
 from torch.autograd import Variable
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
 from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_result, count_correct
 
 
@@ -29,6 +28,7 @@ def run_meta_learning(train_tasks_data, prm):
     # Unpack parameters:
     optim_func, optim_args, lr_schedule =\
         prm.optim_func, prm.optim_args, prm.lr_schedule
+    num_epochs = prm.n_meta_train_epochs
 
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
@@ -50,7 +50,7 @@ def run_meta_learning(train_tasks_data, prm):
     # number of sample-batches in each task:
     n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
 
-    n_batches_per_task = np.min(n_batch_list)
+    n_batches_per_task = np.max(n_batch_list)
     # note: if some tasks have less data that other tasks - it may be sampled more than once in an epoch
 
     # -------------------------------------------------------------------------------------------
@@ -68,12 +68,12 @@ def run_meta_learning(train_tasks_data, prm):
             random.shuffle(task_ids_list)
             task_order += task_ids_list
 
-        # meta-batches loop
-        # each meta-batch includes summing over several tasks batches
-        # take a grad step after each meta-batch
+        # each meta-batch includes several tasks
+        # we take a grad step with theta after each meta-batch
         meta_batch_starts = list(range(0, len(task_order), prm.meta_batch_size))
         n_meta_batches = len(meta_batch_starts)
 
+        # ----------- meta-batches loop (batches of tasks) -----------------------------------#
         for i_meta_batch in range(n_meta_batches):
 
             meta_batch_start = meta_batch_starts[i_meta_batch]
@@ -84,10 +84,10 @@ def run_meta_learning(train_tasks_data, prm):
             total_objective = 0
             correct_count = 0
             sample_count = 0
-            # samples-batches loop (inner loop) - updates weights with gradient steps on training data
-            for i_inner_batch in range(n_inner_batch):
+            # ----------- loop over tasks in batch -----------------------------------#
+            for i_task_in_batch in range(n_inner_batch):
 
-                task_id = task_ids_in_meta_batch[i_inner_batch]
+                task_id = task_ids_in_meta_batch[i_task_in_batch]
 
                 # get sample-batch data from current task to calculate the empirical loss estimate:
                 try:
@@ -98,7 +98,7 @@ def run_meta_learning(train_tasks_data, prm):
                     batch_data = task_train_loaders[task_id].next()
 
                 fast_weights = OrderedDict((name, param) for (name, param) in model.named_parameters())
-
+                # ----------- gradient steps loop -----------------------------------#
                 for i_step in range(prm.n_meta_train_grad_steps):
 
                     # get batch variables:
@@ -114,7 +114,7 @@ def run_meta_learning(train_tasks_data, prm):
 
                     fast_weights = OrderedDict((name, param - prm.alpha * grad)
                                                for ((name, param), grad) in zip(fast_weights.items(), grads))
-                #  end grad steps loop
+                # end grad steps loop
 
                 # Sample new  (validation) data batch for this task:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
@@ -122,7 +122,7 @@ def run_meta_learning(train_tasks_data, prm):
                 total_objective += loss_criterion(outputs, targets)
                 correct_count += count_correct(outputs, targets)
                 sample_count += inputs.size(0)
-            # end inner-loop
+            # end loop over tasks in batch
 
             # Take gradient step with the meta-parameters (theta) based on validation data:
             grad_step(total_objective, meta_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -130,14 +130,11 @@ def run_meta_learning(train_tasks_data, prm):
             # Print status:
             log_interval = 200
             if i_meta_batch % log_interval == 0:
-                # TODO: average all batches and print at end of epoch... in addition to prints every number of sample batches
                 batch_acc = correct_count / sample_count
-                print(cmn.status_string(i_epoch, i_meta_batch, n_meta_batches, prm, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]))
         # end  meta-batches loop
 
     # end run_epoch()
-
-
 
     # -----------------------------------------------------------------------------------------------------------#
     # Main script
@@ -157,7 +154,7 @@ def run_meta_learning(train_tasks_data, prm):
     start_time = timeit.default_timer()
 
     # Training loop:
-    for i_epoch in range(prm.num_epochs):
+    for i_epoch in range(prm.n_meta_train_epochs):
         run_train_epoch(i_epoch)
 
     stop_time = timeit.default_timer()

@@ -34,18 +34,20 @@ def run_learning(task_data, meta_model, prm, verbose=1):
 
     #  Get task optimizer:
     task_optimizer = SGD(task_model.parameters(), lr=prm.alpha)
+    # In meta-testing, use SGD with step-size alpha
 
     # -------------------------------------------------------------------------------------------
-    #  Training  function
+    #  Learning  function
     # -------------------------------------------------------------------------------------------
 
     def run_meta_test_learning(task_model, train_loader):      
 
         task_model.train()
-        for batch_idx, batch_data in enumerate(train_loader):
 
+        for i_epoch in range(prm.n_meta_test_epochs):
+            # ----------- sample-batches loop -----------------------------------#
+            for batch_idx, batch_data in enumerate(train_loader):
 
-            for i_step in range(prm.n_meta_test_grad_steps):
                 # get batch:
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
@@ -55,6 +57,10 @@ def run_learning(task_data, meta_model, prm, verbose=1):
 
                 # Take gradient step with the task weights:
                 grad_step(task_objective, task_optimizer)
+
+        # end sample batches loop
+        # end epochs loop
+
         return task_model
 
     # -------------------------------------------------------------------------------------------
