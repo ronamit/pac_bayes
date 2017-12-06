@@ -29,7 +29,7 @@ parser.add_argument('--K_Shot', type=int, help='Number of training sample per cl
                     default=1)  # Note: number of test samples per class is 20-K (the rest of the data)
 
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
-                    default=64)
+                    default=1500)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='None') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
@@ -61,7 +61,7 @@ parser.add_argument('--alpha', type=float, help='Step size for gradient step',
 parser.add_argument('--n_meta_train_grad_steps', type=int, help='Number of gradient steps in meta-training',
                     default=5)
 parser.add_argument('--n_meta_train_iterations', type=int, help='number of iterations in meta-training',
-                    default=15000)
+                    default=5000)
 parser.add_argument('--n_meta_test_grad_steps', type=int, help='Number of gradient steps in meta-testing',
                     default=5)
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
@@ -85,9 +85,9 @@ prm.lr_schedule = {} # No decay
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-file_name = 'meta_mode_Omniglot' #'meta_model'
+file_name = 'meta_model' #'meta_model'
 
 
 if mode == 'MetaTrain':

@@ -16,7 +16,6 @@ from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_result, count_correct
 
-
 # -------------------------------------------------------------------------------------------
 #  Learning function
 # -------------------------------------------------------------------------------------------
@@ -77,30 +76,26 @@ def run_meta_learning(train_tasks_data, prm):
 
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]
-            n_inner_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
+            n_tasks_in_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
             # note: it is OK if some task appear several times in the meta-batch
 
             total_objective = 0
             correct_count = 0
             sample_count = 0
             # ----------- loop over tasks in batch -----------------------------------#
-            for i_task_in_batch in range(n_inner_batch):
+            for i_task_in_batch in range(n_tasks_in_batch):
 
                 task_id = task_ids_in_meta_batch[i_task_in_batch]
 
-                # get sample-batch data from current task to calculate the empirical loss estimate:
-                try:
-                    batch_data = task_train_loaders[task_id].next()
-                except StopIteration:
-                    # in case some task has less samples - just restart the iterator and re-use the samples
-                    task_train_loaders[task_id] = iter(train_tasks_data[task_id]['train'])
-                    batch_data = task_train_loaders[task_id].next()
+
 
                 fast_weights = OrderedDict((name, param) for (name, param) in model.named_parameters())
                 # ----------- gradient steps loop -----------------------------------#
                 for i_step in range(prm.n_meta_train_grad_steps):
 
                     # get batch variables:
+                    batch_data = data_gen.get_next_batch_cyclic(task_train_loaders[task_id],
+                                                                train_tasks_data[task_id]['train'])
                     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                     if i_step == 0:
@@ -116,6 +111,8 @@ def run_meta_learning(train_tasks_data, prm):
                 # end grad steps loop
 
                 # Sample new  (validation) data batch for this task:
+                batch_data = data_gen.get_next_batch_cyclic(task_train_loaders[task_id],
+                                                            train_tasks_data[task_id]['train'])
                 inputs, targets = data_gen.get_batch_vars(batch_data, prm)
                 outputs = model(inputs, fast_weights)
                 total_objective += loss_criterion(outputs, targets)

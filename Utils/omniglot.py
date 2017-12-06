@@ -71,12 +71,14 @@ def get_omniglot_task(data_path, meta_split, n_labels, k_train_shot, final_input
 
 
     # Data transformations list:
+    normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
     input_transform = [lambda x: FilenameToPILImage(x, data_dir)]
     input_transform +=  [lambda x: x.resize((28,28), resample=Image.LANCZOS)] # to compare to prior papers
     input_transform += [transforms.ToTensor()]
-    input_transform += [lambda x: x.mean(dim=0).unsqueeze_(0)]  # RGB -> gray scale
+    input_transform += [normalize]
+    # input_transform += [lambda x: x.mean(dim=0).unsqueeze_(0)]  # RGB -> gray scale
     # Switch background to 0 and letter to 1:
-    input_transform += [lambda x: 1.0 - x]
+    # input_transform += [lambda x: 1.0 - x]
     if final_input_trans:
         input_transform += final_input_trans
 

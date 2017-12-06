@@ -48,13 +48,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
         # Gradient steps (training) loop
         for i_epoch in range(prm.n_meta_test_grad_steps):
             # get batch:
-            try:
-                batch_data = train_loader_iter.next()
-            except StopIteration:
-                # in case some task has less samples - just restart the iterator and re-use the samples
-                train_loader_iter = iter(train_loader)
-                batch_data = train_loader_iter.next()
-
+            batch_data = data_gen.get_next_batch_cyclic(train_loader_iter, train_loader)
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
             # Calculate empirical loss:

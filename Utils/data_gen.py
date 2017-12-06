@@ -143,13 +143,25 @@ def get_info(prm):
         info = {'input_shape': (3, 32, 32), 'n_classes': 10}
 
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
+        info = {'input_shape': (3, 28, 28), 'n_classes': prm.N_Way}
 
     else:
         raise ValueError('Invalid data_source')
 
     return info
 
+
+
+def get_next_batch_cyclic(data_iterator, data_generator):
+
+    # get sample-batch data
+    try:
+        batch_data = data_iterator.next()
+    except StopIteration:
+        # in case some task has less samples - just restart the iterator and re-use the samples
+        data_iterator = iter(data_generator)
+        batch_data = data_iterator.next()
+    return batch_data
 
 # -------------------------------------------------------------------------------------------
 #  Transform batch to variables
