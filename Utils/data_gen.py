@@ -150,11 +150,20 @@ def get_info(prm):
 
     return info
 
+# -------------------------------------------------------------------------------------------
+#  Batch extraction
+# -------------------------------------------------------------------------------------------
+
+def get_batch_vars(batch_data, args, is_test=False):
+    ''' Transform batch to variables '''
+    inputs, targets = batch_data
+    inputs, targets = inputs.cuda(), targets.cuda(async=True)
+    inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
+    return inputs, targets
 
 
 def get_next_batch_cyclic(data_iterator, data_generator):
-
-    # get sample-batch data
+    ''' get sample from iterator, if it finishes then restart  '''
     try:
         batch_data = data_iterator.next()
     except StopIteration:
@@ -162,15 +171,6 @@ def get_next_batch_cyclic(data_iterator, data_generator):
         data_iterator = iter(data_generator)
         batch_data = data_iterator.next()
     return batch_data
-
-# -------------------------------------------------------------------------------------------
-#  Transform batch to variables
-# -------------------------------------------------------------------------------------------
-def get_batch_vars(batch_data, args, is_test=False):
-    inputs, targets = batch_data
-    inputs, targets = inputs.cuda(), targets.cuda(async=True)
-    inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
-    return inputs, targets
 
 # -----------------------------------------------------------------------------------------------------------#
 # Data manipulation

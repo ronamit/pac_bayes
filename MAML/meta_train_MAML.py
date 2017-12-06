@@ -82,7 +82,7 @@ def run_meta_learning(train_tasks_data, prm):
             total_objective = 0
             correct_count = 0
             sample_count = 0
-            # ----------- loop over tasks in batch -----------------------------------#
+            # ----------- loop over tasks in meta-batch -----------------------------------#
             for i_task_in_batch in range(n_tasks_in_batch):
 
                 task_id = task_ids_in_meta_batch[i_task_in_batch]
@@ -118,7 +118,7 @@ def run_meta_learning(train_tasks_data, prm):
                 total_objective += loss_criterion(outputs, targets)
                 correct_count += count_correct(outputs, targets)
                 sample_count += inputs.size(0)
-            # end loop over tasks in batch
+            # end loop over tasks in  meta-batch
 
             # Take gradient step with the meta-parameters (theta) based on validation data:
             grad_step(total_objective, meta_optimizer, lr_schedule, prm.lr, i_epoch)

@@ -85,24 +85,19 @@ def run_meta_learning(train_tasks_data, prm):
 
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]
-            n_inner_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
+            n_tasks_in_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
             # note: it is OK if some task appear several times in the meta-batch
 
             sum_empirical_loss = 0
             sum_intra_task_comp = 0
 
-            # ----------- loop over tasks in batch -----------------------------------#
-            for i_task_in_batch in range(n_inner_batch):
+            # ----------- loop over tasks in meta-batch -----------------------------------#
+            for i_task_in_batch in range(n_tasks_in_batch):
 
                 task_id = task_ids_in_meta_batch[i_task_in_batch]
 
                 # get sample-batch data from current task to calculate the empirical loss estimate:
-                try:
-                    batch_data = task_train_loaders[task_id].next()
-                except StopIteration:
-                    # in case some task has less samples - just restart the iterator and re-use the samples
-                    task_train_loaders[task_id] = iter(train_tasks_data[task_id]['train'])
-                    batch_data = task_train_loaders[task_id].next()
+                batch_data = data_gen.get_next_batch_cyclic(task_train_loaders[task_id], train_tasks_data[task_id]['train'])
 
                 # The posterior model corresponding to the task in the batch:
                 post_model = posteriors_models[task_id]
@@ -135,9 +130,9 @@ def run_meta_learning(train_tasks_data, prm):
                 sum_empirical_loss += task_empirical_loss
                 sum_intra_task_comp += task_complexity
 
-            # end inner-loop
-            avg_empirical_loss = (1 / n_inner_batch) * sum_empirical_loss
-            avg_intra_task_comp = (1 / n_inner_batch) * sum_intra_task_comp
+            # end loop over tasks in meta-batch
+            avg_empirical_loss = (1 / n_tasks_in_batch) * sum_empirical_loss
+            avg_intra_task_comp = (1 / n_tasks_in_batch) * sum_intra_task_comp
 
             # Hyper-prior term:
             hyperprior = net_norm(prior_model, p=2) * np.sqrt(1 / n_tasks) * prm.hyperprior_factor
