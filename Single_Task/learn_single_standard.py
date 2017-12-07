@@ -76,7 +76,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, batch_idx, n_batches, prm, batch_acc, loss.data[0]))
+                print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, loss.data[0]))
 
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file

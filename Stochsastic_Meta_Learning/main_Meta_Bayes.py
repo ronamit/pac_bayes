@@ -24,7 +24,7 @@ parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
                     default='MNIST')
 
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
-                    default=64)
+                    default=5)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
@@ -39,7 +39,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=300)
+                    default=5)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -67,7 +67,7 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 2.  don't init with too much std so that complexity term won't be too large
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
+prm.n_MC = 3
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -82,7 +82,7 @@ prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
 prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
-prm.kappa_factor = 1e-3  #
+prm.kappa_factor = 0 #
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
@@ -96,19 +96,18 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
-dir_path = './saved'
+dir_path = 'MetaTrain'
 file_name = 'prior'
-
 
 if mode == 'MetaTrain':
 
-    # Generate the data sets of the training tasks:
     n_train_tasks = prm.n_train_tasks
+    # Generate the data sets of the training tasks:
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
+    train_data_loaders = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
+    prior_model = meta_train_Bayes.run_meta_learning(train_data_loaders, prm)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=file_name)
     print('Trained prior saved in ' + f_path)
@@ -120,7 +119,7 @@ elif mode == 'LoadPrior':
     # First, create the model:
     prior_model = get_model(prm)
     # Then load the weights:
-    load_model_state(prior_model, dir_path, name=f_name)
+    load_model_state(prior_model, dir_path, name=file_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')

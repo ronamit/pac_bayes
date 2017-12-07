@@ -19,7 +19,7 @@ from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, 
 # -------------------------------------------------------------------------------------------
 #  Learning function
 # -------------------------------------------------------------------------------------------
-def run_meta_learning(train_tasks_data, prm):
+def run_meta_learning(train_data_loaders, prm):
 
     # -------------------------------------------------------------------------------------------
     #  Setting-up
@@ -31,7 +31,7 @@ def run_meta_learning(train_tasks_data, prm):
     # Loss criterion
     loss_criterion = get_loss_criterion(prm.loss_type)
 
-    n_tasks = len(train_tasks_data)
+    n_tasks = len(train_data_loaders)
 
     # Create a 'dummy' model to generate the set of parameters of the shared initial point (theta):
     model = get_model(prm)
@@ -42,11 +42,8 @@ def run_meta_learning(train_tasks_data, prm):
 
     meta_optimizer = optim_func(meta_params, **optim_args)
 
-    # number of training samples in each task :
-    n_samples_list = [ data_loader['n_train_samples'] for data_loader in train_tasks_data]
-
     # number of sample-batches in each task:
-    n_batch_list = [len(data_loader['train']) for data_loader in train_tasks_data]
+    n_batch_list = [len(data_loader['train']) for data_loader in train_data_loaders]
 
     n_batches_per_task = np.max(n_batch_list)
     # note: if some tasks have less data that other tasks - it may be sampled more than once in an epoch
@@ -57,7 +54,7 @@ def run_meta_learning(train_tasks_data, prm):
     def run_train_epoch(i_epoch):
 
         # For each task, prepare an iterator to generate training batches:
-        task_train_loaders = [iter(train_tasks_data[ii]['train']) for ii in range(n_tasks)]
+        train_iterators = [iter(train_data_loaders[ii]['train']) for ii in range(n_tasks)]
 
         # The task order to take batches from:
         task_order = []
@@ -79,46 +76,11 @@ def run_meta_learning(train_tasks_data, prm):
             n_tasks_in_batch = len(task_ids_in_meta_batch)  # it may be less than  prm.meta_batch_size at the last one
             # note: it is OK if some task appear several times in the meta-batch
 
-            total_objective = 0
-            correct_count = 0
-            sample_count = 0
-            # ----------- loop over tasks in meta-batch -----------------------------------#
-            for i_task_in_batch in range(n_tasks_in_batch):
+            mb_data_loaders = [train_data_loaders[task_id] for task_id in task_ids_in_meta_batch]
+            mb_iterators = [train_iterators[task_id] for task_id in task_ids_in_meta_batch]
 
-                task_id = task_ids_in_meta_batch[i_task_in_batch]
-
-
-
-                fast_weights = OrderedDict((name, param) for (name, param) in model.named_parameters())
-                # ----------- gradient steps loop -----------------------------------#
-                for i_step in range(prm.n_meta_train_grad_steps):
-
-                    # get batch variables:
-                    batch_data = data_gen.get_next_batch_cyclic(task_train_loaders[task_id],
-                                                                train_tasks_data[task_id]['train'])
-                    inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-
-                    if i_step == 0:
-                        outputs = model(inputs)
-                    else:
-                        outputs = model(inputs, fast_weights)
-                    # Empirical Loss on current task:
-                    task_loss = loss_criterion(outputs, targets)
-                    grads = torch.autograd.grad(task_loss, fast_weights.values(), create_graph=True)
-
-                    fast_weights = OrderedDict((name, param - prm.alpha * grad)
-                                               for ((name, param), grad) in zip(fast_weights.items(), grads))
-                # end grad steps loop
-
-                # Sample new  (validation) data batch for this task:
-                batch_data = data_gen.get_next_batch_cyclic(task_train_loaders[task_id],
-                                                            train_tasks_data[task_id]['train'])
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-                outputs = model(inputs, fast_weights)
-                total_objective += loss_criterion(outputs, targets)
-                correct_count += count_correct(outputs, targets)
-                sample_count += inputs.size(0)
-            # end loop over tasks in  meta-batch
+            # Get objective based on tasks in meta-batch:
+            total_objective, info = meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion)
 
             # Take gradient step with the meta-parameters (theta) based on validation data:
             grad_step(total_objective, meta_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -126,7 +88,7 @@ def run_meta_learning(train_tasks_data, prm):
             # Print status:
             log_interval = 200
             if i_meta_batch % log_interval == 0:
-                batch_acc = correct_count / sample_count
+                batch_acc = info['correct_count'] / info['sample_count']
                 print(cmn.status_string(i_epoch, num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]))
         # end  meta-batches loop
 
@@ -142,7 +104,7 @@ def run_meta_learning(train_tasks_data, prm):
     write_result(str(prm), prm.log_file)
     write_result(cmn.get_model_string(model), prm.log_file)
 
-    write_result('---- Meta-Training set: {0} tasks'.format(len(train_tasks_data)), prm.log_file)
+    write_result('---- Meta-Training set: {0} tasks'.format(len(train_data_loaders)), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -162,3 +124,50 @@ def run_meta_learning(train_tasks_data, prm):
 
     # Return learned meta-parameters:
     return model
+
+
+def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
+
+    total_objective = 0
+    correct_count = 0
+    sample_count = 0
+
+    n_tasks_in_mb = len(mb_data_loaders)
+
+    # ----------- loop over tasks in meta-batch -----------------------------------#
+    for i_task in range(n_tasks_in_mb):
+
+        fast_weights = OrderedDict((name, param) for (name, param) in model.named_parameters())
+
+        # ----------- gradient steps loop -----------------------------------#
+        for i_step in range(prm.n_meta_train_grad_steps):
+
+            # get batch variables:
+            batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
+                                                        mb_data_loaders[i_task]['train'])
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+
+            if i_step == 0:
+                outputs = model(inputs)
+            else:
+                outputs = model(inputs, fast_weights)
+            # Empirical Loss on current task:
+            task_loss = loss_criterion(outputs, targets)
+            grads = torch.autograd.grad(task_loss, fast_weights.values(), create_graph=True)
+
+            fast_weights = OrderedDict((name, param - prm.alpha * grad)
+                                       for ((name, param), grad) in zip(fast_weights.items(), grads))
+        # end grad steps loop
+
+        # Sample new  (validation) data batch for this task:
+        batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
+                                                    mb_data_loaders[i_task]['train'])
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+        outputs = model(inputs, fast_weights)
+        total_objective += loss_criterion(outputs, targets)
+        correct_count += count_correct(outputs, targets)
+        sample_count += inputs.size(0)
+    # end loop over tasks in  meta-batch
+
+    info = {'sample_count': sample_count, 'correct_count': correct_count}
+    return total_objective, info

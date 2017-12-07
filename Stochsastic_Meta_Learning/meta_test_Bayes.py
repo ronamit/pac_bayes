@@ -57,8 +57,8 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     def run_train_epoch(i_epoch):
         log_interval = 500
 
-
         post_model.train()
+
         for batch_idx, batch_data in enumerate(train_loader):
 
             correct_count = 0

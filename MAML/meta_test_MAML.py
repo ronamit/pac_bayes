@@ -46,7 +46,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
         train_loader_iter = iter(train_loader)
 
         # Gradient steps (training) loop
-        for i_epoch in range(prm.n_meta_test_grad_steps):
+        for i_grad_step in range(prm.n_meta_test_grad_steps):
             # get batch:
             batch_data = data_gen.get_next_batch_cyclic(train_loader_iter, train_loader)
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)

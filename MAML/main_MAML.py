@@ -28,8 +28,8 @@ parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for 
 parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
                     default=1)  # Note: number of test samples per class is 20-K (the rest of the data)
 
-parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
-                    default=1500)
+parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
+                    default=0)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='None') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
@@ -92,13 +92,17 @@ file_name = 'meta_model' #'meta_model'
 
 if mode == 'MetaTrain':
 
-    # Generate the data sets of the training tasks:
     n_train_tasks = prm.n_train_tasks
-    write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
+    if n_train_tasks:
+        # Generate the data sets of the training tasks:
+        write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
+        train_data_loaders = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
+    else:
+        train_data_loaders = []
+        write_result('-' * 5 + 'New training tasks are drawn from tasks distribution in each step...' + '-' * 5, prm.log_file)
 
     # Meta-training to learn meta-model (theta params):
-    meta_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
+    meta_model = meta_train_MAML.run_meta_learning(train_data_loaders, prm)
     # save learned meta-model:
     f_path = save_model_state(meta_model, dir_path, name=file_name)
     print('Trained meta-model saved in ' + f_path)

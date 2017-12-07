@@ -156,10 +156,10 @@ class ConvNet3(base_model):
         n_hidden_fc1 = 50
         self.conv_layers = nn.Sequential(OrderedDict([
                 ('conv1',  nn.Conv2d(n_in_channels, n_filt1, kernel_size=5)),
-                ('pool1', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('pool1', nn.MaxPool2d(kernel_size=2, stride=None)),
                 ('a1',  nn.ELU(inplace=True)),
                 ('conv2', nn.Conv2d(n_filt1, n_filt2, kernel_size=5)),
-                ('pool2', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('pool2', nn.MaxPool2d(kernel_size=2, stride=None)),
                 ('a2', nn.ELU(inplace=True)),
                  ]))
         conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
@@ -176,10 +176,10 @@ class ConvNet3(base_model):
             x = self.conv_layers(x)
         else:
             x = F.conv2d(x, weights['conv_layers.conv1.weight'], weights['conv_layers.conv1.bias'])
-            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.max_pool2d(x, kernel_size=2, stride=None)
             x = F.elu(x)
             x = F.conv2d(x, weights['conv_layers.conv2.weight'], weights['conv_layers.conv2.bias'])
-            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.max_pool2d(x, kernel_size=2, stride=None)
             x = F.elu(x)
         return x
 
