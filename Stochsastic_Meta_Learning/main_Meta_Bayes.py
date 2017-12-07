@@ -82,7 +82,7 @@ prm.complexity_type = 'PAC_Bayes_Seeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
 prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
-prm.kappa_factor = 0 #
+prm.kappa_factor = 0  #
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 

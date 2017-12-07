@@ -137,9 +137,6 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
 
     complexity_type = prm.complexity_type
 
-    if hasattr(prm, 'samples_mult'):
-        n_samples *= prm.samples_mult
-
     tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)
 
     if complexity_type == 'KLD':
