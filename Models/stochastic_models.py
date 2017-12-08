@@ -16,22 +16,6 @@ from Utils.common import randn_gpu
 from Models.stochastic_layers import StochasticLinear, StochasticConv2d, StochasticLayer
 
 
-
-# -------------------------------------------------------------------------------------------
-# Auxiliary functions
-# -------------------------------------------------------------------------------------------
-
-# generate dummy input sample and forward to get shape after conv layers
-from Utils.common import randn_gpu
-def get_size_of_conv_output(input_shape, conv_func):
-    batch_size = 1
-    batch_shape = (batch_size, *input_shape)
-    # input = Variable(randn_gpu(batch_shape))
-    input = Variable(torch.rand(batch_size, *input_shape))
-    output_feat = conv_func(input)
-    conv_out_size = output_feat.data.view(batch_size, -1).size(1)
-    return conv_out_size
-
 #
 # # -------------------------------------------------------------------------------------------
 # #  Base class for all stochastic models
@@ -144,3 +128,19 @@ def get_model(prm, model_type='Stochastic'):
     model.cuda()
 
     return model
+
+
+# -------------------------------------------------------------------------------------------
+# Auxiliary functions
+# -------------------------------------------------------------------------------------------
+
+# generate dummy input sample and forward to get shape after conv layers
+from Utils.common import randn_gpu
+def get_size_of_conv_output(input_shape, conv_func):
+    batch_size = 1
+    batch_shape = (batch_size, *input_shape)
+    # input = Variable(randn_gpu(batch_shape))
+    input = Variable(torch.rand(batch_size, *input_shape))
+    output_feat = conv_func(input)
+    conv_out_size = output_feat.data.view(batch_size, -1).size(1)
+    return conv_out_size
