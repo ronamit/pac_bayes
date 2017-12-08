@@ -160,6 +160,7 @@ class ConvNet3(base_stochastic_model):
                 ('conv2', self.s_Conv2d(n_filt1, n_filt2, kernel_size=5)),
                 ('pool2', nn.MaxPool2d(kernel_size=2, stride=None)),
                 ('a2', nn.ELU(inplace=True)),
+                ('dropout1', nn.Dropout(p=0.5)),
                  ]))
         conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
         self.add_module('fc1', self.s_Linear(conv_out_size, n_hidden_fc1))
@@ -178,5 +179,6 @@ class ConvNet3(base_stochastic_model):
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
         x = F.elu(x)
+        x = F.dropout(x, training=self.training)
         x = self.fc_out(x)
         return x
