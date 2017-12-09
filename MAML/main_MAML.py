@@ -29,7 +29,7 @@ parser.add_argument('--K_Shot', type=int, help='Number of training sample per cl
                     default=1)  # Note: number of test samples per class is 20-K (the rest of the data)
 
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
-                    default=0)
+                    default=200)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='None') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
