@@ -95,7 +95,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_count / sample_count
-                print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, total_objective.data[0]) +
+                print(cmn.status_string(i_epoch, prm.n_meta_test_epochs, batch_idx, n_batches, batch_acc, total_objective.data[0]) +
                       ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
                       format(task_empirical_loss.data[0], task_complexity.data[0]))
 
@@ -107,7 +107,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     if verbose == 1:
         write_result('-'*10+run_name+'-'*10, prm.log_file)
         write_result(str(prm), prm.log_file)
-        write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
+        write_result('Total number of steps: {}'.format(n_batches * prm.n_meta_test_epochs), prm.log_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -115,7 +115,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     start_time = timeit.default_timer()
 
     # Training loop:
-    for i_epoch in range(prm.num_epochs):
+    for i_epoch in range(prm.n_meta_test_epochs):
         run_train_epoch(i_epoch)
 
     # Test:

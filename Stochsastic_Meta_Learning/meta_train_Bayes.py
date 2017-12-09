@@ -102,7 +102,7 @@ def run_meta_learning(data_loaders, prm):
             log_interval = 200
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
-                print(cmn.status_string(i_epoch,  prm.num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]) +
+                print(cmn.status_string(i_epoch,  prm.n_meta_train_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]) +
                       ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}'.
                       format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp']))
         # end  meta-batches loop
@@ -153,7 +153,7 @@ def run_meta_learning(data_loaders, prm):
     start_time = timeit.default_timer()
 
     # Training loop:
-    for i_epoch in range(prm.num_epochs):
+    for i_epoch in range(prm.n_meta_train_epochs):
         run_train_epoch(i_epoch)
 
     stop_time = timeit.default_timer()

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
+from copy import deepcopy
 import numpy as np
 import torch
 import torch.optim as optim
@@ -39,7 +40,9 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
-parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
+parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
+                    default=300)  # 10 / 300
+parser.add_argument('--n_meta_test_epochs', type=int, help='number of epochs to train',
                     default=300)  # 10 / 300
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
@@ -155,12 +158,13 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 
 write_result('Run standard learning from scratch....', prm.log_file)
-
 test_err_standard = np.zeros(n_test_tasks)
+prm_standard = deepcopy(prm)
+prm_standard.num_epochs = prm.n_meta_test_epochs
 for i_task in range(n_test_tasks):
     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
     task_data = test_tasks_data[i_task]
-    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm, verbose=0)
+    test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm_standard, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------
