@@ -84,7 +84,7 @@ prm.complexity_type = 'NewBound'
 
 prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
 prm.kappa_factor = 0  #
-prm.delta = 0.05
+prm.delta = 0.1  #  maximal probability that the bound does not hold
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
@@ -98,7 +98,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 # -------------------------------------------------------------------------------------------
 
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
-dir_path = 'MetaTrain'
+dir_path = './saved'
 file_name = 'prior'
 
 if mode == 'MetaTrain':

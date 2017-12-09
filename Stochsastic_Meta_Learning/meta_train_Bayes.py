@@ -103,8 +103,8 @@ def run_meta_learning(data_loaders, prm):
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
                 print(cmn.status_string(i_epoch,  prm.num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]) +
-                      ' Empiric-Loss: {:.4}\t Intra-Comp. {:.4}\t Hyperprior: {:.4}'.
-                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['hyperprior']))
+                      ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}'.
+                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp']))
         # end  meta-batches loop
 
     # end run_epoch()
@@ -241,5 +241,5 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
     info = {'sample_count': sample_count, 'correct_count': correct_count,
                   'avg_empirical_loss': avg_empirical_loss.data[0],
                   'avg_intra_task_comp': avg_intra_task_comp.data[0],
-                  'meta_comp.': meta_complex_term.data[0]}
+                  'meta_comp': meta_complex_term.data[0]}
     return total_objective, info

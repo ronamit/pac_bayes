@@ -133,11 +133,11 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=None, noised_prior=True):
+def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=0, noised_prior=True):
 
     complexity_type = prm.complexity_type
-    delta = prm.delta
-    tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)
+    delta = prm.delta  #  maximal probability that the bound does not hold
+    tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)  # KLD between posterior and sampled prior
 
     if complexity_type == 'KLD':
         complex_term = tot_kld
