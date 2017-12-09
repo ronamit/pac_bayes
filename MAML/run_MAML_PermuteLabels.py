@@ -8,7 +8,7 @@ call(['python', 'main_MAML.py',
       # MAML hyper-parameters:
       '--alpha', '0.4',
       '--n_meta_train_grad_steps', '1',
-      '--n_meta_train_iterations', '60000',
+      '--n_meta_train_iterations', '300',
       '--meta_batch_size', '32',
       '--n_meta_test_grad_steps', '100',
       ])

@@ -68,7 +68,7 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 2.  don't init with too much std so that complexity term won't be too large
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 3
+prm.n_MC = 1
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
@@ -79,7 +79,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {}  # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_Seeger'
+prm.complexity_type = 'PAC_Bayes_McAllaster'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
 prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
