@@ -85,7 +85,7 @@ prm.lr_schedule = {} # No decay
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
-mode = 'LoadPrior'  # 'MetaTrain'  \ 'LoadPrior' \
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 file_name = 'meta_model' #'meta_model'
 
