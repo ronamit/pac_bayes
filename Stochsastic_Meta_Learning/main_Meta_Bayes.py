@@ -79,11 +79,12 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {}  # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'PAC_Bayes_McAllaster'
+prm.complexity_type = 'NewBound'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
 prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
 prm.kappa_factor = 0  #
+prm.delta = 0.05
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 

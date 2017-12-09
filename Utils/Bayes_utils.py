@@ -133,17 +133,19 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, noised_prior=True):
+def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=None, noised_prior=True):
 
     complexity_type = prm.complexity_type
-
+    delta = prm.delta
     tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)
 
     if complexity_type == 'KLD':
         complex_term = tot_kld
 
+    elif prm.complexity_type == 'NewBound':
+        complex_term = torch.sqrt((1 / (2 * n_samples)) * (hyper_kl + tot_kld + math.log(2 * math.sqrt(n_samples) / delta)))
+
     elif complexity_type == 'PAC_Bayes_McAllaster':
-        delta = 0.99
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
@@ -152,7 +154,6 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     elif complexity_type == 'PAC_Bayes_Seeger':
         # Seeger complexity is unique since it requires the empirical loss
         # small_num = 1e-9 # to avoid nan due to numerical errors
-        delta = 0.99
         # seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
         seeger_eps = (1 / n_samples) * (tot_kld + math.log(2 * math.sqrt(n_samples) / delta))
         sqrt_arg = 2 * seeger_eps * task_empirical_loss

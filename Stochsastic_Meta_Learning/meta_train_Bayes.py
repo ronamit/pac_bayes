@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 import random
+import math
 import numpy as np
-
+import torch
 # from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
@@ -181,6 +182,15 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
     correct_count = 0
     sample_count = 0
 
+    # KLD between hyper-posterior and hyper-prior:
+    hyper_kl = prm.hyperprior_factor * net_norm(prior_model, p=2)
+    # Hyper-prior term:
+    if prm.complexity_type == 'NewBound':
+        delta =  prm.delta
+        meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
+    else:
+        meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
+
     # ----------- loop over tasks in meta-batch -----------------------------------#
     for i_task in range(n_tasks_in_mb):
 
@@ -213,7 +223,7 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
             # Intra-task complexity of current task:
             curr_complexity = get_posterior_complexity_term(
                 prm, prior_model, post_model,
-                n_samples, curr_empirical_loss, noised_prior=True)
+                n_samples, curr_empirical_loss, hyper_kl, noised_prior=True)
             task_complexity += (1 / n_MC) * curr_complexity
         # end Monte-Carlo loop
 
@@ -224,14 +234,12 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
     avg_empirical_loss = (1 / n_tasks_in_mb) * sum_empirical_loss
     avg_intra_task_comp = (1 / n_tasks_in_mb) * sum_intra_task_comp
 
-    # Hyper-prior term:
-    hyperprior = net_norm(prior_model, p=2) * np.sqrt(1 / n_train_tasks) * prm.hyperprior_factor
 
     # Approximated total objective:
-    total_objective = avg_empirical_loss + avg_intra_task_comp + hyperprior
+    total_objective = avg_empirical_loss + avg_intra_task_comp + meta_complex_term
 
     info = {'sample_count': sample_count, 'correct_count': correct_count,
                   'avg_empirical_loss': avg_empirical_loss.data[0],
                   'avg_intra_task_comp': avg_intra_task_comp.data[0],
-                  'hyperprior': hyperprior.data[0]}
+                  'meta_comp.': meta_complex_term.data[0]}
     return total_objective, info
