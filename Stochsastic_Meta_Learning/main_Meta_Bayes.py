@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
+import timeit, time
 from copy import deepcopy
 import numpy as np
 import torch
@@ -96,13 +97,15 @@ prm.meta_batch_size = 5  # how many tasks in each meta-batch
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
+mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
+dir_path = './saved'
+file_name = 'prior'
+
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
-dir_path = './saved'
-file_name = 'prior'
+start_time = timeit.default_timer()
 
 if mode == 'MetaTrain':
 
@@ -181,3 +184,7 @@ write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
 # -------------------------------------------------------------------------------------------
 from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
 run_prior_analysis(prior_model)
+
+stop_time = timeit.default_timer()
+write_result('Total runtime: ' +
+             time.strftime("%H hours, %M minutes and %S seconds", time.gmtime(stop_time - start_time)),  prm.log_file)

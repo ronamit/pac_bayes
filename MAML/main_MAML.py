@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
+import timeit, time
 import numpy as np
 import torch
 import torch.optim as optim
@@ -59,9 +60,9 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (None
 parser.add_argument('--alpha', type=float, help='Step size for gradient step',
                     default=0.1)
 parser.add_argument('--n_meta_train_grad_steps', type=int, help='Number of gradient steps in meta-training',
-                    default=5)
+                    default=3)
 parser.add_argument('--n_meta_train_iterations', type=int, help='number of iterations in meta-training',
-                    default=5000)
+                    default=300)
 parser.add_argument('--n_meta_test_grad_steps', type=int, help='Number of gradient steps in meta-testing',
                     default=5)
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
@@ -80,15 +81,15 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {} # No decay
 
-
-
-# -------------------------------------------------------------------------------------------
-#  Run Meta-Training
-# -------------------------------------------------------------------------------------------
 mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
 file_name = 'meta_model' #'meta_model'
 
+# -------------------------------------------------------------------------------------------
+#  Run Meta-Training
+# -------------------------------------------------------------------------------------------
+
+start_time = timeit.default_timer()
 
 if mode == 'MetaTrain':
 
@@ -166,3 +167,6 @@ write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
 # write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
 #              format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
 #
+stop_time = timeit.default_timer()
+write_result('Total runtime: ' +
+             time.strftime("%H hours, %M minutes and %S seconds", time.gmtime(stop_time - start_time)),  prm.log_file)
