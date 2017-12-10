@@ -4,8 +4,7 @@
 
 ## Prerequisites
 
-- Computer with NVIDIA GPU and Linux or OSX
-- Python 3.5+ or 2.7+
+- Python 3.5+ 
 - [PyTorch 0.3+ with CUDA](http://pytorch.org)
 - NumPy and Matplotlib
 
