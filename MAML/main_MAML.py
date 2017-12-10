@@ -67,6 +67,11 @@ parser.add_argument('--n_meta_test_grad_steps', type=int, help='Number of gradie
                     default=5)
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=32)
+# Run parameters:
+parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
+                    default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
+parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
+                    default='meta_model')
 
 prm = parser.parse_args()
 prm.data_path = '../data'
@@ -81,9 +86,9 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {} # No decay
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
+
 dir_path = './saved'
-file_name = 'meta_model' #'meta_model'
+
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -91,7 +96,7 @@ file_name = 'meta_model' #'meta_model'
 
 start_time = timeit.default_timer()
 
-if mode == 'MetaTrain':
+if prm.mode == 'MetaTrain':
 
     n_train_tasks = prm.n_train_tasks
     if n_train_tasks:
@@ -105,17 +110,17 @@ if mode == 'MetaTrain':
     # Meta-training to learn meta-model (theta params):
     meta_model = meta_train_MAML.run_meta_learning(train_data_loaders, prm)
     # save learned meta-model:
-    f_path = save_model_state(meta_model, dir_path, name=file_name)
+    f_path = save_model_state(meta_model, dir_path, name=prm.meta_model_file_name)
     print('Trained meta-model saved in ' + f_path)
 
 
-elif mode == 'LoadPrior':
+elif prm.mode == 'LoadMetaModel':
 
     # Loads  previously training prior.
     # First, create the model:
     meta_model = get_model(prm)
     # Then load the weights:
-    load_model_state(meta_model, dir_path, name=file_name)
+    load_model_state(meta_model, dir_path, name=prm.meta_model_file_name)
     print('Pre-trained  meta-model loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')

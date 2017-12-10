@@ -57,6 +57,11 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
+# Run parameters:
+parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
+                    default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
+parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
+                    default='meta_model')
 
 prm = parser.parse_args()
 
@@ -97,9 +102,10 @@ prm.meta_batch_size = 5  # how many tasks in each meta-batch
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
-mode = 'MetaTrain'  # 'MetaTrain'  \ 'LoadPrior' \
 dir_path = './saved'
-file_name = 'prior'
+
+
+
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
@@ -107,7 +113,7 @@ file_name = 'prior'
 
 start_time = timeit.default_timer()
 
-if mode == 'MetaTrain':
+if prm.mode == 'MetaTrain':
 
     n_train_tasks = prm.n_train_tasks
     # Generate the data sets of the training tasks:
@@ -117,17 +123,17 @@ if mode == 'MetaTrain':
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_data_loaders, prm)
     # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=file_name)
+    f_path = save_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
     print('Trained prior saved in ' + f_path)
 
 
-elif mode == 'LoadPrior':
+elif prm.mode == 'LoadPrior':
 
     # Loads  previously training prior.
     # First, create the model:
     prior_model = get_model(prm)
     # Then load the weights:
-    load_model_state(prior_model, dir_path, name=file_name)
+    load_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
     print('Pre-trained  prior loaded from ' + dir_path)
 else:
     raise ValueError('Invalid mode')

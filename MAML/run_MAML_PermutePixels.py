@@ -11,4 +11,6 @@ call(['python', 'main_MAML.py',
       '--n_meta_train_iterations', '300',
       '--meta_batch_size', '32',
       '--n_meta_test_grad_steps', '3',
+      '--mode', 'LoadMetaModel',
+      '--meta_model_file_name', 'Pixels_Alpha1e-2_Grad3',
       ])
