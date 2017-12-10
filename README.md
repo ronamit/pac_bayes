@@ -13,7 +13,7 @@
 ## Reproducing experiments in  the paper:
 
 * Stochsastic_Meta_Learning/main_Meta_Bayes.py             - Learns a prior from the obsereved (meta-training) tasks and use it to learn new (meta-test) tasks.
-* Toy_Examples\Toy_Main.py -  Toy example of 2D  estimation.
+* Toy_Examples/Toy_Main.py -  Toy example of 2D  estimation.
 * Single_Task/main_TwoTaskTransfer_PermuteLabels and  Single_Task/main_TwoTaskTransfer_PermutePixels.py -
 run alternative tranfer methods.
 
