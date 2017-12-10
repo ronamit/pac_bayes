@@ -10,7 +10,7 @@
 - NumPy and Matplotlib
 
 
-## Reproducing experiments in  the paper:
+## Reproducing experiments in the paper:
 
 * Stochsastic_Meta_Learning/main_Meta_Bayes.py             - Learns a prior from the obsereved (meta-training) tasks and use it to learn new (meta-test) tasks.
 * Toy_Examples/Toy_Main.py -  Toy example of 2D  estimation.
