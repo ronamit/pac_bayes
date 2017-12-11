@@ -91,8 +91,8 @@ prm.lr_schedule = {}  # No decay
 prm.complexity_type = 'NewBound'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
 
-prm.hyperprior_factor = 1e-7  # multiplicative  factor for the hyper-prior regularization
-prm.kappa_factor = 1e-3  # The STD of the 'noise' added to prior
+prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
+prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
 prm.delta = 0.1  #  maximal probability that the bound does not hold
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior

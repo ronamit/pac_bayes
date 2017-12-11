@@ -183,7 +183,7 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
     sample_count = 0
 
     # KLD between hyper-posterior and hyper-prior:
-    hyper_kl = prm.hyperprior_factor * net_norm(prior_model, p=2)
+    hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_norm(prior_model, p=2)
     # Hyper-prior term:
     if prm.complexity_type == 'NewBound':
         delta =  prm.delta

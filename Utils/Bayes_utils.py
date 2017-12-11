@@ -198,9 +198,9 @@ def get_total_kld(prior_model, post_model, prm, noised_prior):
 def kld_element(post, prior, prm, noised_prior):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
-    if noised_prior and prm.kappa_factor > 0:
-        prior_log_var = add_noise(prior['log_var'], prm.kappa_factor)
-        prior_mean = add_noise(prior['mean'], prm.kappa_factor)
+    if noised_prior and prm.kappa_post > 0:
+        prior_log_var = add_noise(prior['log_var'], prm.kappa_post)
+        prior_mean = add_noise(prior['mean'], prm.kappa_post)
     else:
         prior_log_var = prior['log_var']
         prior_mean = prior['mean']
