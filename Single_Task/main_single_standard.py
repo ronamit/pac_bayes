@@ -66,7 +66,8 @@ prm.lr_schedule = {} # No decay
 
 # Generate task data set:
 limit_train_samples = None  # None
-data_loader = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
+task_generator = data_gen.Task_Generator(prm)
+data_loader = task_generator.get_data_loader(prm, limit_train_samples=limit_train_samples)
 
 # -------------------------------------------------------------------------------------------
 #  Run learning

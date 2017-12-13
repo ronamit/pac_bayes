@@ -76,8 +76,9 @@ prm.lr_schedule = {} # No decay
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Generate task data set:
+task_generator = data_gen.Task_Generator(prm)
 limit_train_samples = None  # None
-data_loader = data_gen.get_data_loader(prm, limit_train_samples=limit_train_samples)
+data_loader = task_generator.get_data_loader(prm, limit_train_samples=limit_train_samples)
 
 # -------------------------------------------------------------------------------------------
 #  Run learning
