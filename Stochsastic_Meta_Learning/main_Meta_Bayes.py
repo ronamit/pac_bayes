@@ -66,7 +66,7 @@ parser.add_argument('--meta_model_file_name', type=str, help='File name to save 
 
 parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
                     help='Upper limit for the number of training sampels in the meta-test tasks (0 = unlimited)',
-                    default=0)
+                    default=2000)
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
@@ -135,7 +135,7 @@ if prm.mode == 'MetaTrain':
     print('Trained prior saved in ' + f_path)
 
 
-elif prm.mode == 'LoadPrior':
+elif prm.mode == 'LoadMetaModel':
 
     # Loads  previously training prior.
     # First, create the model:
