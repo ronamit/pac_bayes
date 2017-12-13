@@ -145,6 +145,13 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     elif prm.complexity_type == 'NewBound':
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (hyper_kl + tot_kld + math.log(2 * math.sqrt(n_samples) / delta)))
 
+    elif prm.complexity_type == 'NewBoundSeeger':
+        seeger_eps = (1 / n_samples) * (tot_kld + hyper_kl + math.log(4 * math.sqrt(n_samples) / delta))
+        sqrt_arg = 2 * seeger_eps * task_empirical_loss
+        sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
+        complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
+
+
     elif complexity_type == 'PAC_Bayes_McAllaster':
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
 

@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from MAML import meta_train_MAML, meta_test_MAML
+from MAML import meta_train_MAML_finite_tasks, meta_test_MAML
 from Models.deterministic_models import get_model
 from Utils.data_gen import get_data_loader
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
@@ -108,7 +108,7 @@ if mode == 'MetaTrain':
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn meta-model (theta params):
-    meta_model = meta_train_MAML.run_meta_learning(train_tasks_data, prm)
+    meta_model = meta_train_MAML_finite_tasks.run_meta_learning(train_tasks_data, prm)
     # save learned meta-model:
     f_path = save_model_state(meta_model, dir_path, name=f_name)
     print('Trained meta-model saved in ' + f_path)

@@ -7,7 +7,9 @@ import errno
 import random
 from PIL import Image
 import torch.utils.data as data
-from torchvision import transforms
+from torchvision.transforms.functional import to_tensor
+import numpy as np
+import torch
 
 
 # Based on code from:
@@ -16,36 +18,80 @@ from torchvision import transforms
 
 # data set: https://github.com/brendenlake/omniglot
 
-def get_omniglot_task(data_path, meta_split, n_labels, k_train_shot, final_input_trans=None, target_transform=None):
+
+# -------------------------------------------------------------------------------------------
+# Auxiliary function
+# -------------------------------------------------------------------------------------------
+def get_all_char_paths(data_dir):
+    languages = os.listdir(data_dir)
+    predefined_split_dir = os.path.split(data_dir)[-1]
+    chars = []
+    for lang in languages:
+        chars += [os.path.join(predefined_split_dir, lang, x)
+                  for x in os.listdir(os.path.join(data_dir, lang))]
+    return chars
+
+# -------------------------------------------------------------------------------------------
+#  Create meta-split of characters
+# -------------------------------------------------------------------------------------------
+def split_chars(data_path, chars_split_type, n_meta_train_chars):
+    #  split the characters to meta-train and meta-test
+    # return the data folders paths of each split
+
+    split_names = ['meta_train', 'meta_test']
+    chars_splits = {}
+
+    # Get data:
+    root_path = os.path.join(data_path, 'Omniglot')
+    predefined_splits_dirs = maybe_download(root_path)
+
+    if chars_split_type == 'predefined_split':
+
+        for split_name in split_names:
+            data_dir = predefined_splits_dirs[split_name]
+            chars_splits[split_name] = get_all_char_paths(data_dir)
+
+    elif chars_split_type == 'random':
+        # Get all chars dirs (don't care about pre-defined splits):
+        chars = sum([get_all_char_paths(predefined_splits_dirs[split_name])
+                 for split_name in split_names], [])
+
+        # Take random n_meta_train_chars chars as meta-train and rest as meta-test
+        random.shuffle(chars)
+        chars_splits['meta_train'] = chars[:n_meta_train_chars]
+        chars_splits['meta_test'] = chars[n_meta_train_chars:]
+
+    else:
+        raise ValueError('Unrecognized split_type')
+
+    return chars_splits
+
+# -------------------------------------------------------------------------------------------
+#  Get task
+# -------------------------------------------------------------------------------------------
+
+def get_task(chars, root_path, n_labels, k_train_shot, final_input_trans=None, target_transform=None):
 
     '''
     Samples a N-way k-shot learning task (classification to N classes,
      k training samples per class) from the Omniglot dataset.
 
-     - root = data path
      -  n_labels = number of labels (chars) in the task.
-     - meta_split =  'meta_train' / 'meta_test - take chars from meta-train or meta-test data sets
+     - chars =   list of chars dirs  for current meta-split
      - k_train_shot - sample this many training examples from each char class,
                       rest of the char examples will be in the test set.
 
       e.g:
     data_loader = get_omniglot_task(prm, meta_split='meta_train', n_labels=5, k_train_shot=10)
     '''
-    if meta_split not in ['meta_train', 'meta_test']:
-        raise ValueError('Invalid meta_split')
 
     # Get data:
-    root_path = os.path.join(data_path, 'Omniglot')
-    splits_dirs  = maybe_download(root_path)
-    data_dir = splits_dirs[meta_split]
+    data_dir = os.path.join(root_path, 'Omniglot', 'processed')
 
     # Sample n_labels classes:
-    languages = os.listdir(data_dir)
-    chars = []
-    for lang in languages:
-        chars += [os.path.join(lang, x) for x in os.listdir(os.path.join(data_dir, lang))]
-    random.shuffle(chars)
-    classes_names = chars[:n_labels]
+    n_tot_chars = len(chars)
+    char_inds = np.random.choice(n_tot_chars, n_labels)
+    classes_names = [chars[ind] for ind in char_inds]
 
     train_samp = []
     test_samp = []
@@ -69,22 +115,9 @@ def get_omniglot_task(data_path, meta_split, n_labels, k_train_shot, final_input
         train_targets += [i_label] * len(cls_train_samp)
         test_targets += [i_label] * len(cls_test_samp)
 
-
-    # Data transformations list:
-    normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
-    input_transform = [lambda x: FilenameToPILImage(x, data_dir)]
-    input_transform +=  [lambda x: x.resize((28,28), resample=Image.LANCZOS)] # to compare to prior papers
-    input_transform += [transforms.ToTensor()]
-    input_transform += [normalize]
-    # input_transform += [lambda x: x.mean(dim=0).unsqueeze_(0)]  # RGB -> gray scale
-    # Switch background to 0 and letter to 1:
-    # input_transform += [lambda x: 1.0 - x]
-    if final_input_trans:
-        input_transform += final_input_trans
-
     # Create the dataset object:
-    train_dataset = omniglot_dataset(train_samp, train_targets, input_transform, target_transform)
-    test_dataset = omniglot_dataset(test_samp, test_targets, input_transform, target_transform)
+    train_dataset = omniglot_dataset(data_dir, train_samp, train_targets, final_input_trans, target_transform)
+    test_dataset = omniglot_dataset(data_dir, test_samp, test_targets, final_input_trans, target_transform)
 
 
     return train_dataset, test_dataset
@@ -93,10 +126,11 @@ def get_omniglot_task(data_path, meta_split, n_labels, k_train_shot, final_input
 #  Class definition
 # -------------------------------------------------------------------------------------------
 class omniglot_dataset(data.Dataset):
-    def __init__(self, samples_paths, targets, transform=None, target_transform=None):
+    def __init__(self, data_dir, samples_paths, targets, final_input_trans=None, target_transform=None):
         self.all_items = list(zip(samples_paths, targets))
-        self.transform = transform
+        self.final_input_trans = final_input_trans[0]
         self.target_transform = target_transform
+        self.data_dir = data_dir
 
 
     def __getitem__(self, index):
@@ -104,9 +138,22 @@ class omniglot_dataset(data.Dataset):
         img = self.all_items[index][0]
         target = self.all_items[index][1]
 
-        if self.transform:
-            for trasns in self.transform:
-                img = trasns(img)
+        # Data transformations list:
+        img = FilenameToPILImage(img, self.data_dir)
+        # Re-size to 28x28  (to compare to prior papers)
+        img = img.resize((28, 28), resample=Image.LANCZOS)
+
+        img = to_tensor(img)
+        img = img.mean(dim=0).unsqueeze_(0)  # RGB -> gray scale
+        img = 1.0 - img  # Switch background to 0 and letter to 1
+
+        # show  image
+        # import matplotlib.pyplot as plt
+        # plt.imshow(img.numpy()[0])
+        # plt.show()
+
+        if self.final_input_trans:
+            img = self.final_input_trans(img)
 
         if self.target_transform:
             for trasns in self.target_transform:
@@ -118,6 +165,10 @@ class omniglot_dataset(data.Dataset):
         return len(self.all_items)
 
 
+# -------------------------------------------------------------------------------------------
+#  Auxiliary functions
+# -------------------------------------------------------------------------------------------
+
 def FilenameToPILImage(filename, data_dir):
     """
     Load a PIL RGB Image from a filename.
@@ -127,10 +178,6 @@ def FilenameToPILImage(filename, data_dir):
     # img.save("tmp.png") # debug
     return img
 
-# -------------------------------------------------------------------------------------------
-#  Auxiliary functions
-# -------------------------------------------------------------------------------------------
-
 def check_exists(splits_dirs):
     paths = list(splits_dirs.values())
     return all([os.path.exists(path) for path in paths])
@@ -139,8 +186,9 @@ def maybe_download(root):
     from six.moves import urllib
     import zipfile
 
-    splits_dirs = {'meta_train':  os.path.join(root, 'processed', 'images_background'),
-                 'meta_test': os.path.join(root, 'processed', 'images_evaluation')}
+    processed_path = os.path.join(root, 'processed')
+    splits_dirs = {'meta_train':  os.path.join(processed_path, 'images_background'),
+                 'meta_test': os.path.join(processed_path, 'images_evaluation')}
     if check_exists(splits_dirs):
         return splits_dirs
 

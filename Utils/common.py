@@ -171,7 +171,7 @@ def status_string(i_epoch, num_epochs, batch_idx, n_batches, batch_acc, loss_dat
 
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * num_epochs)
     return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
-        progress_per, i_epoch + 1, batch_idx, loss_data, batch_acc))
+        progress_per, i_epoch, batch_idx, loss_data, batch_acc))
 
 # def status_string_meta(i_epoch, prm, batch_acc, loss_data):
 #

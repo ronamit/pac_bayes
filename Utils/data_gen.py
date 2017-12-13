@@ -7,65 +7,97 @@ import torch.utils.data as data_utils
 from torch.autograd import Variable
 import multiprocessing, os
 import numpy as np
-from Utils.omniglot import get_omniglot_task
+import Utils.omniglot as omniglot
+import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------
-#  Create data loader
+#  Task generator class
 # -------------------------------------------------------------------------------------------
 
+class Task_Generator(object):
 
-def get_data_loader(prm, limit_train_samples=None, meta_split='meta_train'):
+    def __init__(self, prm):
 
-    # Set data transformation function:
-    final_input_trans = None
-    target_trans = []
+        self.data_source = prm.data_source
+        self.data_transform = prm.data_transform
+        self.data_path = prm.data_path
 
-    if prm.data_transform == 'Permute_Pixels':
-        # Create a fixed random pixels permutation, applied to all images
-        extra_input_trans = [create_pixel_permute_trans(prm)]
+        if self.data_source == 'Omniglot':
+            # Randomly split the characters to meta-train and meta-test
+            # Later, tasks will be generated using this characters
+            self.chars_splits = omniglot.split_chars(prm.data_path, prm.chars_split_type, prm.n_meta_train_chars)
 
-    elif prm.data_transform == 'Permute_Labels':
-        # Create a fixed random label permutation, applied to all images
-        target_trans = [create_label_permute_trans(prm)]
 
-    # Get dataset:
-    if prm.data_source == 'MNIST':
-        train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
+    def create_meta_batch(self, prm, n_tasks, meta_split='meta_train', limit_train_samples=None):
+        ''' generate a meta-batch of tasks'''
+        data_loaders = [self.get_data_loader(prm, meta_split, limit_train_samples) for i_task in range(n_tasks)]
+        return data_loaders
 
-    elif prm.data_source == 'CIFAR10':
-        train_dataset, test_dataset = load_CIFAR(final_input_trans, target_trans, prm)
 
-    elif prm.data_source == 'Sinusoid':
+    def get_data_loader(self, prm, meta_split='meta_train', limit_train_samples=None):
 
-        task_param = create_sinusoid_task()
-        train_dataset = create_sinusoid_data(task_param, n_samples=10)
-        test_dataset = create_sinusoid_data(task_param, n_samples=100)
+        # Set data transformation function:
+        if self.data_transform == 'Permute_Pixels':
+            # Create a fixed random pixels permutation, applied to all images
+            final_input_trans = [create_pixel_permute_trans(prm)]
+            target_trans = []
 
-    elif prm.data_source == 'Omniglot':
-        train_dataset, test_dataset = get_omniglot_task(prm.data_path, meta_split,
-            n_labels=prm.N_Way, k_train_shot=prm.K_Shot,
-            final_input_trans=final_input_trans, target_transform=target_trans)
-    else:
-        raise ValueError('Invalid data_source')
+        elif self.data_transform == 'Permute_Labels':
+            # Create a fixed random label permutation, applied to all images
+            target_trans = [create_label_permute_trans(prm)]
+            final_input_trans = None
 
-    # Limit the training samples :
-    if limit_train_samples:
-        train_dataset = reduce_train_set(train_dataset, limit_train_samples)
+        elif self.data_transform == 'Rotate90':
+            # all images in task are rotated by some random angle from [0,90,180,270]
+            final_input_trans = [create_rotation_trans()]
+            target_trans = []
 
-    # Create data loaders:
-    # kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True}   # this might cause "connection refuse" problems
-    kwargs = {'num_workers': 0, 'pin_memory': True}
+        elif self.data_transform == 'None':
+            final_input_trans = None
+            target_trans = []
 
-    train_loader = data_utils.DataLoader(train_dataset, batch_size=prm.batch_size, shuffle=True, **kwargs)
-    test_loader = data_utils.DataLoader(test_dataset, batch_size=prm.test_batch_size, shuffle=True, **kwargs)
+        else:
+            raise ValueError('Unrecognized data_transform')
 
-    n_train_samples = len(train_loader.dataset)
-    n_test_samples = len(test_loader.dataset)
+        # Get dataset:
+        if self.data_source == 'MNIST':
+            train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
 
-    data_loader = {'train': train_loader, 'test': test_loader,
-                   'n_train_samples': n_train_samples, 'n_test_samples': n_test_samples}
+        elif self.data_source == 'CIFAR10':
+            train_dataset, test_dataset = load_CIFAR(final_input_trans, target_trans, prm)
 
-    return data_loader
+        elif self.data_source == 'Sinusoid':
+            pass
+            # task_param = create_sinusoid_task()
+            # train_dataset = create_sinusoid_data(task_param, n_samples=10)
+            # test_dataset = create_sinusoid_data(task_param, n_samples=100)
+
+        elif self.data_source == 'Omniglot':
+            chars = self.chars_splits[meta_split] #   list of chars dirs  for current meta-split
+            train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
+                n_labels=prm.N_Way, k_train_shot=prm.K_Shot,
+                final_input_trans=final_input_trans, target_transform=target_trans)
+        else:
+            raise ValueError('Invalid data_source')
+
+        # Limit the training samples :
+        if limit_train_samples:
+            train_dataset = reduce_train_set(train_dataset, limit_train_samples)
+
+        # Create data loaders:
+        # kwargs = {'num_workers': multiprocessing.cpu_count(), 'pin_memory': True}   # this might cause "connection refuse" problems
+        kwargs = {'num_workers': 0, 'pin_memory': True}
+
+        train_loader = data_utils.DataLoader(train_dataset, batch_size=prm.batch_size, shuffle=True, **kwargs)
+        test_loader = data_utils.DataLoader(test_dataset, batch_size=prm.test_batch_size, shuffle=True, **kwargs)
+
+        n_train_samples = len(train_loader.dataset)
+        n_test_samples = len(test_loader.dataset)
+
+        data_loader = {'train': train_loader, 'test': test_loader,
+                       'n_train_samples': n_train_samples, 'n_test_samples': n_test_samples}
+
+        return data_loader
 
 
 # -------------------------------------------------------------------------------------------
@@ -143,7 +175,7 @@ def get_info(prm):
         info = {'input_shape': (3, 32, 32), 'n_classes': 10}
 
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (3, 28, 28), 'n_classes': prm.N_Way}
+        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
 
     else:
         raise ValueError('Invalid data_source')
@@ -199,6 +231,20 @@ def create_label_permute_trans(prm):
     inds_permute = torch.randperm(info['n_classes'])
     transform_func = lambda target: inds_permute[target]
     return transform_func
+
+
+def create_rotation_trans():
+    # all images in task are rotated by some random angle from [0,90,180,270]
+    n_rot = np.random.randint(4)
+    return lambda x: rotate_im(x, n_rot)
+
+def rotate_im(x, n_rot):
+    x = torch.from_numpy(np.rot90(x.squeeze().numpy(), n_rot).copy()).unsqueeze_(0)
+    # show  image
+    # import matplotlib.pyplot as plt
+    # plt.imshow(x.numpy()[0])
+    # plt.show()
+    return x
 
 
 def reduce_train_set(train_dataset, limit_train_samples):

@@ -55,13 +55,24 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
                     default=1000)
 
-parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
-                    default='log')
+parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
+                    default=5)
 # Run parameters:
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
 parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
                     default='meta_model')
+
+parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
+                    help='Upper limit for the number of training sampels in the meta-test tasks (0 = unlimited)',
+                    default=0)
+
+parser.add_argument('--n_test_tasks', type=int,
+                    help='Number of meta-test tasks for meta-evaluation',
+                    default=100)
+
+parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
+                    default='log')
 
 prm = parser.parse_args()
 
@@ -88,8 +99,8 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {}  # No decay
 
 # Meta-alg params:
-prm.complexity_type = 'NewBound'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
+prm.complexity_type = 'NewBoundSeeger'
+#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' / NewBoundSeeger
 
 prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
 prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
@@ -97,14 +108,10 @@ prm.delta = 0.1  #  maximal probability that the bound does not hold
 
 init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
 
-prm.meta_batch_size = 5  # how many tasks in each meta-batch
-
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 dir_path = './saved'
-
-
 
 
 # -------------------------------------------------------------------------------------------
@@ -142,13 +149,17 @@ else:
 # Generate the data sets of the test tasks:
 # -------------------------------------------------------------------------------------------
 
-n_test_tasks = 10
-limit_train_samples = 2000
+n_test_tasks = prm.n_test_tasks
+
+limit_train_samples_in_test_tasks = prm.limit_train_samples_in_test_tasks
+if limit_train_samples_in_test_tasks == 0:
+    limit_train_samples_in_test_tasks = None
 
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples)+'-'*5, prm.log_file)
+             format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
 
-test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples, meta_split='meta_test') for _ in range(n_test_tasks)]
+test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples_in_test_tasks, meta_split='meta_test')
+                   for _ in range(n_test_tasks)]
 
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing

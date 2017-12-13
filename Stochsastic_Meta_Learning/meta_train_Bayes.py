@@ -212,6 +212,12 @@ def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_mod
             # get batch variables:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
+            # Debug
+            # print(targets[0].data[0])  # print first image label
+            # import matplotlib.pyplot as plt
+            # plt.imshow(inputs[0].cpu().data[0].numpy())  # show first image
+            # plt.show()
+
             # Empirical Loss on current task:
             outputs = post_model(inputs)
             curr_empirical_loss = loss_criterion(outputs, targets)
