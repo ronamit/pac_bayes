@@ -59,7 +59,7 @@ parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks
                     default=5)
 # Run parameters:
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
-                    default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
+                    default='LoadMetaModel')   # 'MetaTrain'  \ 'LoadMetaModel'
 
 parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
                     default='meta_model')
