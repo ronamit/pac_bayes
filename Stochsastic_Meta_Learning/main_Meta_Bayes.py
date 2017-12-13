@@ -12,7 +12,7 @@ from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
 
 from Models.stochastic_models import get_model
 from Single_Task import learn_single_standard
-from Utils.data_gen import get_data_loader
+from Utils.data_gen import Task_Generator
 from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
@@ -42,7 +42,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=100)  # 10 / 300
+                    default=100)  # 10 / 100
 parser.add_argument('--n_meta_test_epochs', type=int, help='number of epochs to train',
                     default=300)  # 10 / 300
 
@@ -60,6 +60,7 @@ parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks
 # Run parameters:
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
+
 parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
                     default='meta_model')
 
@@ -69,7 +70,7 @@ parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
-                    default=100)
+                    default=10)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
@@ -113,7 +114,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 dir_path = './saved'
 
-
+task_generator = Task_Generator(prm)
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Training
 # -------------------------------------------------------------------------------------------
@@ -125,7 +126,7 @@ if prm.mode == 'MetaTrain':
     n_train_tasks = prm.n_train_tasks
     # Generate the data sets of the training tasks:
     write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_data_loaders = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
+    train_data_loaders = task_generator.create_meta_batch(prm, n_train_tasks, meta_split='meta_train')
 
     # Meta-training to learn prior:
     prior_model = meta_train_Bayes.run_meta_learning(train_data_loaders, prm)
@@ -158,9 +159,10 @@ if limit_train_samples_in_test_tasks == 0:
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
 
-test_tasks_data = [get_data_loader(prm, limit_train_samples=limit_train_samples_in_test_tasks, meta_split='meta_test')
-                   for _ in range(n_test_tasks)]
 
+test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test',
+                                                   limit_train_samples=limit_train_samples_in_test_tasks)
+#
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
 # -------------------------------------------------------------------------------

@@ -158,7 +158,8 @@ if limit_train_samples_in_test_tasks == 0:
 write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
              format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
 
-test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test', limit_train_samples=limit_train_samples_in_test_tasks)
+test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test',
+                                                   limit_train_samples=limit_train_samples_in_test_tasks)
 #
 # -------------------------------------------------------------------------------------------
 #  Run Meta-Testing
