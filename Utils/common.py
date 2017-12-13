@@ -48,7 +48,7 @@ def randn_gpu(size, mean=0, std=1):
 
 
 def count_correct(outputs, targets):
-    ''' Deterimne the class prediction by the max output and compare to ground truth'''
+    ''' Determine the class prediction by the max output and compare to ground truth'''
     pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
     return pred.eq(targets.data.view_as(pred)).cpu().sum()
 
