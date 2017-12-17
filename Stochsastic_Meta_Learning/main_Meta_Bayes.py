@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
 
 from Models.stochastic_models import get_model
 from Single_Task import learn_single_standard
@@ -23,14 +23,14 @@ torch.backends.cudnn.benchmark = True  # For speed improvement with models with 
 # Training settings
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST'",
-                    default='MNIST')
+parser.add_argument('--data-source', type=str, help='Data set',
+                    default='MNIST') # 'MNIST' / 'Omniglot'
 
-parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks',
+parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
                     default=5)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels'
+                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
 
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
@@ -42,7 +42,10 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=100)  # 10 / 100
+                    default=150)  # 10 / 100
+parser.add_argument('--n_inner_steps', type=int, help='For infinite tasks case, number of steps for training per meta-batch of tasks',
+                    default=50)  #
+
 parser.add_argument('--n_meta_test_epochs', type=int, help='number of epochs to train',
                     default=200)  # 10 / 300
 
@@ -70,10 +73,20 @@ parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
-                    default=10)
+                    default=100)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
+
+# Omniglot Parameters:
+parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
+                    default=5)
+parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
+                    default=5)  # Note: number of test samples per class is 20-K (the rest of the data)
+parser.add_argument('--chars_split_type', type=str, help='how to split the Omniglot characters  - "random" / "predefined_split"',
+                    default='random')
+parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
+                    default=1200)
 
 prm = parser.parse_args()
 
@@ -99,10 +112,9 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [50, 150]}
 prm.lr_schedule = {}  # No decay
 
-# Meta-alg params:
-prm.complexity_type = 'NewBoundSeeger'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' / NewBoundSeeger
-
+# MPB alg  params:
+prm.complexity_type = 'NewBoundMcAllaster'
+#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBound / NewBoundSeeger
 prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
 prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
 prm.delta = 0.1  #  maximal probability that the bound does not hold
@@ -124,15 +136,25 @@ start_time = timeit.default_timer()
 if prm.mode == 'MetaTrain':
 
     n_train_tasks = prm.n_train_tasks
-    # Generate the data sets of the training tasks:
-    write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
-    train_data_loaders = task_generator.create_meta_batch(prm, n_train_tasks, meta_split='meta_train')
+    if n_train_tasks:
+        # In this case we generate a finite set of train (observed) task before meta-training.
+        # Generate the data sets of the training tasks:
+        write_result('-' * 5 + 'Generating {} training-tasks'.format(n_train_tasks) + '-' * 5, prm.log_file)
+        train_data_loaders = task_generator.create_meta_batch(prm, n_train_tasks, meta_split='meta_train')
 
-    # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_data_loaders, prm)
-    # save learned prior:
-    f_path = save_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
-    print('Trained prior saved in ' + f_path)
+        # Meta-training to learn prior:
+        prior_model = meta_train_Bayes_finite_tasks.run_meta_learning(train_data_loaders, prm)
+        # save learned prior:
+        f_path = save_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
+        print('Trained prior saved in ' + f_path)
+    else:
+        # In this case we observe new tasks generated from the task-distribution in each meta-iteration.
+        write_result(
+            '-' * 5 + 'Infinite train tasks - New training tasks are drawn from tasks distribution in each iteration...' + '-' * 5,
+            prm.log_file)
+
+        # Meta-training to learn meta-prior (theta params):
+        meta_model = meta_train_Bayes_infinite_tasks.run_meta_learning(task_generator, prm)
 
 
 elif prm.mode == 'LoadMetaModel':
@@ -192,13 +214,6 @@ for i_task in range(n_test_tasks):
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
-write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
-write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
-             format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
-
-# -------------------------------------------------------------------------------------------
 #  Print prior analysis
 # -------------------------------------------------------------------------------------------
 from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
@@ -207,3 +222,9 @@ run_prior_analysis(prior_model)
 stop_time = timeit.default_timer()
 write_result('Total runtime: ' +
              time.strftime("%H hours, %M minutes and %S seconds", time.gmtime(stop_time - start_time)),  prm.log_file)
+# -------------------------------------------------------------------------------------------
+write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
+             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
+write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
+             format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)

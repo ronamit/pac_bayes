@@ -6,7 +6,7 @@ import argparse
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes_finite_tasks
 from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import get_data_loader
@@ -134,7 +134,7 @@ if mode == 'MetaTrain':
     train_tasks_data = [get_data_loader(prm, meta_split='meta_train') for i_task in range(n_train_tasks)]
 
     # Meta-training to learn prior:
-    prior_model = meta_train_Bayes.run_meta_learning(train_tasks_data, prm)
+    prior_model = meta_train_Bayes_finite_tasks.run_meta_learning(train_tasks_data, prm)
     # save learned prior:
     f_path = save_model_state(prior_model, dir_path, name=f_name)
     print('Trained prior saved in ' + f_path)

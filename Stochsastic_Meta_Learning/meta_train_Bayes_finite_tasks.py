@@ -11,7 +11,7 @@ from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
 from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result
-
+from Stochsastic_Meta_Learning.Get_Objective_MPB import get_objective
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -39,10 +39,7 @@ def run_meta_learning(data_loaders, prm):
     prior_model = get_model(prm)
 
     # Gather all tasks posterior params:
-    all_post_param = []
-    for i_task in range(n_train_tasks):
-        post_params = list(posteriors_models[i_task].parameters())
-        all_post_param += post_params
+    all_post_param = sum([list(posterior_model.parameters()) for posterior_model in posteriors_models], [])
 
     # Create optimizer for all parameters (posteriors + prior)
     prior_params = list(prior_model.parameters())
@@ -92,8 +89,8 @@ def run_meta_learning(data_loaders, prm):
             mb_posteriors_models = [posteriors_models[task_id] for task_id in task_ids_in_meta_batch]
 
             # Get objective based on tasks in meta-batch:
-            total_objective, info = meta_step(prior_model, prm, mb_data_loaders,
-                                              mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks)
+            total_objective, info = get_objective(prior_model, prm, mb_data_loaders,
+                                                  mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks)
 
             # Take gradient step with the shared prior and all tasks' posteriors:
             grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -168,84 +165,3 @@ def run_meta_learning(data_loaders, prm):
     return prior_model
 
 
-# -------------------------------------------------------------------------------------------
-# function for meta step
-# -------------------------------------------------------------------------------------------
-def meta_step(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks):
-    '''  Calculate objective based on tasks in meta-batch '''
-    # note: it is OK if some tasks appear several times in the meta-batch
-
-    n_tasks_in_mb = len(mb_data_loaders)
-
-    sum_empirical_loss = 0
-    sum_intra_task_comp = 0
-    correct_count = 0
-    sample_count = 0
-
-    # KLD between hyper-posterior and hyper-prior:
-    hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_norm(prior_model, p=2)
-    # Hyper-prior term:
-    if prm.complexity_type == 'NewBound':
-        delta =  prm.delta
-        meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
-    else:
-        meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
-
-    # ----------- loop over tasks in meta-batch -----------------------------------#
-    for i_task in range(n_tasks_in_mb):
-
-        n_samples = mb_data_loaders[i_task]['n_train_samples']
-
-        # get sample-batch data from current task to calculate the empirical loss estimate:
-        batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task], mb_data_loaders[i_task]['train'])
-
-        # The posterior model corresponding to the task in the batch:
-        post_model = mb_posteriors_models[i_task]
-        post_model.train()
-
-        # Monte-Carlo iterations:
-        n_MC = prm.n_MC
-        task_empirical_loss = 0
-        task_complexity = 0
-        # ----------- Monte-Carlo loop  -----------------------------------#
-        for i_MC in range(n_MC):
-            # get batch variables:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-
-            # Debug
-            # print(targets[0].data[0])  # print first image label
-            # import matplotlib.pyplot as plt
-            # plt.imshow(inputs[0].cpu().data[0].numpy())  # show first image
-            # plt.show()
-
-            # Empirical Loss on current task:
-            outputs = post_model(inputs)
-            curr_empirical_loss = loss_criterion(outputs, targets)
-            task_empirical_loss += (1 / n_MC) * curr_empirical_loss
-
-            correct_count += count_correct(outputs, targets)
-            sample_count += inputs.size(0)
-
-            # Intra-task complexity of current task:
-            curr_complexity = get_posterior_complexity_term(
-                prm, prior_model, post_model,
-                n_samples, curr_empirical_loss, hyper_kl, noised_prior=True)
-            task_complexity += (1 / n_MC) * curr_complexity
-        # end Monte-Carlo loop
-
-        sum_empirical_loss += task_empirical_loss
-        sum_intra_task_comp += task_complexity
-
-    # end loop over tasks in meta-batch
-    avg_empirical_loss = (1 / n_tasks_in_mb) * sum_empirical_loss
-    avg_intra_task_comp = (1 / n_tasks_in_mb) * sum_intra_task_comp
-
-
-    # Approximated total objective:
-    total_objective = avg_empirical_loss + avg_intra_task_comp + meta_complex_term
-
-    info = {'sample_count': sample_count, 'correct_count': correct_count,
-                  'avg_empirical_loss': avg_empirical_loss.data[0],
-                  'avg_intra_task_comp': avg_intra_task_comp.data[0],
-                  'meta_comp': meta_complex_term.data[0]}
-    return total_objective, info

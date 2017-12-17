@@ -264,19 +264,19 @@ def reduce_train_set(train_dataset, limit_train_samples):
 # -----------------------------------------------------------------------------------------------------------#
 # Sinusoid Regression
 # -----------------------------------------------------------------------------------------------------------#
-def create_sinusoid_task():
-    task_param = {'phase':np.random.uniform(0, np.pi),
-                  'amplitude':np.random.uniform(0.1, 5.0),
-                  'freq': 5.0,
-                  'input_range': [-0.5, 0.5]}
-    return task_param
-
-def create_sinusoid_data(task_param, n_samples):
-    amplitude = task_param['amplitude']
-    phase = task_param['phase']
-    freq = task_param['freq']
-    input_range = task_param['input_range']
-    y = np.ndarray(shape=(n_samples, 1), dtype=np.float32)
-    x = np.random.uniform(input_range[0], input_range[1], n_samples)
-    y = amplitude * np.sin(phase + 2 * np.pi * freq * x)
-    return x, y
+# def create_sinusoid_task():
+#     task_param = {'phase':np.random.uniform(0, np.pi),
+#                   'amplitude':np.random.uniform(0.1, 5.0),
+#                   'freq': 5.0,
+#                   'input_range': [-0.5, 0.5]}
+#     return task_param
+#
+# def create_sinusoid_data(task_param, n_samples):
+#     amplitude = task_param['amplitude']
+#     phase = task_param['phase']
+#     freq = task_param['freq']
+#     input_range = task_param['input_range']
+#     y = np.ndarray(shape=(n_samples, 1), dtype=np.float32)
+#     x = np.random.uniform(input_range[0], input_range[1], n_samples)
+#     y = amplitude * np.sin(phase + 2 * np.pi * freq * x)
+#     return x, y

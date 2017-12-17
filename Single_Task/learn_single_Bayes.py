@@ -35,6 +35,8 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     else:
         post_model = get_model(prm)
 
+    # post_model.set_eps_std(0.0) # DEBUG: turn off randomness
+
     #  Get optimizer:
     optimizer = optim_func(post_model.parameters(), **optim_args)
 
@@ -43,7 +45,17 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     # -------------------------------------------------------------------------------------------
 
     def run_train_epoch(i_epoch):
-        log_interval = 500
+
+        # # Adjust randomness (eps_std)
+        # if hasattr(prm, 'use_randomness_schedeule') and prm.use_randomness_schedeule:
+        #     if i_epoch > prm.randomness_full_epoch:
+        #         eps_std = 1.0
+        #     elif i_epoch > prm.randomness_init_epoch:
+        #         eps_std = (i_epoch - prm.randomness_init_epoch) / (prm.randomness_full_epoch - prm.randomness_init_epoch)
+        #     else:
+        #         eps_std = 0.0  #  turn off randomness
+        #     post_model.set_eps_std(eps_std)
+
 
         complexity_term = 0
 
@@ -77,6 +89,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
 
             # Print status:
+            log_interval = 500
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, objective.data[0]) +

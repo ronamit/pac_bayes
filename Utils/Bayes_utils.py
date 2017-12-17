@@ -106,28 +106,18 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         test_acc, n_correct, n_test_samples))
     return test_acc, test_loss
 
-#
-# def get_eps_std(i_epoch, batch_idx, n_meta_batches, prm):
-#
-#     total_iter = prm.num_epochs * n_meta_batches
-#     n_iter_stage_1 = int(total_iter * prm.stage_1_ratio)
-#     n_iter_stage_2 = total_iter - n_iter_stage_1
-#     n_iter_with_full_eps_std = int(n_iter_stage_2 * prm.full_eps_ratio_in_stage_2)
-#     full_eps_std = 1.0
-#
-#     # We gradually increase epsilon'PermuteLabels_Seeger.out STD from 0 to 1.
-#     # The reason is that using 1 from the start results in high variance gradients.
-#     iter_idx = i_epoch * n_meta_batches + batch_idx
-#     if iter_idx >= n_iter_stage_1:
-#         if n_iter_stage_2 == n_iter_with_full_eps_std:
-#             eps_std = 1.0
-#         else:
-#             eps_std = full_eps_std * (iter_idx - n_iter_stage_1) / (n_iter_stage_2 - n_iter_with_full_eps_std)
-#     else:
-#         eps_std = 0.0
-#     eps_std = min(max(eps_std, 0.0), 1.0)  # keep in [0,1]
-#     return eps_std
 
+
+def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
+    if n_train_tasks == 0:
+        meta_complex_term = 0  # infinite tasks case
+    else:
+        if prm.complexity_type == 'NewBoundMcAllaster' or  prm.complexity_type == 'NewBoundSeeger':
+            delta =  prm.delta
+            meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
+        else:
+            meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
+    return meta_complex_term
 
 #  -------------------------------------------------------------------------------------------
 #  Intra-task complexity for posterior distribution
@@ -142,8 +132,8 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     if complexity_type == 'KLD':
         complex_term = tot_kld
 
-    elif prm.complexity_type == 'NewBound':
-        complex_term = torch.sqrt((1 / (2 * n_samples)) * (hyper_kl + tot_kld + math.log(2 * math.sqrt(n_samples) / delta)))
+    elif prm.complexity_type == 'NewBoundMcAllaster':
+        complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_kl + tot_kld + math.log(2 * n_samples / delta)))
 
     elif prm.complexity_type == 'NewBoundSeeger':
         seeger_eps = (1 / n_samples) * (tot_kld + hyper_kl + math.log(4 * math.sqrt(n_samples) / delta))

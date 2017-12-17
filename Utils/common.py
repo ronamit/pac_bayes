@@ -128,7 +128,7 @@ def grad_step(objective, optimizer, lr_schedule=None, initial_lr=None, i_epoch=N
         adjust_learning_rate_schedule(optimizer, i_epoch, initial_lr, **lr_schedule)
     optimizer.zero_grad()
     objective.backward()
-    # clip_grad_norm(***.parameters(), 5.)
+    # torch.nn.utils.clip_grad_norm(parameters, 0.25)
     optimizer.step()
 
 

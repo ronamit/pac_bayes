@@ -18,7 +18,7 @@ torch.backends.cudnn.benchmark = True  # For speed improvement with models with 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
-                    default='MNIST')
+                    default='Omniglot')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
                     default='None')
@@ -33,7 +33,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 300
+                    default=1500) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -46,6 +46,18 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
+
+
+# Omniglot Parameters:
+parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
+                    default=5)
+parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
+                    default=5)  # Note: number of test samples per class is 20-K (the rest of the data)
+parser.add_argument('--chars_split_type', type=str, help='how to split the Omniglot characters  - "random" / "predefined_split"',
+                    default='random')
+parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
+                    default=1200)
+
 
 prm = parser.parse_args()
 
@@ -61,7 +73,12 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 1. start with small sigma - so gradients variance estimate will be low
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
+prm.n_MC = 5
+
+# prm.use_randomness_schedeule = True # False / True
+# prm.randomness_init_epoch = 0
+# prm.randomness_full_epoch = 500000000
+
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}

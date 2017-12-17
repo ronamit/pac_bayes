@@ -24,11 +24,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help='Data set',
                     default='Omniglot') # 'MNIST' / 'Omniglot'
 
-parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
-                    default=5)
-parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
-                    default=5)  # Note: number of test samples per class is 20-K (the rest of the data)
-
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
                     default=0)
 
@@ -81,13 +76,19 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (None
                     default='log')
 
 
+# Omniglot Parameters:
+parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
+                    default=5)
+parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
+                    default=5)  # Note: number of test samples per class is 20-K (the rest of the data)
+parser.add_argument('--chars_split_type', type=str, help='how to split the Omniglot characters  - "random" / "predefined_split"',
+                    default='random')
+parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
+                    default=1200)
+
+
 prm = parser.parse_args()
 prm.data_path = '../data'
-
-# Omniglot data parameters:
-prm.chars_split_type = 'random'  # how to split the Omniglot characters  - 'random' / 'predefined_split'
-prm.n_meta_train_chars = 1200  # how many characters to use for meta-training, if split type is random
-
 
 set_random_seed(prm.seed)
 

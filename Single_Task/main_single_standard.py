@@ -48,7 +48,16 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
 
-parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
+# Omniglot Parameters:
+parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
+                    default=5)
+parser.add_argument('--K_Shot', type=int, help='Number of training sample per class (for Omniglot)',
+                    default=5)  # Note: number of test samples per class is 20-K (the rest of the data)
+parser.add_argument('--chars_split_type', type=str, help='how to split the Omniglot characters  - "random" / "predefined_split"',
+                    default='random')
+parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
+                    default=1200)
+
 
 prm = parser.parse_args()
 

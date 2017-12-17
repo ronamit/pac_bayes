@@ -48,7 +48,6 @@ def run_meta_learning(prm, task_generator):
         # Generate the data sets of the training-tasks for meta-batch:
         mb_data_loaders = task_generator.create_meta_batch(prm, meta_batch_size, meta_split='meta_train')
 
-
         # For each task, prepare an iterator to generate training batches:
         mb_iterators = [iter(mb_data_loaders[ii]['train']) for ii in range(meta_batch_size)]
 

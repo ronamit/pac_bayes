@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes
+from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes_finite_tasks
 from Models.models import get_model
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils import data_gen

@@ -128,7 +128,7 @@ def get_task(chars, root_path, n_labels, k_train_shot, final_input_trans=None, t
 class omniglot_dataset(data.Dataset):
     def __init__(self, data_dir, samples_paths, targets, final_input_trans=None, target_transform=None):
         self.all_items = list(zip(samples_paths, targets))
-        self.final_input_trans = final_input_trans[0]
+        self.final_input_trans = final_input_trans
         self.target_transform = target_transform
         self.data_dir = data_dir
 
