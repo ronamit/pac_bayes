@@ -152,8 +152,11 @@ class omniglot_dataset(data.Dataset):
         # plt.imshow(img.numpy()[0])
         # plt.show()
 
-        if self.final_input_trans:
-            img = self.final_input_trans(img)
+        final_input_trans = self.final_input_trans
+        if final_input_trans:
+            if isinstance(final_input_trans, list):
+                final_input_trans = final_input_trans[0]
+            img = final_input_trans(img)
 
         if self.target_transform:
             for trasns in self.target_transform:

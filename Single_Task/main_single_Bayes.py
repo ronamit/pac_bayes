@@ -18,7 +18,7 @@ torch.backends.cudnn.benchmark = True  # For speed improvement with models with 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
-                    default='Omniglot')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
                     default='None')
@@ -33,7 +33,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1500) # 300
+                    default=300) # 300
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -73,7 +73,7 @@ prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias'
 # 1. start with small sigma - so gradients variance estimate will be low
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 5
+prm.n_MC = 1
 
 # prm.use_randomness_schedeule = True # False / True
 # prm.randomness_init_epoch = 0

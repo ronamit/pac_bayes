@@ -154,7 +154,7 @@ if prm.mode == 'MetaTrain':
             prm.log_file)
 
         # Meta-training to learn meta-prior (theta params):
-        meta_model = meta_train_Bayes_infinite_tasks.run_meta_learning(task_generator, prm)
+        prior_model = meta_train_Bayes_infinite_tasks.run_meta_learning(task_generator, prm)
 
 
 elif prm.mode == 'LoadMetaModel':

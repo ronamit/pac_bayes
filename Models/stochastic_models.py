@@ -62,7 +62,7 @@ def get_model(prm, model_type='Stochastic'):
         raise ValueError('Invalid model_name')
 
     model.cuda()
-
+    # model.set_eps_std(0.00) # debug
     return model
 
 

@@ -56,6 +56,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         #         eps_std = 0.0  #  turn off randomness
         #     post_model.set_eps_std(eps_std)
 
+        # post_model.set_eps_std(0.00) # debug
 
         complexity_term = 0
 
