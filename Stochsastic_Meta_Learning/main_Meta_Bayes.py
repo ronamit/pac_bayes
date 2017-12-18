@@ -113,7 +113,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {}  # No decay
 
 # MPB alg  params:
-prm.complexity_type = 'NewBoundMcAllaster'
+prm.complexity_type = 'NewBoundSeeger'
 #  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBound / NewBoundSeeger
 prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
 prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
