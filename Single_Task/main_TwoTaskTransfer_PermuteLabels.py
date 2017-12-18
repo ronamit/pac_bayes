@@ -8,10 +8,10 @@ import torch.optim as optim
 
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import Task_Generator
-from Utils.common import  write_result, set_random_seed
+from Utils.common import write_result, set_random_seed
 
 
-torch.backends.cudnn.benchmark=True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
+torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 
 
 # -------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=200) # 200
+                    default=200)  # 200
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
