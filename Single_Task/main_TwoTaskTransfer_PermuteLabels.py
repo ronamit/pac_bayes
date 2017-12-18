@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 
 from Single_Task import learn_single_Bayes, learn_single_standard
-from Utils import data_gen
+from Utils.data_gen import Task_Generator
 from Utils.common import  write_result, set_random_seed
 
 
@@ -54,14 +54,10 @@ prm.data_path = '../data'
 
 set_random_seed(prm.seed)
 
-n_experiments = 10  # 10
+n_experiments = 100  # 10
 
 #  Define model:
-prm.model_name = 'ConvNet'   # 'FcNet2' / 'FcNet3' / 'ConvNet' / 'ConvNet_Dropout'
-
-# Weights initialization:
-prm.init_override = None # {'bias': 0, 'std': 0.1}
-# None = use default initializer
+prm.model_name = 'ConvNet3'
 
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
@@ -76,17 +72,19 @@ prm.lr_schedule = {} # No decay
 prm_reg = deepcopy(prm)
 prm.optim_args['weight_decay'] = 1e-3
 
-
 # For freeze lower layers experiment:
 prm_freeze = deepcopy(prm)
-prm_freeze.freeze_list = ['conv1', 'conv2', 'fc1']
+prm_freeze.not_freeze_list = ['fc_out']
 
 # For bayes experiment -
 # Weights initialization:
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-prm.n_MC = 3 # Number of Monte-Carlo iterations
+prm.n_MC = 1 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
+
+
+task_generator = Task_Generator(prm)
 
 test_err_orig = np.zeros(n_experiments)
 test_err_scratch = np.zeros(n_experiments)
@@ -99,7 +97,7 @@ for i in range(n_experiments):
     write_result('-' * 5 + ' Expirement #{} out of {}'.format(i+1, n_experiments), prm.log_file)
 
     # Generate the task #1 data set:
-    task1_data = data_gen.get_data_loader(prm)
+    task1_data = task_generator.get_data_loader(prm)
     n_samples_orig = task1_data['n_train_samples']
 
     #  Run learning of task 1
@@ -109,7 +107,7 @@ for i in range(n_experiments):
     # Generate the task 2 data set:
     limit_train_samples = 2000
     write_result('-'*5 + 'Generating task #2 with at most {} samples'.format(limit_train_samples) + '-'*5, prm.log_file)
-    task2_data = data_gen.get_data_loader(prm, limit_train_samples = limit_train_samples)
+    task2_data = task_generator.get_data_loader(prm, limit_train_samples = limit_train_samples)
 
     #  Run learning of task 2 from scratch:
     write_result('-'*5 + 'Standard learning of task #2 from scratch' + '-'*5, prm.log_file)
