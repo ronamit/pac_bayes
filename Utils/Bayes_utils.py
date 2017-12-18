@@ -115,6 +115,8 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
         if prm.complexity_type == 'NewBoundMcAllaster' or  prm.complexity_type == 'NewBoundSeeger':
             delta =  prm.delta
             meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
+        elif prm.complexity_type == 'KLD':
+            meta_complex_term = hyper_kl
         else:
             meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
     return meta_complex_term

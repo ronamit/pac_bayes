@@ -6,10 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
-from Models.models import get_model
+from Models.stochastic_models import get_model
 
 from Single_Task import learn_single_Bayes, learn_single_standard
-from Utils.data_gen import get_data_loader
+from Utils.data_gen import Task_Generator
 from Utils.common import  write_result, set_random_seed
 from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
 
@@ -72,7 +72,10 @@ prm.n_MC = 3 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 prm.complexity_type = 'PAC_Bayes_McAllaster'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity'
+#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBound / NewBoundSeeger
+prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
+prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
+prm.delta = 0.1  #  maximal probability that the bound does not hold
 
 init_from_prior = True  #  False \ True . init posterior from prior
 
@@ -81,14 +84,17 @@ init_from_prior = True  #  False \ True . init posterior from prior
 prior_model = None # Start with no prior
 
 n_tasks = 200
-limit_train_samples = 100
+limit_train_samples = 2000
 
 test_err_per_task= np.zeros(n_tasks)
+
+task_generator = Task_Generator(prm)
+
 
 for i_task in range(n_tasks):
 
     write_result('-'*5 + 'Learning task #{} out of {}...'.format(1+i_task, n_tasks), prm.log_file)
-    task_data = get_data_loader(prm, limit_train_samples=limit_train_samples)
+    task_data = task_generator.get_data_loader(prm, limit_train_samples=limit_train_samples)
     test_err, posterior_model = learn_single_Bayes.run_learning(task_data, prm, prior_model=prior_model, init_from_prior=init_from_prior, verbose=0)
     prior_model = deepcopy(posterior_model)
     test_err_per_task[i_task] = test_err
