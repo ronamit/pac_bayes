@@ -88,6 +88,11 @@ parser.add_argument('--chars_split_type', type=str, help='how to split the Omnig
 parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
                     default=1200)
 
+parser.add_argument('--override_eps_std', type=float,
+                    help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
+                    default=1.0)
+
+
 prm = parser.parse_args()
 
 prm.data_path = '../data'

@@ -62,7 +62,10 @@ def get_model(prm, model_type='Stochastic'):
         raise ValueError('Invalid model_name')
 
     model.cuda()
-    # model.set_eps_std(0.00) # debug
+
+    # For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)
+    if hasattr(prm, 'override_eps_std'):
+        model.set_eps_std(prm.override_eps_std) # debug
     return model
 
 
