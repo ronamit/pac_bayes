@@ -10,15 +10,21 @@ from Utils.common import count_correct
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticLayer
 
-def run_test_Bayes(model, test_loader, loss_criterion, prm):
+
+
+def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
+
     if prm.test_type == 'MaxPosterior':
-        return run_test_max_posterior(model, test_loader, loss_criterion, prm)
+        info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
     elif prm.test_type == 'MajorityVote':
-        return run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
     elif prm.test_type == 'AvgVote':
-        return run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
     else:
         raise ValueError('Invalid test_type')
+    if verbose:
+        print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(info['test_acc'], info['n_correct'], info['n_test_samples'], info['test_loss']))
+    return info['test_acc'], info['test_loss']
 
 
 def run_test_max_posterior(model, test_loader, loss_criterion, prm):
@@ -39,9 +45,9 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
 
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
-    print('\nMax-Posterior, Test set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-        test_loss.data[0], test_acc, n_correct, n_test_samples))
-    return test_acc, test_loss.data[0]
+    info = {'test_acc':test_acc, 'n_correct':n_correct, 'test_type':'max_posterior',
+            'n_test_samples':n_test_samples, 'test_loss':test_loss.data[0]}
+    return info
 
 
 def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
@@ -69,13 +75,12 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
-
-
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
-    print('\nMajority-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
-        test_acc, n_correct, n_test_samples))
-    return test_acc, test_loss
+    info = {'test_acc': test_acc, 'n_correct': n_correct, 'test_type': 'majority_vote',
+            'n_test_samples': n_test_samples, 'test_loss': test_loss.data[0]}
+    return info
+
 
 def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 
@@ -102,9 +107,9 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
-    print('\nAveraged-Vote, Test set: Accuracy: {:.3} ( {}/{})\n'.format(
-        test_acc, n_correct, n_test_samples))
-    return test_acc, test_loss
+    info = {'test_acc': test_acc, 'n_correct': n_correct, 'test_type': 'AvgVote',
+            'n_test_samples': n_test_samples, 'test_loss': test_loss.data[0]}
+    return info
 
 
 
