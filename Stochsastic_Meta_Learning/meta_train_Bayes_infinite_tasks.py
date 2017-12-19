@@ -128,7 +128,7 @@ def run_meta_iteration(i_iter, prior_model, posteriors_models, task_generator, p
     # Print status = on test set of meta-batch:
     log_interval_eval = 10
     if (i_iter) % log_interval_eval == 0 and i_iter > 0:
-        run_test(mb_data_loaders, posteriors_models, loss_criterion, prm)
+        test_acc_avg = run_test(mb_data_loaders, posteriors_models, loss_criterion, prm)
         print('Meta-iter: {} \t Meta-Batch Test Acc: {:1.3}\t'.format(i_iter, test_acc_avg))
     # End of inner steps
     return prior_model, posteriors_models, test_acc_avg
