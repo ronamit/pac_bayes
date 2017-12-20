@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticConv2d, StochasticLinear
-from Models.stochastic_layers import base_class_stochastic_model
+from Models.stochastic_models import general_model
 
 # from: https://github.com/andreasveit/densenet-pytorch
 
@@ -11,8 +11,11 @@ from Models.stochastic_layers import base_class_stochastic_model
 # StochasticConv2d(in_channels, out_channels, kernel_size, prm, use_bias, stride, padding, dilation)
 
 
-def get_bayes_densenet_model_class(prm, input_channels=3):
+def get_bayes_densenet_model_class(prm, task_info):
 
+    input_shape = task_info['input_shape']
+    num_classes = task_info['n_classes']
+    input_channels = input_shape[0]
 
     class BasicBlock(nn.Module):
         def __init__(self, in_planes, out_planes, prm, dropRate=0.0):
@@ -75,10 +78,12 @@ def get_bayes_densenet_model_class(prm, input_channels=3):
         def forward(self, x):
             return self.layer(x)
 
-    class BayesDenseNet3(base_class_stochastic_model):
-        def __init__(self, depth, num_classes, growth_rate=12,
+    class BayesDenseNet(general_model):
+        def __init__(self, depth, growth_rate=12,
                      reduction=0.5, bottleneck=True, dropRate=0.0):
-            super(BayesDenseNet3, self).__init__()
+            super(BayesDenseNet, self).__init__()
+            self.model_type = 'Stochastic'
+            self.model_name = 'BayesDenseNet'
             in_planes = 2 * growth_rate
             n = (depth - 4) / 3
             if bottleneck == True:
@@ -129,4 +134,4 @@ def get_bayes_densenet_model_class(prm, input_channels=3):
             return self.fc(out)
 
 
-    return BayesDenseNet3
+    return BayesDenseNet

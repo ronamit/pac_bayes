@@ -58,6 +58,11 @@ def get_model(prm, model_type='Stochastic'):
     elif model_name == 'ConvNet3':
         model = ConvNet3(model_type, model_name, linear_layer, conv2d_layer, task_info)
 
+    elif model_name == 'BayesDenseNet':
+        from Models.densenetBayes import get_bayes_densenet_model_class
+        densenet_model = get_bayes_densenet_model_class(prm, task_info)
+        model = densenet_model(depth=20)
+
     else:
         raise ValueError('Invalid model_name')
 
