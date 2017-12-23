@@ -69,7 +69,7 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
             # Intra-task complexity of current task:
             curr_complexity = get_posterior_complexity_term(
                 prm, prior_model, post_model,
-                n_samples, curr_empirical_loss, hyper_kl, noised_prior=True)
+                n_samples, curr_empirical_loss, hyper_kl, n_train_tasks=n_train_tasks, noised_prior=True)
             task_complexity += (1 / n_MC) * curr_complexity
         # end Monte-Carlo loop
 

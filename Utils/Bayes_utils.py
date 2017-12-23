@@ -130,7 +130,7 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=0, noised_prior=True):
+def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
@@ -153,7 +153,7 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
         complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
 
     elif complexity_type == 'PAC_Bayes_Pentina':
-        complex_term = math.sqrt(1 / n_samples) * tot_kld
+        complex_term = math.sqrt(1 / n_samples) * tot_kld + hyper_kl * (1/(n_train_tasks * math.sqrt(n_samples)))
 
     elif complexity_type == 'PAC_Bayes_Seeger':
         # Seeger complexity is unique since it requires the empirical loss
