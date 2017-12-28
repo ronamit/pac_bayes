@@ -63,6 +63,12 @@ def get_model(prm, model_type='Stochastic'):
         densenet_model = get_bayes_densenet_model_class(prm, task_info)
         model = densenet_model(depth=20)
 
+
+    elif model_name == 'ConvNet3SemiStoch':
+        model = ConvNet3SemiStoch(model_type, model_name, linear_layer, conv2d_layer, task_info)
+
+
+
     else:
         raise ValueError('Invalid model_name')
 
@@ -136,6 +142,38 @@ class ConvNet3(general_model):
         n_hidden_fc1 = 50
         self.conv1 = conv2d_layer(color_channels, n_filt1, kernel_size=5)
         self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=5)
+        conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
+        self.fc1 = linear_layer(conv_feat_size, n_hidden_fc1)
+        self.fc_out = linear_layer(n_hidden_fc1, n_classes)
+
+    def _forward_features(self, x):
+        x = F.elu(F.max_pool2d(self.conv1(x), 2))
+        x = F.elu(F.max_pool2d(self.conv2(x), 2))
+        return x
+
+    def forward(self, x):
+        x = self._forward_features(x)
+        x = x.view(x.size(0), -1)
+        x = F.elu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        x = self.fc_out(x)
+        return x
+
+
+
+class ConvNet3SemiStoch(general_model):
+    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info):
+        super(ConvNet3SemiStoch, self).__init__()
+        self.model_type = model_type
+        self.model_name = model_name
+        input_shape = task_info['input_shape']
+        color_channels = input_shape[0]
+        n_classes = task_info['n_classes']
+        n_filt1 = 10
+        n_filt2 = 20
+        n_hidden_fc1 = 50
+        self.conv1 = nn.Conv2d(color_channels, n_filt1, kernel_size=5)
+        self.conv2 = nn.Conv2d(n_filt1, n_filt2, kernel_size=5)
         conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
         self.fc1 = linear_layer(conv_feat_size, n_hidden_fc1)
         self.fc_out = linear_layer(n_hidden_fc1, n_classes)
