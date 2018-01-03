@@ -50,7 +50,8 @@ parser.add_argument('--log-file', type=str, help='Name of file to save log (defa
 
 prm = parser.parse_args()
 
-prm.data_path = '../data'
+from Data_Path import get_data_path
+prm.data_path = get_data_path()
 
 set_random_seed(prm.seed)
 
