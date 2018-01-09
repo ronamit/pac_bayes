@@ -74,8 +74,12 @@ class Task_Generator(object):
 
         elif self.data_source == 'Omniglot':
             chars = self.chars_splits[meta_split] #   list of chars dirs  for current meta-split
+
+            #K_Shot = prm.K_Shot if meta_split=='meta_test' else None
+            K_Shot = prm.K_Shot
+
             train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
-                n_labels=prm.N_Way, k_train_shot=prm.K_Shot,
+                n_labels=prm.N_Way, k_train_shot=K_Shot,
                 final_input_trans=final_input_trans, target_transform=target_trans)
         else:
             raise ValueError('Invalid data_source')

@@ -103,6 +103,8 @@ def get_task(chars, root_path, n_labels, k_train_shot, final_input_trans=None, t
         class_dir = classes_names[i_label]
         # First get all instances of that class
         all_class_samples = [os.path.join(class_dir, x) for x in os.listdir(os.path.join(data_dir, class_dir))]
+        if not k_train_shot:
+            k_train_shot = len(all_class_samples)
         # Sample k_train_shot instances randomly each for train
         random.shuffle(all_class_samples)
         cls_train_samp = all_class_samples[:k_train_shot]

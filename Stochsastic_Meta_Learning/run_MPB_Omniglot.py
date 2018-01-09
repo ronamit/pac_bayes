@@ -6,11 +6,11 @@ call(['python', 'main_Meta_Bayes.py',
       '--N_Way', '5',
       '--K_Shot', '5',
       '--n_train_tasks', '0',
-      '--data-transform', 'Rotate90',
-      '--model-name',   'ConvNet3SemiStoch', # TODO: implement stochastic 'OmConvNet',
+      '--model-name',   'ConvNet3', # TODO: implement stochastic 'OmConvNet',
+      '--complexity_type', 'NewBoundMcAllaster',
       '--n_test_tasks', '10',
-      '--n_meta_train_epochs', '3000',
-      '--n_inner_steps', '50',
+      '--n_meta_train_epochs', '300', # 3000
+      '--n_inner_steps', '10000',
       '--meta_batch_size', '32',  # 32
       '--mode', 'MetaTrain',  # 'MetaTrain'  \ 'LoadMetaModel'
       # '--override_eps_std', '1e-3',

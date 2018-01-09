@@ -9,7 +9,7 @@ import torch
 import torch.optim as optim
 
 from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
-
+from Single_Task import learn_single_Bayes
 from Models.stochastic_models import get_model
 from Single_Task import learn_single_standard
 from Utils.data_gen import Task_Generator
@@ -26,8 +26,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
 
-parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
-                    default=5)
+parser.add_argument('--max_n_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
+                    default=20)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
@@ -73,7 +73,7 @@ parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
-                    default=100)
+                    default=10)
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
@@ -106,6 +106,7 @@ prm.data_path = get_data_path()
 
 set_random_seed(prm.seed)
 
+prm.num_epochs = prm.n_meta_test_epochs
 
 # Weights initialization (for Bayesian net):
 prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
@@ -143,9 +144,15 @@ task_generator = Task_Generator(prm)
 
 start_time = timeit.default_timer()
 
-if prm.mode == 'MetaTrain':
+max_n_tasks = prm.max_n_tasks
+n_tasks_vec = np.arange(max_n_tasks)
+mean_error_per_tasks_n = np.zeros(max_n_tasks)
+std_error_per_tasks_n = np.zeros(max_n_tasks)
 
-    n_train_tasks = prm.n_train_tasks
+
+
+for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
+
     if n_train_tasks:
         # In this case we generate a finite set of train (observed) task before meta-training.
         # Generate the data sets of the training tasks:
@@ -158,82 +165,72 @@ if prm.mode == 'MetaTrain':
         f_path = save_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
         print('Trained prior saved in ' + f_path)
     else:
-        # In this case we observe new tasks generated from the task-distribution in each meta-iteration.
-        write_result(
-            '-' * 5 + 'Infinite train tasks - New training tasks are drawn from tasks distribution in each iteration...' + '-' * 5,
-            prm.log_file)
+       # learn from scratch
+       prior_model = None
 
-        # Meta-training to learn meta-prior (theta params):
-        prior_model = meta_train_Bayes_infinite_tasks.run_meta_learning(task_generator, prm)
+    # -------------------------------------------------------------------------------------------
+    # Generate the data sets of the test tasks:
+    # -------------------------------------------------------------------------------------------
 
+    n_test_tasks = prm.n_test_tasks
 
-elif prm.mode == 'LoadMetaModel':
+    limit_train_samples_in_test_tasks = prm.limit_train_samples_in_test_tasks
+    if limit_train_samples_in_test_tasks == 0:
+        limit_train_samples_in_test_tasks = None
 
-    # Loads  previously training prior.
-    # First, create the model:
-    prior_model = get_model(prm)
-    # Then load the weights:
-    load_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
-    print('Pre-trained  prior loaded from ' + dir_path)
-else:
-    raise ValueError('Invalid mode')
-
-# -------------------------------------------------------------------------------------------
-# Generate the data sets of the test tasks:
-# -------------------------------------------------------------------------------------------
-
-n_test_tasks = prm.n_test_tasks
-
-limit_train_samples_in_test_tasks = prm.limit_train_samples_in_test_tasks
-if limit_train_samples_in_test_tasks == 0:
-    limit_train_samples_in_test_tasks = None
-
-write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
-             format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
+    write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
+                 format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
 
 
-test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test',
-                                                   limit_train_samples=limit_train_samples_in_test_tasks)
-#
-# -------------------------------------------------------------------------------------------
-#  Run Meta-Testing
-# -------------------------------------------------------------------------------
-write_result('Meta-Testing with transferred prior....', prm.log_file)
+    test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test',
+                                                           limit_train_samples=limit_train_samples_in_test_tasks)
+    #
+    # -------------------------------------------------------------------------------------------
+    #  Run Meta-Testing
+    # -------------------------------------------------------------------------------
+    write_result('Meta-Testing with transferred prior....', prm.log_file)
 
-test_err_bayes = np.zeros(n_test_tasks)
-for i_task in range(n_test_tasks):
-    print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
-    task_data = test_tasks_data[i_task]
-    test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+    test_err_bayes = np.zeros(n_test_tasks)
+    for i_task in range(n_test_tasks):
+        print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
+        task_data = test_tasks_data[i_task]
+        if prior_model:
+            test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+        else:
+            # learn from scratch
+            test_err_bayes[i_task], _ = learn_single_Bayes.run_learning(task_data, prm, verbose=0)
+
+    mean_error_per_tasks_n[i_task_n]  = test_err_bayes.mean()
+    std_error_per_tasks_n[i_task_n] = test_err_bayes.std()
+# end n_tasks loop
 
 
-# -------------------------------------------------------------------------------------------
-#  Compare to standard learning
-# -------------------------------------------------------------------------------------------
-#
-# test_err_standard = np.zeros(n_test_tasks)
-# write_result('Run standard learning from scratch....', prm.log_file)
-# prm_standard = deepcopy(prm)
-# prm_standard.num_epochs = prm.n_meta_test_epochs
-# for i_task in range(n_test_tasks):
-#     print('Standard learning task {} out of {}...'.format(i_task, n_test_tasks))
-#     task_data = test_tasks_data[i_task]
-#     test_err_standard[i_task], _ = learn_single_standard.run_learning(task_data, prm_standard, verbose=0)
-#     write_result('Standard - Avg test err: {:.3}%, STD: {:.3}%'.
-#                  format(100 * test_err_standard.mean(), 100 * test_err_standard.std()), prm.log_file)
 
 # -------------------------------------------------------------------------------------------
 #  Print results
 # -------------------------------------------------------------------------------------------
-#  Print prior analysis
-# -------------------------------------------------------------------------------------------
-from Stochsastic_Meta_Learning.Analyze_Prior import run_prior_analysis
-run_prior_analysis(prior_model)
+
+
+import pickle, os
+# Saving the objects:
+with open(os.path.join(dir_path, 'results.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
+    pickle.dump([mean_error_per_tasks_n, std_error_per_tasks_n, n_tasks_vec], f)
+
+# # Getting back the objects:
+# with open('objs.pkl') as f:  # Python 3: open(..., 'rb')
+#     obj0, obj1, obj2 = pickle.load(f)
+
+
+import matplotlib.pyplot as plt
+plt.figure()
+
+plt.errorbar(n_tasks_vec, 100*mean_error_per_tasks_n, yerr=100*std_error_per_tasks_n)
+plt.xticks(n_tasks_vec)
+plt.xlabel('Number of training-tasks')
+plt.ylabel('Error on new task [%]')
+plt.show()
 
 stop_time = timeit.default_timer()
 write_result('Total runtime: ' +
              time.strftime("%H hours, %M minutes and %S seconds", time.gmtime(stop_time - start_time)),  prm.log_file)
 # -------------------------------------------------------------------------------------------
-write_result('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
-write_result('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
-             .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm.log_file)
