@@ -175,8 +175,6 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     elif complexity_type == 'NoComplexity':
         complex_term = Variable(cmn.zeros_gpu(1), requires_grad=False)
 
-    elif complexity_type == 'None':
-        complex_term = 0
     else:
         raise ValueError('Invalid complexity_type')
 

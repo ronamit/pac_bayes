@@ -57,8 +57,14 @@ def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
         # end grad steps loop
 
         # Sample new  (validation) data batch for this task:
-        batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
-                                                    mb_data_loaders[i_task]['train'])
+        if hasattr(prm, 'MAML_Use_Test_Data') and prm.MAML_Use_Test_Data:
+            batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
+                                                        mb_data_loaders[i_task]['test'])
+        else:
+            batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
+                                                     mb_data_loaders[i_task]['train'])
+
+
         inputs, targets = data_gen.get_batch_vars(batch_data, prm)
         outputs = model(inputs, fast_weights)
         total_objective += loss_criterion(outputs, targets)

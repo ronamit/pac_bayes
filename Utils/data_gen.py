@@ -42,6 +42,12 @@ class Task_Generator(object):
             final_input_trans = [create_pixel_permute_trans(prm)]
             target_trans = []
 
+        elif self.data_transform == 'Shuffled_Pixels':
+            # Create a fixed random pixels permutation, applied to all images
+            final_input_trans = [create_limited_pixel_permute_trans(prm)]
+            target_trans = []
+
+
         elif self.data_transform == 'Permute_Labels':
             # Create a fixed random label permutation, applied to all images
             target_trans = [create_label_permute_trans(prm)]
@@ -220,6 +226,22 @@ def create_pixel_permute_trans(prm):
     transform_func = lambda x: permute_pixels(x, inds_permute)
     return transform_func
 
+def create_limited_pixel_permute_trans(prm):
+    info = get_info(prm)
+    input_shape = info['input_shape']
+    input_size = input_shape[0] * input_shape[1] * input_shape[2]
+    inds_permute = torch.LongTensor(np.arange(0, input_size))
+
+    for i_shuffle in range(prm.n_pixels_shuffels):
+        i1 = np.random.randint(0, input_size)
+        i2 = np.random.randint(0, input_size)
+        temp = inds_permute[i1]
+        inds_permute[i1] = inds_permute[i2]
+        inds_permute[i2] = temp
+
+    transform_func = lambda x: permute_pixels(x, inds_permute)
+    return transform_func
+
 def permute_pixels(x, inds_permute):
     ''' Permute pixels of a tensor image'''
     im_H = x.shape[1]
@@ -228,6 +250,11 @@ def permute_pixels(x, inds_permute):
     x = x.view(input_size)  # flatten image
     x = x[inds_permute]
     x = x.view(1, im_H, im_W)
+    # debug: show  image
+    # import matplotlib.pyplot as plt
+    # plt.imshow(x.numpy()[0])
+    # plt.show()
+
     return x
 
 def create_label_permute_trans(prm):

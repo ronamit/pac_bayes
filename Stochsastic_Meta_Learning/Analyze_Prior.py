@@ -112,11 +112,11 @@ if __name__ == "__main__":
 
     dir_path = './saved'
 
-    name = 'Permuted_pixels'  # 'Permuted_pixels' / Permuted_labels
+    exp_id = 1 # 1 'Permuted_pixels' / 2 Permuted_labels
 
-    if name == 'Permuted_pixels':
+    if exp_id == 1:
         # Permute Pixels:
-        file_name_prior = 'prior_New_PermutePixels'
+        file_name_prior = 'meta_model_PemutePixels100_800_400_400'
         prm.model_name = 'FcNet3'
         layers_names = ('FC1', 'FC2', 'FC3', 'FC_out')
         # ***************

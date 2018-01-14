@@ -27,27 +27,27 @@ parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
 
 parser.add_argument('--max_n_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
-                    default=20)
+                    default=10)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
+                    default='Shuffled_Pixels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 Shuffled_Pixels
 
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # ConvNet3 / 'FcNet3'
+                    default='FcNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=150)  # 10 / 100
+                    default=300)  # 10 / 100
 parser.add_argument('--n_inner_steps', type=int, help='For infinite tasks case, number of steps for training per meta-batch of tasks',
                     default=50)  #
 
 parser.add_argument('--n_meta_test_epochs', type=int, help='number of epochs to train',
-                    default=200)  # 10 / 300
+                    default=300)  # 10 / 300
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -59,7 +59,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
                     default=1000)
 
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
-                    default=5)
+                    default=16)
 # Run parameters:
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
@@ -98,9 +98,7 @@ parser.add_argument('--complexity_type', type=str,
                     default='NewBoundSeeger')
 
 parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
-                    default=200)
-
-
+                    default=300)
 
 
 prm = parser.parse_args()

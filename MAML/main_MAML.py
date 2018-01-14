@@ -86,10 +86,14 @@ parser.add_argument('--chars_split_type', type=str, help='how to split the Omnig
 parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how many characters to use for meta-training, if split type is random',
                     default=1200)
 
+parser.add_argument('--MAML_Use_Test_Data', type=bool, help='If true MAML evaluates loss with batch from test data (instead train)',
+                    default=False)
 
 prm = parser.parse_args()
 from Data_Path import get_data_path
 prm.data_path = get_data_path()
+
+
 
 set_random_seed(prm.seed)
 

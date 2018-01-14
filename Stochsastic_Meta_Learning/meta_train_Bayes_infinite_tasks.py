@@ -39,9 +39,7 @@ def run_meta_learning(task_generator, prm):
     n_inner_steps = prm.n_inner_steps
 
 
-    # The posteriors models will adjust to new tasks in eacxh meta-batch
-    # Create posterior models for each task:
-    posteriors_models = [get_model(prm) for _ in range(meta_batch_size)]
+
 
     # -----------------------------------------------------------------------------------------------------------#
     # Main script
@@ -62,7 +60,7 @@ def run_meta_learning(task_generator, prm):
     # Training loop:
     test_acc_avg = 0.0
     for i_iter in range(n_meta_iterations):
-        prior_model, posteriors_models, test_acc_avg = run_meta_iteration(i_iter, prior_model, posteriors_models, task_generator, prm)
+        prior_model, posteriors_models, test_acc_avg = run_meta_iteration(i_iter, prior_model, task_generator, prm)
 
     # Note: test_acc_avg is the last checked test error in a meta-training batch
     #  (not the final evaluation which is done on the meta-test tasks)
@@ -79,7 +77,7 @@ def run_meta_learning(task_generator, prm):
 # -------------------------------------------------------------------------------------------
 #  Training epoch  function
 # -------------------------------------------------------------------------------------------
-def run_meta_iteration(i_iter, prior_model, posteriors_models, task_generator, prm):
+def run_meta_iteration(i_iter, prior_model, task_generator, prm):
     # In each meta-iteration we draw a meta-batch of several tasks
     # Then we take a grad step with prior.
 
@@ -98,6 +96,16 @@ def run_meta_iteration(i_iter, prior_model, posteriors_models, task_generator, p
 
     # For each task, prepare an iterator to generate training batches:
     mb_iterators = [iter(mb_data_loaders[ii]['train']) for ii in range(meta_batch_size)]
+
+    # The posteriors models will adjust to new tasks in eacxh meta-batch
+    # Create posterior models for each task:
+    posteriors_models = [get_model(prm) for _ in range(meta_batch_size)]
+    init_from_prior = True
+    if init_from_prior:
+        for post_model in posteriors_models:
+            post_model.load_state_dict(prior_model.state_dict())
+
+
 
     # Gather all tasks posterior params:
     all_post_param = sum([list(posterior_model.parameters()) for posterior_model in posteriors_models], [])
@@ -122,8 +130,9 @@ def run_meta_iteration(i_iter, prior_model, posteriors_models, task_generator, p
         log_interval = 20
         if (i_inner_step) % log_interval == 0:
             batch_acc = info['correct_count'] / info['sample_count']
-            print(cmn.status_string(i_iter, n_meta_iterations, i_inner_step, n_inner_steps,
-                                    batch_acc, total_objective.data[0]))
+            print(cmn.status_string(i_iter, n_meta_iterations, i_inner_step, n_inner_steps, batch_acc, total_objective.data[0]) +
+                  ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t'.
+                  format(info['avg_empirical_loss'], info['avg_intra_task_comp']))
 
     # Print status = on test set of meta-batch:
     log_interval_eval = 10

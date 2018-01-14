@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot",
                     default='MNIST')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels' ",
+parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
@@ -95,7 +95,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Generate task data set:
 task_generator = data_gen.Task_Generator(prm)
-limit_train_samples = None  # None
+limit_train_samples = 2000  # None
 data_loader = task_generator.get_data_loader(prm, limit_train_samples=limit_train_samples)
 
 # -------------------------------------------------------------------------------------------

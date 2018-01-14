@@ -30,7 +30,7 @@ parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training t
                     default=5)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
+                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 / Limited_Permute_Pixels
 
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
