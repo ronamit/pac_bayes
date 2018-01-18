@@ -23,6 +23,14 @@ torch.backends.cudnn.benchmark = True  # For speed improvement with models with 
 # Training settings
 parser = argparse.ArgumentParser()
 
+
+parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
+                    default='log')
+parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
+                    default=300)
+
+
+
 parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
 
@@ -75,8 +83,7 @@ parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
                     default=10)
 
-parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
-                    default='log')
+
 
 # Omniglot Parameters:
 parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
@@ -97,8 +104,6 @@ parser.add_argument('--complexity_type', type=str,
                     help=" 'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBoundMcAllaster / NewBoundSeeger'",
                     default='NewBoundSeeger')
 
-parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
-                    default=300)
 
 
 prm = parser.parse_args()
@@ -111,10 +116,7 @@ set_random_seed(prm.seed)
 prm.num_epochs = prm.n_meta_test_epochs
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-# Note:
-# 1. start with small sigma - so gradients variance estimate will be low
-# 2.  don't init with too much std so that complexity term won't be too large
+prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -147,7 +149,7 @@ task_generator = Task_Generator(prm)
 start_time = timeit.default_timer()
 
 max_n_tasks = prm.max_n_tasks
-n_tasks_vec = np.arange(1, max_n_tasks)
+n_tasks_vec = np.arange(1, max_n_tasks+1)
 mean_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 std_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 
@@ -215,7 +217,8 @@ for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
 
 import pickle, os
 # Saving the objects:
-with open(os.path.join(dir_path, 'results.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
+results_file_name = prm.log_file
+with open(os.path.join(dir_path, results_file_name+'.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
     pickle.dump([mean_error_per_tasks_n, std_error_per_tasks_n, n_tasks_vec], f)
 
 # # Getting back the objects:

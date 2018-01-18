@@ -7,7 +7,9 @@ import torch.utils.data as data_utils
 from torch.autograd import Variable
 import multiprocessing, os
 import numpy as np
-import Utils.omniglot as omniglot
+from Utils import omniglot
+from Utils import imagenet_data
+
 import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------
@@ -26,6 +28,9 @@ class Task_Generator(object):
             # Randomly split the characters to meta-train and meta-test
             # Later, tasks will be generated using this characters
             self.chars_splits = omniglot.split_chars(prm.data_path, prm.chars_split_type, prm.n_meta_train_chars)
+
+        elif self.data_source == 'SmallImageNet':
+            self.class_split = imagenet_data.split_classes(prm)
 
 
     def create_meta_batch(self, prm, n_tasks, meta_split='meta_train', limit_train_samples=None):
@@ -78,17 +83,29 @@ class Task_Generator(object):
             # train_dataset = create_sinusoid_data(task_param, n_samples=10)
             # test_dataset = create_sinusoid_data(task_param, n_samples=100)
 
+
+        elif self.data_source == 'SmallImageNet':
+            labels_in_split = self.class_split[meta_split]  # list of chars dirs  for current meta-split
+            if meta_split == 'meta_test':
+                k_train_shot = prm.K_Shot_MetaTest
+            else:
+                k_train_shot = prm.K_Shot_MetaTrain
+            train_dataset, test_dataset = imagenet_data.get_task(labels_in_split, prm.N_Way, k_train_shot, prm)
+
+
         elif self.data_source == 'Omniglot':
             chars = self.chars_splits[meta_split] #   list of chars dirs  for current meta-split
-
-            #K_Shot = prm.K_Shot if meta_split=='meta_test' else None
-            K_Shot = prm.K_Shot
-
+            if meta_split == 'meta_test':
+                k_train_shot = prm.K_Shot_MetaTest
+            else:
+                k_train_shot = prm.K_Shot_MetaTrain
             train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
-                n_labels=prm.N_Way, k_train_shot=K_Shot,
+                n_labels=prm.N_Way, k_train_shot=k_train_shot,
                 final_input_trans=final_input_trans, target_transform=target_trans)
         else:
             raise ValueError('Invalid data_source')
+
+
 
         # Limit the training samples :
         if limit_train_samples:
@@ -186,6 +203,9 @@ def get_info(prm):
 
     elif prm.data_source == 'Omniglot':
         info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
+
+    elif prm.data_source == 'SmallImageNet':
+        info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way}
 
     else:
         raise ValueError('Invalid data_source')

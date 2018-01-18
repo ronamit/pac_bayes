@@ -20,6 +20,7 @@ torch.backends.cudnn.benchmark = True  # For speed improvement with models with 
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
 
+
 # Training settings
 parser = argparse.ArgumentParser()
 
@@ -27,7 +28,7 @@ parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
 
 parser.add_argument('--max_n_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
-                    default=20)
+                    default=10)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
@@ -42,12 +43,12 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=150)  # 10 / 100
+                    default=300)  # 10 / 100
 parser.add_argument('--n_inner_steps', type=int, help='For infinite tasks case, number of steps for training per meta-batch of tasks',
                     default=50)  #
 
 parser.add_argument('--n_meta_test_epochs', type=int, help='number of epochs to train',
-                    default=200)  # 10 / 300
+                    default=300)  # 10 / 300
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
@@ -59,7 +60,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
                     default=1000)
 
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
-                    default=5)
+                    default=16)
 # Run parameters:
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
@@ -97,10 +98,6 @@ parser.add_argument('--complexity_type', type=str,
                     help=" 'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBoundMcAllaster / NewBoundSeeger'",
                     default='NewBoundSeeger')
 
-parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
-                    default=200)
-
-
 
 
 prm = parser.parse_args()
@@ -113,10 +110,8 @@ set_random_seed(prm.seed)
 prm.num_epochs = prm.n_meta_test_epochs
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-# Note:
-# 1. start with small sigma - so gradients variance estimate will be low
-# 2.  don't init with too much std so that complexity term won't be too large
+prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
+
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -149,7 +144,7 @@ task_generator = Task_Generator(prm)
 start_time = timeit.default_timer()
 
 max_n_tasks = prm.max_n_tasks
-n_tasks_vec = np.arange(1, max_n_tasks)
+n_tasks_vec = np.arange(1, max_n_tasks+1)
 mean_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 std_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 
@@ -217,7 +212,8 @@ for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
 
 import pickle, os
 # Saving the objects:
-with open(os.path.join(dir_path, 'results.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
+results_file_name = prm.log_file
+with open(os.path.join(dir_path, results_file_name+'.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
     pickle.dump([mean_error_per_tasks_n, std_error_per_tasks_n, n_tasks_vec], f)
 
 # # Getting back the objects:

@@ -97,8 +97,6 @@ parser.add_argument('--complexity_type', type=str,
                     help=" 'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBoundMcAllaster / NewBoundSeeger'",
                     default='NewBoundSeeger')
 
-#
-
 prm = parser.parse_args()
 
 from Data_Path import get_data_path
@@ -108,10 +106,7 @@ set_random_seed(prm.seed)
 
 
 # Weights initialization (for Bayesian net):
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
-# Note:
-# 1. start with small sigma - so gradients variance estimate will be low
-# 2.  don't init with too much std so that complexity term won't be too large
+prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1

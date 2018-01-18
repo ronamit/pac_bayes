@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
 
     # Weights initialization (for Bayesian net):
-    prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+    prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
 
     #
     #  Load pre-trained prior

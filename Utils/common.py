@@ -4,9 +4,7 @@
 from __future__ import absolute_import, division, print_function
 
 from datetime import datetime
-import glob
 import os
-import shutil
 from torch.autograd import Variable
 import torch.nn as nn
 import torch
@@ -101,6 +99,8 @@ def load_model_state(model, dir_path, name):
 #     print('Data path: ', pth)
 #     return pth
 
+
+
 # -------------------------------------------------------------------------------------------
 #  Regularization
 # -------------------------------------------------------------------------------------------
@@ -117,6 +117,7 @@ def net_norm(model, p=2):
         target = Variable(zeros_gpu(param.size()), requires_grad=False)  # dummy target
         total_norm += loss_crit(param, target)
     return total_norm
+
 
 
 # -----------------------------------------------------------------------------------------------------------#

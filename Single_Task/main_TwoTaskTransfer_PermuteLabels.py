@@ -78,8 +78,7 @@ prm_freeze = deepcopy(prm)
 prm_freeze.not_freeze_list = ['fc_out']
 
 # For bayes experiment -
-# Weights initialization:
-prm.bayes_inits = {'Bayes-Mu': {'bias': 0, 'std': 0.1}, 'Bayes-log-var': {'bias': -10, 'std': 0.1}}
+prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
 prm.n_MC = 1 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 

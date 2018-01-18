@@ -12,7 +12,12 @@ from Models.stochastic_layers import StochasticLayer
 
 
 
+# -----------------------------------------------------------------------------------------------------------#
+
 def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
+
+    if len(test_loader) == 0:
+        return 0.0, 0.0
 
     if prm.test_type == 'MaxPosterior':
         info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
@@ -30,7 +35,6 @@ def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
 def run_test_max_posterior(model, test_loader, loss_criterion, prm):
 
     n_test_samples = len(test_loader.dataset)
-    n_test_batches = len(test_loader)
 
     model.eval()
     test_loss = 0
@@ -60,7 +64,7 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
 
-        batch_size = min(prm.test_batch_size, n_test_samples)
+        batch_size = inputs.shape[0] # min(prm.test_batch_size, n_test_samples)
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
@@ -73,7 +77,7 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
                 pred_val = pred[i_sample].cpu().numpy()[0]
                 votes[i_sample, pred_val] += 1
 
-        majority_pred = votes.max(1, keepdim=True)[1]
+        majority_pred = votes.max(1, keepdim=True)[1] # find argmax class for each sample
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples

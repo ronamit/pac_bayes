@@ -1,10 +1,34 @@
 
 from sklearn.datasets import fetch_20newsgroups
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 from pprint import pprint
 import random
 import numpy as np
 
 n_labels_total = 20
+
+
+class newsgroups_dataset():
+    def __init__(self):
+        super(newsgroups_dataset, self).__init__()
+        newsgroups_train = fetch_20newsgroups(subset='train', remove=('headers', 'footers', 'quotes'))
+        newsgroups_test = fetch_20newsgroups(subset='train', remove=('headers', 'footers', 'quotes'))
+        vectorizer = TfidfVectorizer()
+        self.train_vectors = vectorizer.fit_transform(newsgroups_train.data)
+        self.train_targets = newsgroups_train.target
+        self.test_vectors = vectorizer.fit_transform(newsgroups_test.data)
+        self.test_targets = newsgroups_test.target
+
+
+
+# def __getitem__(self, index):
+
+    # def __len__(self):
+
+
+
+
 
 
 def create_meta_split(n_meta_train_labels):
@@ -30,10 +54,19 @@ def get_task(labels_in_split,  n_labels, k_train_shot):
     task_categories = [all_categories[label] for label in task_labels]
 
     train_dataset = fetch_20newsgroups(subset='train', categories=task_categories, shuffle=True)
-    train_dataset = None
-    test_dataset = None
+    test_dataset = fetch_20newsgroups(subset='test', categories=task_categories, shuffle=True)
+
+    # Take subset of training data:
+    k_train_shot
+
+
     return train_dataset, test_dataset
 
+
+
+
+
+dataset = newsgroups_dataset()
 
 n_meta_train_labels = 10
 labels_splits = create_meta_split(n_meta_train_labels)
