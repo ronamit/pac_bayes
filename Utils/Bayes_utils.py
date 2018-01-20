@@ -124,17 +124,22 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
         if prm.complexity_type == 'NewBoundMcAllaster' or  prm.complexity_type == 'NewBoundSeeger':
             delta =  prm.delta
             meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
-        elif prm.complexity_type == 'KLD':
-            meta_complex_term = hyper_kl
-        else:
+
+        elif prm.complexity_type == 'PAC_Bayes_Pentina':
             meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
+
+        elif prm.complexity_type == 'Variational_Bayes':
+            meta_complex_term = hyper_kl
+
+        else:
+            raise ValueError('Invalid complexity_type')
     return meta_complex_term
 
 #  -------------------------------------------------------------------------------------------
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_empirical_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
+def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
@@ -149,7 +154,7 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
 
     elif prm.complexity_type == 'NewBoundSeeger':
         seeger_eps = (1 / n_samples) * (tot_kld + hyper_kl + math.log(4 * math.sqrt(n_samples) / delta))
-        sqrt_arg = 2 * seeger_eps * task_empirical_loss
+        sqrt_arg = 2 * seeger_eps * empirical_loss
         sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
@@ -159,8 +164,9 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,
         # we need to multiply by the average_loss by total number of samples
-        # Then we normalize the objective by n_samples
-        complex_term = (1 / n_samples) * tot_kld
+        empirical_loss = n_samples * empirical_loss
+        complex_term = tot_kld
+
 
     # elif complexity_type == 'PAC_Bayes_Seeger':
     #     # Seeger complexity is unique since it requires the empirical loss
@@ -178,7 +184,7 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     else:
         raise ValueError('Invalid complexity_type')
 
-    return complex_term
+    return empirical_loss, complex_term
 
 
 def get_total_kld(prior_model, post_model, prm, noised_prior):

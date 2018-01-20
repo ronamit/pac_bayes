@@ -5,7 +5,7 @@ import timeit
 
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
+from Utils.Bayes_utils import get_bayes_task_objective, run_test_Bayes
 from Utils.common import grad_step, count_correct, get_loss_criterion, write_to_log
 
 
@@ -75,10 +75,11 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 # Calculate empirical loss:
                 outputs = post_model(inputs)
                 curr_empirical_loss = loss_criterion(outputs, targets)
-                task_empirical_loss += (1 / n_MC) * curr_empirical_loss
 
-                curr_complexity = get_posterior_complexity_term(
-                    prm, prior_model, post_model, n_train_samples, curr_empirical_loss, noised_prior=False)
+                curr_empirical_loss, curr_complexity = get_bayes_task_objective(prm, prior_model, post_model,
+                                                           n_train_samples, curr_empirical_loss, noised_prior=False)
+
+                task_empirical_loss += (1 / n_MC) * curr_empirical_loss
                 task_complexity += (1 / n_MC) * curr_complexity
 
                 correct_count += count_correct(outputs, targets)

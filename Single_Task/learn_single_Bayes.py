@@ -6,7 +6,7 @@ import timeit
 from copy import deepcopy
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import run_test_Bayes, get_posterior_complexity_term
+from Utils.Bayes_utils import run_test_Bayes, get_bayes_task_objective
 from Utils.common import grad_step, correct_rate, get_loss_criterion, get_value
 
 
@@ -78,7 +78,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
             #  complexity/prior term:
             if prior_model:
-                complexity_term = get_posterior_complexity_term(
+                empirical_loss, complexity_term = get_bayes_task_objective(
                     prm, prior_model, post_model, n_train_samples, empirical_loss)
             else:
                 complexity_term = 0.0
@@ -101,9 +101,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
 
     #  Update Log file
-    if verbose == 1:
-        cmn.write_to_log(cmn.get_model_string(post_model), prm)
-        cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
+    update_file = not verbose == 0
+    cmn.write_to_log(cmn.get_model_string(post_model), prm, update_file=update_file)
+    cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
+    cmn.write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
 
     start_time = timeit.default_timer()
 

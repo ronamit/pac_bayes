@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 # from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, get_meta_complexity_term
+from Utils.Bayes_utils import get_bayes_task_objective, run_test_Bayes, get_meta_complexity_term
 from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, get_value
 
 # -------------------------------------------------------------------------------------------
@@ -57,15 +57,16 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
             # Empirical Loss on current task:
             outputs = post_model(inputs)
             curr_empirical_loss = loss_criterion(outputs, targets)
-            task_empirical_loss += (1 / n_MC) * curr_empirical_loss
 
             correct_count += count_correct(outputs, targets)
             sample_count += inputs.size(0)
 
             # Intra-task complexity of current task:
-            curr_complexity = get_posterior_complexity_term(
+            curr_empirical_loss, curr_complexity = get_bayes_task_objective(
                 prm, prior_model, post_model,
-                n_samples, curr_empirical_loss, hyper_kl, n_train_tasks=n_train_tasks, noised_prior=True)
+                n_samples, curr_empirical_loss, hyper_kl, n_train_tasks=n_train_tasks)
+
+            task_empirical_loss += (1 / n_MC) * curr_empirical_loss
             task_complexity += (1 / n_MC) * curr_complexity
         # end Monte-Carlo loop
 

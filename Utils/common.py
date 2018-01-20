@@ -188,17 +188,20 @@ def create_result_dir(prm):
     write_to_log(message, prm, mode='w') # create new log file
 
 
-def write_to_log(message, prm, mode='a'):
+def write_to_log(message, prm, mode='a', update_file=True):
     # mode='a' is append
     # mode = 'w' is write new file
     if not isinstance(message, list):
         message = [message]
-    log_file_path = os.path.join(prm.result_dir, 'log') + '.out'
-    with open(log_file_path, mode) as f:
-        for string in message:
-            print(string, file=f)
-            print(string)
-
+    # update log file:
+    if update_file:
+        log_file_path = os.path.join(prm.result_dir, 'log') + '.out'
+        with open(log_file_path, mode) as f:
+            for string in message:
+                print(string, file=f)
+    # print to console:
+    for string in message:
+        print(string)
 
 def write_final_result(test_acc, run_time, prm, result_name='', verbose=1):
     message = []

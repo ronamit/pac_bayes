@@ -81,9 +81,10 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
-    if verbose == 1:
-        cmn.write_to_log(cmn.get_model_string(model), prm)
-        cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
+    update_file = not verbose == 0
+    cmn.write_to_log(cmn.get_model_string(model), prm, update_file=update_file)
+    cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
+    cmn.write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
