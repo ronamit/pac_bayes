@@ -1,15 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
-import timeit
-import random
-import math
-import numpy as np
-import torch
+
 # from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, get_meta_complexity_term
-from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result, get_value
+from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, get_value
 
 # -------------------------------------------------------------------------------------------
 #

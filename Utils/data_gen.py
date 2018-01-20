@@ -106,9 +106,8 @@ class Task_Generator(object):
             raise ValueError('Invalid data_source')
 
 
-
         # Limit the training samples :
-        if limit_train_samples:
+        if limit_train_samples: # if not none/zero
             train_dataset = reduce_train_set(train_dataset, limit_train_samples)
 
         # Create data loaders:

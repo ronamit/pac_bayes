@@ -5,8 +5,8 @@ import timeit
 
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes, add_noise_to_model
-from Utils.common import grad_step, count_correct, get_loss_criterion, write_result
+from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
+from Utils.common import grad_step, count_correct, get_loss_criterion, write_to_log
 
 
 def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
@@ -102,12 +102,8 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
-    # -----------------------------------------------------------------------------------------------------------#
-    run_name = cmn.gen_run_name('Meta-Testing')
     if verbose == 1:
-        write_result('-'*10+run_name+'-'*10, prm.log_file)
-        write_result(str(prm), prm.log_file)
-        write_result('Total number of steps: {}'.format(n_batches * prm.n_meta_test_epochs), prm.log_file)
+        write_to_log('Total number of steps: {}'.format(n_batches * prm.n_meta_test_epochs), prm)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -122,7 +118,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
     test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type, verbose=verbose)
 
     test_err = 1 - test_acc
     return test_err, post_model

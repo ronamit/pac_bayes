@@ -3,14 +3,11 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 import random
-import math
 import numpy as np
-import torch
-# from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
-from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
-from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result
+from Utils import common as cmn
+from Utils.Bayes_utils import run_test_Bayes
+from Utils.common import grad_step, get_loss_criterion, write_to_log
 from Stochsastic_Meta_Learning.Get_Objective_MPB import get_objective
 
 # -------------------------------------------------------------------------------------------
@@ -123,10 +120,10 @@ def run_meta_learning(data_loaders, prm):
 
                 n_test_samples = len(test_loader.dataset)
 
-                write_result('Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
-                    prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm.log_file)
+                write_to_log('Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} (of {} samples)\n'.format(
+                    i_task, prm.test_type, test_loss, test_acc, n_test_samples), prm)
             else:
-                print('Train Task {}, Test set: {} - No test data'.format(prm.test_type, i_task))
+                print('Train Task {}, Test set: {} - No test data'.format(i_task, prm.test_type))
 
         if n_tests > 0:
             test_acc_avg /= n_tests
@@ -137,12 +134,9 @@ def run_meta_learning(data_loaders, prm):
     # -----------------------------------------------------------------------------------------------------------#
 
     # Update Log file
-    run_name = cmn.gen_run_name('Meta-Training')
-    write_result('-'*10 + run_name + '-'*10, prm.log_file)
-    write_result(str(prm), prm.log_file)
-    write_result(cmn.get_model_string(prior_model), prm.log_file)
 
-    write_result('---- Meta-Training set: {0} tasks'.format(len(data_loaders)), prm.log_file)
+    write_to_log(cmn.get_model_string(prior_model), prm)
+    write_to_log('---- Meta-Training set: {0} tasks'.format(len(data_loaders)), prm)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -159,7 +153,7 @@ def run_meta_learning(data_loaders, prm):
     test_acc_avg = run_test()
 
     # Update Log file:
-    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm.log_file, result_name=prm.test_type)
+    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm, result_name=prm.test_type)
 
     # Return learned prior:
     return prior_model

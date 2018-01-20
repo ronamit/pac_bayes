@@ -26,10 +26,6 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--log-file', type=str, help='Name of file to save log (None = no save)',
                     default='log')
-parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
-                    default=300)
-
-
 
 parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
@@ -38,7 +34,10 @@ parser.add_argument('--max_n_tasks', type=int, help='Number of meta-training tas
                     default=10)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Shuffled_Pixels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 Shuffled_Pixels
+                    default='Shuffled_Pixels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 / Shuffled_Pixels
+
+parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
+                    default=300)
 
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
@@ -84,7 +83,6 @@ parser.add_argument('--n_test_tasks', type=int,
                     default=10)
 
 
-
 # Omniglot Parameters:
 parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for Omniglot)',
                     default=5)
@@ -99,11 +97,9 @@ parser.add_argument('--override_eps_std', type=float,
                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
                     default=1.0)
 
-
 parser.add_argument('--complexity_type', type=str,
                     help=" 'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBoundMcAllaster / NewBoundSeeger'",
                     default='NewBoundSeeger')
-
 
 
 prm = parser.parse_args()
@@ -154,7 +150,6 @@ mean_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 std_error_per_tasks_n = np.zeros(len(n_tasks_vec))
 
 
-
 for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
 
     if n_train_tasks:
@@ -169,8 +164,8 @@ for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
         f_path = save_model_state(prior_model, dir_path, name=prm.meta_model_file_name)
         print('Trained prior saved in ' + f_path)
     else:
-       # learn from scratch
-       prior_model = None
+        # learn from scratch
+        prior_model = None
 
     # -------------------------------------------------------------------------------------------
     # Generate the data sets of the test tasks:
@@ -185,9 +180,8 @@ for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
     write_result('-'*5 + 'Generating {} test-tasks with at most {} training samples'.
                  format(n_test_tasks, limit_train_samples_in_test_tasks)+'-'*5, prm.log_file)
 
-
     test_tasks_data = task_generator.create_meta_batch(prm, n_test_tasks, meta_split='meta_test',
-                                                           limit_train_samples=limit_train_samples_in_test_tasks)
+                                                       limit_train_samples=limit_train_samples_in_test_tasks)
     #
     # -------------------------------------------------------------------------------------------
     #  Run Meta-Testing
@@ -199,7 +193,8 @@ for i_task_n, n_train_tasks in enumerate(n_tasks_vec):
         print('Meta-Testing task {} out of {}...'.format(1+i_task, n_test_tasks))
         task_data = test_tasks_data[i_task]
         if prior_model:
-            test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data, prior_model, prm, init_from_prior, verbose=0)
+            test_err_bayes[i_task], _ = meta_test_Bayes.run_learning(task_data,
+                                                                     prior_model, prm, init_from_prior, verbose=0)
         else:
             # learn from scratch
             test_err_bayes[i_task], _ = learn_single_Bayes.run_learning(task_data, prm, verbose=0)

@@ -81,12 +81,9 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
-    run_name = cmn.gen_run_name('Standard')
     if verbose == 1:
-        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-        cmn.write_result(str(prm), prm.log_file)
-        cmn.write_result(cmn.get_model_string(model), prm.log_file)
-        cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
+        cmn.write_to_log(cmn.get_model_string(model), prm)
+        cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -101,7 +98,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     test_acc = run_test(model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose, result_name='Standard')
+    cmn.write_final_result(test_acc, stop_time - start_time, prm, verbose=verbose, result_name='Standard')
 
     test_err = 1 - test_acc
     return test_err, model

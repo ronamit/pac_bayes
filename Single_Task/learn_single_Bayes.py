@@ -101,12 +101,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
 
     #  Update Log file
-    run_name = cmn.gen_run_name('Bayes')
     if verbose == 1:
-        cmn.write_result('-'*10+run_name+'-'*10, prm.log_file)
-        cmn.write_result(str(prm), prm.log_file)
-        cmn.write_result(cmn.get_model_string(post_model), prm.log_file)
-        cmn.write_result('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm.log_file)
+        cmn.write_to_log(cmn.get_model_string(post_model), prm)
+        cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
 
     start_time = timeit.default_timer()
 
@@ -118,7 +115,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, result_name=prm.test_type)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type)
 
     test_err = 1 - test_acc
     return test_err, post_model

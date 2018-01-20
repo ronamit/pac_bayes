@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from Models.stochastic_models import get_model
-from Utils.common import save_model_state, load_model_state, write_result, set_random_seed
+from Utils.common import save_model_state, load_model_state, load_run_data, set_random_seed
 
 # -------------------------------------------------------------------------------------------
 # Auxilary functions:
@@ -50,7 +50,7 @@ def plot_statistics(mean_list, std_list, name):
 # Analysis function:
 #----------------------------------------------------------------------------------------------
 
-def run_prior_analysis(prior_model, layers_names=None, showPlt=True):
+def run_prior_analysis(prior_model, showPlt=True):
 
     # w_mu_params = extract_param_list(prior_model,'_mean', '.w_')
     # b_mu_params = extract_param_list(prior_model,'_mean', '.b_')
@@ -62,10 +62,12 @@ def run_prior_analysis(prior_model, layers_names=None, showPlt=True):
     # w_sigma_params = log_var_to_sigma(w_log_var_params)
     # b_sigma_params = log_var_to_sigma(b_log_var_params)
 
-    plot_statistics(*get_params_statistics(w_log_var_params), name=r'$\log (\sigma^2)$')
+    mean_list, std_list = get_params_statistics(w_log_var_params)
+
+    plot_statistics(mean_list, std_list, name=r'$\log (\sigma^2)$')
     layers_inds = np.arange(n_layers)
-    if layers_names:
-        layers_names = [str(i) + ' (' + layers_names[i] + ')' for i in layers_inds]
+    if hasattr(prior_model, 'layers_names'):
+        layers_names = [str(i) + ' (' + prior_model.layers_names[i] + ')' for i in layers_inds]
     else:
         layers_names = [str(i) for i in layers_inds]
 
@@ -74,67 +76,33 @@ def run_prior_analysis(prior_model, layers_names=None, showPlt=True):
         plt.show()
 
 
-
 # -------------------------------------------------------------------------------------------
 # execute only if run as a script
 # -------------------------------------------------------------------------------------------
 if __name__ == "__main__":
 
-
+    # plot settings
     # font = {'family' : 'normal',
     #         'weight' : 'normal',
     #         'size'   : 15}
     # matplotlib.rc('font', **font)
 
-    # settings
-    parser = argparse.ArgumentParser()
 
-    parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'Sinusoid' ",
-                        default='MNIST')
+    #***** Enter here the relative path to results dir (with the learned prior you want to analyze):
+    result_dir = ''
 
-    parser.add_argument('--seed', type=int,  help='random seed',
-                        default=1)
+    prm, info_dict = load_run_data(result_dir)
 
-    parser.add_argument('--log-file', type=str, help='Name of file to save log (default: no save)',
-                        default='log')
-
-    prm = parser.parse_args()
-
-    set_random_seed(prm.seed)
-
-
-    # Weights initialization (for Bayesian net):
-    prm.log_var_init = {'mean':-10, 'std':0.1} # The initial value for the log-var parameter (rho) of each weight
-
-    #
-    #  Load pre-trained prior
-    #
-
-    dir_path = './saved'
-
-    exp_id = 1 # 1 'Permuted_pixels' / 2 Permuted_labels
-
-    if exp_id == 1:
-        # Permute Pixels:
-        file_name_prior = 'meta_model_PemutePixels100_800_400_400'
-        prm.model_name = 'FcNet3'
-        layers_names = ('FC1', 'FC2', 'FC3', 'FC_out')
-        # ***************
-    else:
-        # Permute Labels:
-        file_name_prior = 'pror_Permuted_labels_MNIST'
-        prm.model_name = 'ConvNet'
-        layers_names = ('conv1', 'conv2', 'FC1', 'FC_out')
-
-    full_path = os.path.join(dir_path, file_name_prior)
+    # path to the saved learned meta-parameters
+    saved_path = prm.result_dir + 'meta_model.pt'
 
     # Loads  previously training prior.
     # First, create the model:
     prior_model = get_model(prm)
     # Then load the weights:
-    is_loaded = load_model_state(prior_model, dir_path, name=file_name_prior)
+    is_loaded = load_model_state(prior_model, saved_path)
     if not is_loaded:
-        raise ValueError('No prior found in the path: ' + full_path)
-    print('Pre-trained  prior loaded from ' + full_path)
+        raise ValueError('No prior found in the path: ' + saved_path)
+    print('Pre-trained  prior loaded from ' + saved_path)
 
-    run_prior_analysis(prior_model, layers_names, showPlt=True)
+    run_prior_analysis(prior_model, showPlt=True)

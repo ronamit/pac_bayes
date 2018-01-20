@@ -10,7 +10,8 @@ import torch.nn as nn
 import torch
 import numpy as np
 import random
-
+import sys
+import pickle
 # -----------------------------------------------------------------------------------------------------------#
 # General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
@@ -56,30 +57,15 @@ def correct_rate(outputs, targets):
     return n_correct / outputs.size()[0]
 
 
-def save_models_dict(models_dict, dir_path):
+def save_model_state(model, f_path):
 
-    for name in models_dict:
-        save_model_state(models_dict[name], dir_path, name)
-
-def load_models_dict(models_dict, dir_path):
-    ''' Load models '''
-    for name in models_dict:
-        load_model_state(models_dict[name], dir_path, name)
-
-
-def save_model_state(model, dir_path, name):
-
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    f_path = os.path.join(dir_path, name + '.pt')
     with open(f_path, 'wb') as f_pointer:
         torch.save(model.state_dict(), f_pointer)
     return f_path
 
 
-def load_model_state(model, dir_path, name):
+def load_model_state(model, f_path):
 
-    f_path = os.path.join(dir_path, name + '.pt')
     if not os.path.exists(f_path):
         return False
     with open(f_path, 'rb') as f_pointer:
@@ -188,17 +174,53 @@ def get_model_string(model):
 # Result saving
 # -----------------------------------------------------------------------------------------------------------#
 
-def write_result(str, log_file_name):
-
-    print(str)
-    if log_file_name:
-        with open(log_file_name + '.out', 'a') as f:
-            print(str, file=f)
-
-
-def gen_run_name(name_prefix):
+def create_result_dir(prm):
+    # If run_name empty, set according to time
     time_str = datetime.now().strftime(' %Y-%m-%d %H:%M:%S')
-    return name_prefix + time_str
+    if prm.run_name == '':
+        prm.run_name = time_str
+    prm.result_dir = os.path.join('saved', prm.run_name)
+    if not os.path.exists(prm.result_dir):
+        os.makedirs(prm.result_dir)
+    message = ['Log file created at ' + time_str,
+               'Run script: ' + sys.argv[0],
+               'Parameters:', str(prm), '-'*50]
+    write_to_log(message, prm, mode='w') # create new log file
+
+
+def write_to_log(message, prm, mode='a'):
+    # mode='a' is append
+    # mode = 'w' is write new file
+    if not isinstance(message, list):
+        message = [message]
+    log_file_path = os.path.join(prm.result_dir, 'log') + '.out'
+    with open(log_file_path, mode) as f:
+        for string in message:
+            print(string, file=f)
+            print(string)
+
+
+def write_final_result(test_acc, run_time, prm, result_name='', verbose=1):
+    message = []
+    if verbose == 1:
+        message.append('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'))
+    message.append(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
+                     .format(100 * (1 - test_acc), run_time))
+    write_to_log(message, prm)
+
+
+def save_run_data(prm, info_dict):
+    run_data_file_path = os.path.join(prm.result_dir, 'run_data.pkl')
+    with open(run_data_file_path, 'wb') as f:
+        pickle.dump([prm, info_dict], f)
+
+
+def load_run_data(result_dir):
+    run_data_file_path = os.path.join(result_dir, 'run_data.pkl')
+    with open(run_data_file_path, 'rb') as f:
+       prm, info_dict = pickle.load(f)
+    return prm, info_dict
+
 
 # def save_code(setting_name, run_name):
 #     dir_name = setting_name + '_' + run_name
@@ -209,13 +231,5 @@ def gen_run_name(name_prefix):
 #         os.makedirs(dest_dir)
 #     for filename in glob.glob(os.path.join(source_dir, '*.*')):
 #         shutil.copy(filename, dest_dir)
-
-
-def write_final_result(test_acc,run_time, log_file_name, result_name='', verbose=1):
-    if verbose == 1:
-        write_result('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'), log_file_name)
-    write_result(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
-                     .format(100 * (1 - test_acc), run_time), log_file_name)
-
 
 

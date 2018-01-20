@@ -2,15 +2,10 @@
 from __future__ import absolute_import, division, print_function
 
 import timeit
-import random
-import math
-import numpy as np
-import torch
-# from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
-from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_posterior_complexity_term, run_test_Bayes
-from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, write_result
+from Utils import common as cmn
+from Utils.Bayes_utils import  run_test_Bayes
+from Utils.common import grad_step, get_loss_criterion, write_to_log
 from Stochsastic_Meta_Learning.Get_Objective_MPB import get_objective
 
 # -------------------------------------------------------------------------------------------
@@ -38,19 +33,13 @@ def run_meta_learning(task_generator, prm):
     n_meta_iterations = prm.n_meta_train_epochs
     n_inner_steps = prm.n_inner_steps
 
-
-
-
     # -----------------------------------------------------------------------------------------------------------#
     # Main script
     # -----------------------------------------------------------------------------------------------------------#
 
     # Update Log file
-    run_name = cmn.gen_run_name('Meta-Training')
-    write_result('-'*10 + run_name + '-'*10, prm.log_file)
-    write_result(str(prm), prm.log_file)
-    write_result(cmn.get_model_string(prior_model), prm.log_file)
-    write_result('---- Meta-Training with infinite tasks...', prm.log_file)
+    write_to_log(cmn.get_model_string(prior_model), prm)
+    write_to_log('---- Meta-Training with infinite tasks...', prm)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -166,7 +155,7 @@ def run_test(mb_data_loaders, mb_posteriors_models, loss_criterion, prm):
             #     'Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
             #         prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm.log_file)
         else:
-            print('Train Task {}, Test set: {} - No test data'.format(prm.test_type, i_task))
+            print('Train Task {}, Test set: {} - No test data'.format(i_task, prm.test_type))
 
     if n_tests > 0:
         test_acc_avg /= n_tests
