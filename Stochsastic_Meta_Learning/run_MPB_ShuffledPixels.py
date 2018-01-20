@@ -6,7 +6,7 @@ call(['python', 'main_Meta_Bayes.py',
       '--n_train_tasks', '10',
       '--model-name',   'FcNet3',
       '--complexity_type',  'NewBoundSeeger', #'NewBoundMcAllaster', NewBoundSeeger
-      '--n_test_tasks', '10',
+      '--n_test_tasks', '20',
       '--n_meta_train_epochs', '300',
       '--n_meta_test_epochs', '300',  # 300
       '--meta_batch_size', '16',  # 32

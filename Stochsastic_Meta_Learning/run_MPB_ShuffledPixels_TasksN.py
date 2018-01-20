@@ -43,7 +43,7 @@ if run_experiments:
               '--limit_train_samples_in_test_tasks', '2000',
               '--model-name',   'FcNet3',
               '--complexity_type',  'NewBoundSeeger',
-              '--n_test_tasks', '100',  # 100
+              '--n_test_tasks', '20',  # 100
               '--n_meta_train_epochs', '150',  # 150
               '--n_meta_test_epochs', '200',  # 200
               '--meta_batch_size', '16',

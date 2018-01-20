@@ -39,7 +39,7 @@ parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation',
-                    default=100)
+                    default=20)
 
 # ----- Task Parameters ---------------------------------------------#
 

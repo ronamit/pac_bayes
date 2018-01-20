@@ -26,6 +26,6 @@ call(['python', 'main_Meta_Bayes.py',
       '--model-name', 'ConvNet3',
       '--n_meta_train_epochs', '150',
       '--n_meta_test_epochs', '200',
-      '--n_test_tasks', '100',
+      '--n_test_tasks', '20',
 
       ])
