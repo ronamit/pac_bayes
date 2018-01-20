@@ -35,10 +35,6 @@ parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
 parser.add_argument('--load_model_path', type=str, help='The path the the model file, in case it is loaded (relative path)',
                     default='')
 
-parser.add_argument('--meta_model_file_name', type=str, help='File name to save meta-model or to load from',
-                    default='meta_model')
-
-
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
 
@@ -93,8 +89,8 @@ parser.add_argument('--n_meta_train_chars'
 # ----- Algorithm Parameters ---------------------------------------------#
 
 parser.add_argument('--complexity_type', type=str,
-                    help=" 'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBoundMcAllaster / NewBoundSeeger'",
-                    default='NewBoundSeeger')
+                    help=" The learning objective complexity type",
+                    default='NewBoundSeeger')  #  'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
@@ -157,7 +153,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # path to save the learned meta-parameters
-save_path = os.path.join(prm.result_dir, 'meta_model.pt')
+save_path = os.path.join(prm.result_dir, 'learned_prior.pt')
 
 task_generator = Task_Generator(prm)
 

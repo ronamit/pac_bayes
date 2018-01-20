@@ -140,8 +140,9 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
     delta = prm.delta  #  maximal probability that the bound does not hold
     tot_kld = get_total_kld(prior_model, post_model, prm, noised_prior)  # KLD between posterior and sampled prior
 
-    if complexity_type == 'KLD':
-        complex_term = tot_kld
+    if complexity_type == 'NoComplexity':
+        # set as zero
+        complex_term = Variable(cmn.zeros_gpu(1), requires_grad=False)
 
     elif prm.complexity_type == 'NewBoundMcAllaster':
         complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_kl + tot_kld + math.log(2 * n_samples / delta)))
@@ -152,23 +153,8 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
         sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
-
-    elif complexity_type == 'PAC_Bayes_McAllaster':
-        complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
-
     elif complexity_type == 'PAC_Bayes_Pentina':
         complex_term = math.sqrt(1 / n_samples) * tot_kld + hyper_kl * (1/(n_train_tasks * math.sqrt(n_samples)))
-
-    elif complexity_type == 'PAC_Bayes_Seeger':
-        # Seeger complexity is unique since it requires the empirical loss
-        # small_num = 1e-9 # to avoid nan due to numerical errors
-        # seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
-        seeger_eps = (1 / n_samples) * (tot_kld + math.log(2 * math.sqrt(n_samples) / delta))
-        sqrt_arg = 2 * seeger_eps * task_empirical_loss
-        sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
-        complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
-
-
 
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,
@@ -176,8 +162,18 @@ def get_posterior_complexity_term(prm, prior_model, post_model, n_samples, task_
         # Then we normalize the objective by n_samples
         complex_term = (1 / n_samples) * tot_kld
 
-    elif complexity_type == 'NoComplexity':
-        complex_term = Variable(cmn.zeros_gpu(1), requires_grad=False)
+    # elif complexity_type == 'PAC_Bayes_Seeger':
+    #     # Seeger complexity is unique since it requires the empirical loss
+    #     # small_num = 1e-9 # to avoid nan due to numerical errors
+    #     # seeger_eps = (1 / n_samples) * (kld + math.log(2 * math.sqrt(n_samples) / delta))
+    #     seeger_eps = (1 / n_samples) * (tot_kld + math.log(2 * math.sqrt(n_samples) / delta))
+    #     sqrt_arg = 2 * seeger_eps * task_empirical_loss
+    #     sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
+    #     complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
+
+    # elif complexity_type == 'PAC_Bayes_McAllaster':
+    #     complex_term = torch.sqrt((1 / (2 * n_samples)) * (tot_kld + math.log(2*math.sqrt(n_samples) / delta)))
+
 
     else:
         raise ValueError('Invalid complexity_type')
