@@ -80,14 +80,19 @@ parser.add_argument('--n_meta_train_chars', type=int, help='For Omniglot: how ma
 # MAML hyper-parameters:
 parser.add_argument('--alpha', type=float, help='Step size for gradient step',
                     default=0.4)
+
 parser.add_argument('--n_meta_train_grad_steps', type=int, help='Number of gradient steps in meta-training',
                     default=1)
+
 parser.add_argument('--n_meta_train_iterations', type=int, help='number of iterations in meta-training',
                     default=15000)  #  60000
+
 parser.add_argument('--n_meta_test_grad_steps', type=int, help='Number of gradient steps in meta-testing',
                     default=3)
+
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=32)
+
 parser.add_argument('--MAML_Use_Test_Data', type=bool, help='If true MAML evaluates loss with batch from test data (instead of drawing from train set)',
                     default=False)
 

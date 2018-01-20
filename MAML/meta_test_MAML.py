@@ -101,7 +101,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
     test_acc = run_test(task_model, test_loader)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm.log_file, verbose=verbose)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm, verbose=verbose)
 
     test_err = 1 - test_acc
     return test_err, task_model
