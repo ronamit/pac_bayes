@@ -251,7 +251,7 @@ def create_limited_pixel_permute_trans(prm):
     input_size = input_shape[0] * input_shape[1] * input_shape[2]
     inds_permute = torch.LongTensor(np.arange(0, input_size))
 
-    for i_shuffle in range(prm.n_pixels_shuffels):
+    for i_shuffle in range(prm.n_pixels_shuffles):
         i1 = np.random.randint(0, input_size)
         i2 = np.random.randint(0, input_size)
         temp = inds_permute[i1]

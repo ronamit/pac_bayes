@@ -36,9 +36,6 @@ parser.add_argument('--max_n_tasks', type=int, help='Number of meta-training tas
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Shuffled_Pixels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 / Shuffled_Pixels
 
-parser.add_argument('--n_pixels_shuffels', type=int, help='For "Shuffled_Pixels": how many pixels swaps',
-                    default=300)
-
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 

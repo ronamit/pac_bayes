@@ -12,7 +12,7 @@ call(['python', 'main_Meta_Bayes.py',
       '--meta_batch_size', '16',  # 32
       '--mode', 'MetaTrain',  # 'MetaTrain'  \ 'LoadMetaModel'
       '--limit_train_samples_in_test_tasks', '2000',
-      '--n_pixels_shuffels', '200',
+      '--n_pixels_shuffles', '200',
       # '--override_eps_std', '1e-3',
       ])
 
