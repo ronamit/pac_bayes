@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='PAC_Bayes_Pentina')  #
+                    default='NewBoundSeeger')  #
 # 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
 
 args = parser.parse_args()
