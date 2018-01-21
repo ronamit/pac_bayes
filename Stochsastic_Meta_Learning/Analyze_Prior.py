@@ -15,7 +15,14 @@ from Utils.common import save_model_state, load_model_state, load_run_data, set_
 #----------------------------------------------------------------------------------------------
 
 def extract_param_list(model, name1, name2):
-    return [named_param for named_param in model.named_parameters() if name1 in named_param[0] and name2 in named_param[0]]
+    # extract parameters which names contain the strings name1 and name2:
+    params_per_layer = [named_param for named_param in model.named_parameters()
+                        if name1 in named_param[0] and name2 in named_param[0]]
+    # note: each element is a tuple (name, values)
+    # flatten values to vectors:
+    params_per_layer = [(params[0], params[1].view(-1)) for params in params_per_layer]
+    return params_per_layer
+
 
 def log_var_to_sigma(log_var_params):
     return [(named_param[0].replace('_log_var', '_sigma'),
@@ -55,14 +62,21 @@ def run_prior_analysis(prior_model, showPlt=True):
     # w_mu_params = extract_param_list(prior_model,'_mean', '.w_')
     # b_mu_params = extract_param_list(prior_model,'_mean', '.b_')
     w_log_var_params = extract_param_list(prior_model,'_log_var', '.w_')
-    # b_log_var_params = extract_param_list(prior_model,'_log_var', '.b_')
+    b_log_var_params = extract_param_list(prior_model,'_log_var', '.b_')
 
     n_layers = len(w_log_var_params)
 
     # w_sigma_params = log_var_to_sigma(w_log_var_params)
     # b_sigma_params = log_var_to_sigma(b_log_var_params)
 
-    mean_list, std_list = get_params_statistics(w_log_var_params)
+    # concatenate weight and bias values:
+    log_var_params = []
+    for i_layer in range(n_layers):
+        values = torch.cat((w_log_var_params[i_layer][1], b_log_var_params[i_layer][1]), 0)
+        log_var_params.append(('log_var', values))
+
+
+    mean_list, std_list = get_params_statistics(log_var_params)
 
     plot_statistics(mean_list, std_list, name=r'$\log (\sigma^2)$')
     layers_inds = np.arange(n_layers)
@@ -89,12 +103,11 @@ if __name__ == "__main__":
 
 
     #***** Enter here the relative path to results dir (with the learned prior you want to analyze):
-    result_dir = ''
-
+    result_dir = 'saved/PermutedLabels_5_Tasks_NewBoundSeeger_Comp'
     prm, info_dict = load_run_data(result_dir)
 
     # path to the saved learned meta-parameters
-    saved_path = prm.result_dir + 'meta_model.pt'
+    saved_path = os.path.join(prm.result_dir, 'learned_prior.pt')
 
     # Loads  previously training prior.
     # First, create the model:

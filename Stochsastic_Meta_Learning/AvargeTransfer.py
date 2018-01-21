@@ -220,7 +220,7 @@ stop_time = timeit.default_timer()
 write_to_log('Total runtime: ' +
              time.strftime("%H hours, %M minutes and %S seconds", time.gmtime(stop_time - start_time)),  prm)
 # -------------------------------------------------------------------------------------------
-write_to_log('-'*5 + ' Final Results: '+'-'*5, prm.log_file)
+write_to_log('---- Final Results: ', prm)
 write_to_log('Meta-Testing - Avg test err: {:.3}%, STD: {:.3}%'
              .format(100 * test_err_bayes.mean(), 100 * test_err_bayes.std()), prm)
 

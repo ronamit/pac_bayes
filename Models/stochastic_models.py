@@ -104,7 +104,7 @@ class FcNet3(general_model):
         super(FcNet3, self).__init__()
         self.model_type = model_type
         self.model_name = model_name
-        self.layer_names = ('FC1', 'FC2', 'FC3', 'FC_out')
+        self.layers_names = ('FC1', 'FC2', 'FC3', 'FC_out')
         input_shape = task_info['input_shape']
         n_classes = task_info['n_classes']
         input_size = input_shape[0] * input_shape[1] * input_shape[2]

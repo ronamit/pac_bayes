@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='NewBoundSeeger')  #
+                    default='NewBoundSeeger')
 # 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
 
 args = parser.parse_args()
@@ -27,5 +27,5 @@ call(['python', 'main_Meta_Bayes.py',
       '--n_meta_train_epochs', '150',
       '--n_meta_test_epochs', '200',
       '--n_test_tasks', '20',
-
+      '--meta_batch_size', '16',
       ])

@@ -25,18 +25,6 @@ class StochasticLayer(nn.Module):
             self.b = {'mean': self.b_mu, 'log_var': self.b_log_var}
 
 
-
-    #
-        # self.w_mu = get_randn_param(weights_size, 0, 0.1)
-        # self.w_log_var = get_randn_param(weights_size, -10, 0.1)
-        # self.w = {'mean': self.w_mu, 'log_var': self.w_log_var}
-        # if bias_size is not None:
-        #     self.b_mu =get_randn_param(bias_size, 0, 0.1)
-        #     self.b_log_var =get_randn_param(bias_size, -10, 0.1)
-        #     self.b = {'mean': self.b_mu, 'log_var': self.b_log_var}
-
-
-
     def forward(self, x):
 
         # Layer computations (based on "Variational Dropout and the Local

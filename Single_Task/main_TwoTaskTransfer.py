@@ -8,7 +8,7 @@ import torch.optim as optim
 
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Utils.data_gen import Task_Generator
-from Utils.common import write_to_log, set_random_seed, create_result_dir
+from Utils.common import write_to_log, set_random_seed, create_result_dir, save_run_data
 from Data_Path import get_data_path
 
 torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
@@ -104,6 +104,10 @@ prm.n_MC = 1 # Number of Monte-Carlo iterations
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 
+# -------------------------------------------------------------------------------------------
+#  Run experiments
+# -------------------------------------------------------------------------------------------
+
 task_generator = Task_Generator(prm)
 
 test_err_orig = np.zeros(n_experiments)
@@ -150,6 +154,10 @@ for i in range(n_experiments):
     test_err_scratch_reg[i], _ = learn_single_standard.run_learning(task2_data, prm_reg, verbose=0)
 
 
+# -------------------------------------------------------------------------------------------
+#  Print Results
+# -------------------------------------------------------------------------------------------
+
 write_to_log('--- Final Results: ', prm)
 write_to_log('Averaging of {} experiments...'.format(n_experiments), prm)
 
@@ -177,3 +185,11 @@ write_to_log('Standard learning of task #2  (at most {} samples)'
 write_to_log('Standard learning of task #2  (at most {} samples) using transferred weights as initial point '
              ' + {}, average test error: {:.3}%, STD: {:.3}%'.
              format(limit_train_samples, freeze_description, 100*test_err_freeze.mean(), 100*test_err_freeze.std()), prm_freeze)
+
+
+# -------------------------------------------------------------------------------------------
+#  Save Results
+# -------------------------------------------------------------------------------------------
+
+save_run_data(prm, {'test_err_orig': test_err_orig, 'test_err_scratch': test_err_scratch, 'test_err_scratch_bayes': test_err_scratch_bayes,
+                    'test_err_transfer': test_err_transfer, 'test_err_freeze':test_err_freeze, 'test_err_scratch_reg': test_err_scratch_reg})
