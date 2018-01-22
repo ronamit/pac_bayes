@@ -113,9 +113,7 @@ if __name__ == "__main__":
     # First, create the model:
     prior_model = get_model(prm)
     # Then load the weights:
-    is_loaded = load_model_state(prior_model, saved_path)
-    if not is_loaded:
-        raise ValueError('No prior found in the path: ' + saved_path)
+    load_model_state(prior_model, saved_path)
     print('Pre-trained  prior loaded from ' + saved_path)
 
     run_prior_analysis(prior_model, showPlt=True)

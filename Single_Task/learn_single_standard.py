@@ -30,21 +30,28 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     else:
         model = get_model(prm)
 
-
+    # Load initial weights:
     if initial_model:
         model.load_state_dict(initial_model.state_dict())
+
+    # Gather modules list:
+    modules_list = list(model.named_children())
+    if hasattr(model, 'net'):
+        # extract the modules from 'net' field:
+        modules_list += list(model.net.named_children())
+        modules_list = [m for m in modules_list if m[0] is not 'net']
 
     # Determine which parameters are optimized and which are frozen:
     if hasattr(prm, 'freeze_list'):
         freeze_list = prm.freeze_list
         optimized_modules = [named_module[1]
-                             for named_module in model.named_children()
+                             for named_module in modules_list
                              if not named_module[0] in freeze_list]
         optimized_params = sum([list(mo.parameters()) for mo in optimized_modules], [])
     elif hasattr(prm, 'not_freeze_list'):
         not_freeze_list = prm.not_freeze_list
         optimized_modules = [named_module[1]
-                             for named_module in model.named_children()
+                             for named_module in modules_list
                              if named_module[0] in not_freeze_list]
         optimized_params = sum([list(mo.parameters()) for mo in optimized_modules], [])
     else:

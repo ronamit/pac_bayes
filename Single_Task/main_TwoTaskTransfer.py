@@ -59,14 +59,17 @@ if prm.Experiment_Name == 'Permute_Labels':
     freeze_list = None
 
 elif prm.Experiment_Name == 'Shuffled_Pixels':
-    n_pixels_shuffles = 300
-    prm.run_name = 'TwoTaskTransfer_shuffled_pixels' + str(n_pixels_shuffles)
+    n_pixels_shuffles = 200
+    prm.run_name = 'TwoTaskTransfer_shuffled_pixels' + str(n_pixels_shuffles) + '_v2'
     prm.data_transform = 'Shuffled_Pixels'
     prm.n_pixels_shuffles = n_pixels_shuffles
     prm.model_name = 'FcNet3'
-    freeze_description = 'freeze output layer'
-    freeze_list = ['fc_out']
-    not_freeze_list = None
+    # freeze_description = 'freeze output layer'
+    # freeze_list = ['fc_out']
+    # not_freeze_list = None
+    freeze_description = 'freeze all layers except first'
+    not_freeze_list = ['fc1']
+    freeze_list = None
 
 else:
     raise ValueError('Unrecognized Experiment_Name')
@@ -133,25 +136,25 @@ for i in range(n_experiments):
     write_to_log('--- Generating task #2 with at most {} samples'.format(limit_train_samples), prm)
     task2_data = task_generator.get_data_loader(prm, limit_train_samples = limit_train_samples)
 
-    #  Run learning of task 2 from scratch:
-    write_to_log('--- Standard learning of task #2 from scratch', prm)
-    test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
-
-    #  Run Bayesian-learning of task 2 from scratch:
-    write_to_log('-' * 5 + 'Bayesian learning of task #2 from scratch', prm)
-    test_err_scratch_bayes[i], _ = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
-
-    #  Run learning of task 2 using transferred initial point:
-    write_to_log('--- Standard learning of task #2 using transferred weights as initial point', prm)
-    test_err_transfer[i], _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transferred_model, verbose=0)
+    # #  Run learning of task 2 from scratch:
+    # write_to_log('--- Standard learning of task #2 from scratch', prm)
+    # test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
+    #
+    # #  Run Bayesian-learning of task 2 from scratch:
+    # write_to_log('---- Bayesian learning of task #2 from scratch', prm)
+    # test_err_scratch_bayes[i], _ = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
+    #
+    # #  Run learning of task 2 using transferred initial point:
+    # write_to_log('--- Standard learning of task #2 using transferred weights as initial point', prm)
+    # test_err_transfer[i], _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transferred_model, verbose=0)
 
     #  Run learning of task 2 using transferred initial point + freeze some layers:
     write_to_log('--- Standard learning of task #2 using transferred weights as initial point + ' + freeze_description, prm_freeze)
     test_err_freeze[i], _ = learn_single_standard.run_learning(task2_data, prm_freeze, initial_model=transferred_model, verbose=0)
-
-    #  Run learning of task 2 from scratch + weight regularization:
-    write_to_log('--- Standard learning of task #2 from scratch', prm_reg)
-    test_err_scratch_reg[i], _ = learn_single_standard.run_learning(task2_data, prm_reg, verbose=0)
+    #
+    # #  Run learning of task 2 from scratch + weight regularization:
+    # write_to_log('--- Standard learning of task #2 from scratch', prm_reg)
+    # test_err_scratch_reg[i], _ = learn_single_standard.run_learning(task2_data, prm_reg, verbose=0)
 
 
 # -------------------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
 
-parser.add_argument('--load_model_path', type=str, help='The path the the model file, in case it is loaded (relative path)',
+parser.add_argument('--load_model_path', type=str, help='set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)',
                     default='')
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
@@ -100,7 +100,7 @@ parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -153,7 +153,7 @@ init_from_prior = True  #  False \ True . In meta-testing -  init posterior from
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
 
 # path to save the learned meta-parameters
-save_path = os.path.join(prm.result_dir, 'learned_prior.pt')
+save_path = os.path.join(prm.result_dir, 'model.pt')
 
 task_generator = Task_Generator(prm)
 

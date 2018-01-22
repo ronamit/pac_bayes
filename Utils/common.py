@@ -65,12 +65,10 @@ def save_model_state(model, f_path):
 
 
 def load_model_state(model, f_path):
-
     if not os.path.exists(f_path):
-        return False
+        raise ValueError('No file found with the path: ' + f_path)
     with open(f_path, 'rb') as f_pointer:
         model.load_state_dict(torch.load(f_pointer))
-    return True
 
 #
 # def get_data_path():
@@ -186,6 +184,9 @@ def create_result_dir(prm):
                'Run script: ' + sys.argv[0],
                'Parameters:', str(prm), '-'*50]
     write_to_log(message, prm, mode='w') # create new log file
+    # set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)
+    if not hasattr(prm, 'load_model_path') or prm.load_model_path == '':
+        prm.load_model_path = os.path.join(prm.result_dir, 'model.pt')
 
 
 def write_to_log(message, prm, mode='a', update_file=True):

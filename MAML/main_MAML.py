@@ -32,7 +32,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--mode', type=str, help='MetaTrain or LoadMetaModel',
                     default='MetaTrain')   # 'MetaTrain'  \ 'LoadMetaModel'
 
-parser.add_argument('--load_model_path', type=str, help='The path the the model file dir, in case it is loaded (relative path)',
+parser.add_argument('--load_model_path', type=str, help='set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)',
                     default='')
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
@@ -52,6 +52,9 @@ parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training t
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
                     default='Rotate90') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
+
+parser.add_argument('--n_pixels_shuffles', type=int, help='In case of "Shuffled_Pixels": how many pixels swaps',
+                    default=300)
 
 parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
                     help='Upper limit for the number of training sampels in the meta-test tasks (0 = unlimited)',
@@ -115,6 +118,7 @@ prm.data_path = get_data_path()
 set_random_seed(prm.seed)
 create_result_dir(prm)
 
+
 #  Define optimizer:
 prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
 # prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
@@ -124,7 +128,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e
 prm.lr_schedule = {} # No decay
 
 # path to save the learned meta-parameters
-save_path = os.path.join(prm.result_dir, 'meta_model.pt')
+save_path = os.path.join(prm.result_dir, 'model.pt')
 
 task_generator = Task_Generator(prm)
 # -------------------------------------------------------------------------------------------
