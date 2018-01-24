@@ -5,10 +5,12 @@ import argparse
 import os
 import torch
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from Models.stochastic_models import get_model
 from Utils.common import save_model_state, load_model_state, load_run_data, set_random_seed
+
 
 # -------------------------------------------------------------------------------------------
 # Auxilary functions:
@@ -45,6 +47,7 @@ def get_params_statistics(param_list):
 
 
 def plot_statistics(mean_list, std_list, name):
+
     plt.figure()
     n_list = len(mean_list)
     plt.errorbar(range(n_list), mean_list, yerr=std_list)
@@ -95,19 +98,23 @@ def run_prior_analysis(prior_model, showPlt=True):
 # -------------------------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    # plot settings
-    # font = {'family' : 'normal',
-    #         'weight' : 'normal',
-    #         'size'   : 15}
-    # matplotlib.rc('font', **font)
+    ## plot settings
+    font = {'family' : 'normal',
+            'weight' : 'normal',
+            'size'   : 12}
+    matplotlib.rc('font', **font)
+    matplotlib.rcParams.update({'lines.linewidth': 2})
+
+
 
 
     #***** Enter here the relative path to results dir (with the learned prior you want to analyze):
-    result_dir = 'saved/PermutedLabels_5_Tasks_NewBoundSeeger_Comp'
+    result_dir = 'saved/PermutedLabels_5_Tasks_NewBoundMcAllaster_Comp'
+    # result_dir = 'saved/Shuffled_200_Pixels_10_Tasks_NewBoundSeeger_Comp'
     prm, info_dict = load_run_data(result_dir)
 
     # path to the saved learned meta-parameters
-    saved_path = os.path.join(prm.result_dir, 'learned_prior.pt')
+    saved_path = os.path.join(prm.result_dir, 'model.pt')
 
     # Loads  previously training prior.
     # First, create the model:

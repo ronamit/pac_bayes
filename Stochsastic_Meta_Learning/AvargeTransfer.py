@@ -47,7 +47,10 @@ parser.add_argument('--data-source', type=str, help='Data set',
                     default='MNIST') # 'MNIST' / 'Omniglot'
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
+                    default='Permute_Labels') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 / Shuffled_Pixels
+
+parser.add_argument('--n_pixels_shuffles', type=int, help='In case of "Shuffled_Pixels": how many pixels swaps',
+                    default=200)
 
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
                     default=5)

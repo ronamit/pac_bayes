@@ -54,7 +54,7 @@ parser.add_argument('--data-transform', type=str, help="Data transformation:  'N
                     default='None')
 
 parser.add_argument('--n_pixels_shuffles', type=int, help='In case of "Shuffled_Pixels": how many pixels swaps',
-                    default=300)
+                    default=200)
 
 parser.add_argument('--limit_train_samples_in_test_tasks', type=int,
                     help='Upper limit for the number of training samples in the meta-test tasks (0 = unlimited)',

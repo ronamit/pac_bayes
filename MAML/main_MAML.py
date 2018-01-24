@@ -51,7 +51,7 @@ parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training t
                     default=0)
 
 parser.add_argument('--data-transform', type=str, help="Data transformation",
-                    default='Rotate90') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90
+                    default='Rotate90') #  'None' / 'Permute_Pixels' / 'Permute_Labels' / Rotate90 / Shuffled_Pixels
 
 parser.add_argument('--n_pixels_shuffles', type=int, help='In case of "Shuffled_Pixels": how many pixels swaps',
                     default=300)

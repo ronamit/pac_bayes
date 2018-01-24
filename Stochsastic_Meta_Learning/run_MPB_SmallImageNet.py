@@ -3,10 +3,10 @@ import argparse
 import os
 
 # Select GPU to run:
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-n_train_tasks = 10
+n_train_tasks = 0  # 0 = infinite
 
 parser = argparse.ArgumentParser()
 
@@ -24,17 +24,17 @@ call(['python', 'main_Meta_Bayes.py',
       '--run-name', 'SmallImageNet_Comp'.format(n_train_tasks, complexity_type),
       '--data-source', 'SmallImageNet',
       '--N_Way', '5',
-      '--K_Shot_MetaTrain', '1000',
-      '--K_Shot_MetaTest', '100',
+      '--K_Shot_MetaTrain', '500',
+      '--K_Shot_MetaTest', '500',
       '--data-transform', 'None',
       '--limit_train_samples_in_test_tasks', '0',
       '--n_train_tasks',  str(n_train_tasks),
       '--mode', 'MetaTrain',
       '--complexity_type',  complexity_type,
       '--model-name', 'OmConvNet',
-      '--n_meta_train_epochs', '300',  # 100
-      '--n_inner_steps', '500',
+      '--n_meta_train_epochs', '150',  # 100
+      '--n_inner_steps', '5000',
       '--n_meta_test_epochs', '300',
       '--n_test_tasks', '20',
-      '--meta_batch_size', '3',
+      '--meta_batch_size', '5',
       ])

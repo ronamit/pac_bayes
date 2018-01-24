@@ -11,8 +11,9 @@ alpha = 0.01
 n_meta_train_grad_steps = 2
 run_learning = True   # If false, just show results
 
-
-n_meta_test_grad_steps_vec = list(range(1, 20))
+min_test_grad_steps = 1
+max_test_grad_steps = 20
+n_meta_test_grad_steps_vec = list(range(min_test_grad_steps, 1+max_test_grad_steps))
 meta_train_in_this_run = 1  # we can meta-train just once and use the learned meta-parameters to meta-test with different number of gradient steps
 
 base_run_name = 'Labels_Alpha_{}_TrainGrads_{}'.format(alpha, n_meta_train_grad_steps)
