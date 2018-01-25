@@ -4,7 +4,7 @@ import os
 
 # Select GPU to run:
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 n_train_tasks = 0  # 0 = infinite
 
@@ -21,7 +21,7 @@ args = parser.parse_args()
 complexity_type = args.complexity_type
 
 call(['python', 'main_Meta_Bayes.py',
-      '--run-name', 'SmallImageNet_Comp'.format(n_train_tasks, complexity_type),
+      '--run-name', 'SmallTasks_SmallImageNet',
       '--data-source', 'SmallImageNet',
       '--N_Way', '5',
       '--K_Shot_MetaTrain', '50',
