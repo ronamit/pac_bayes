@@ -99,11 +99,11 @@ def run_prior_analysis(prior_model, showPlt=True):
 if __name__ == "__main__":
 
     ## plot settings
-    font = {'family' : 'normal',
-            'weight' : 'normal',
+    font = {'weight' : 'normal',
             'size'   : 12}
     matplotlib.rc('font', **font)
     matplotlib.rcParams.update({'lines.linewidth': 2})
+
 
 
 

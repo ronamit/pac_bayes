@@ -58,7 +58,7 @@ def run_meta_learning(task_generator, prm):
 
 
     # Update Log file:
-    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm.log_file, result_name=prm.test_type)
+    cmn.write_final_result(test_acc_avg, stop_time - start_time, prm, result_name=prm.test_type)
 
     # Return learned prior:
     return prior_model
@@ -153,7 +153,7 @@ def run_test(mb_data_loaders, mb_posteriors_models, loss_criterion, prm):
 
             # write_result(
             #     'Train Task {}, Test set: {} -  Average loss: {:.4}, Accuracy: {:.3} of {} samples\n'.format(
-            #         prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm.log_file)
+            #         prm.test_type, i_task, test_loss, test_acc, n_test_samples), prm)
         else:
             print('Train Task {}, Test set: {} - No test data'.format(i_task, prm.test_type))
 
