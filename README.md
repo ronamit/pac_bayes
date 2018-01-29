@@ -9,14 +9,19 @@
 - NumPy and Matplotlib
 
 
+## Data
+All data sets (except ImageNet) are downloaded automatically.
+Specify the main data path in the file 'Data_Path.py'.
+For ImageNet see Utils/Resize_ImageNet.py 
+
 ## Reproducing experiments in the paper:
 
-* Stochsastic_Meta_Learning/main_Meta_Bayes.py             - Learns a prior from the obsereved (meta-training) tasks and use it to learn new (meta-test) tasks.
+* PriorMetaLearning/run_MPB_*.py   - Learns a prior from the obsereved (meta-training) tasks and use it to learn new (meta-test) tasks.
 * Toy_Examples/Toy_Main.py -  Toy example of 2D  estimation.
 * Single_Task/main_TwoTaskTransfer_PermuteLabels and  Single_Task/main_TwoTaskTransfer_PermutePixels.py -
 run alternative tranfer methods.
 
-* Stochsastic_Meta_Learning/Analyze_Prior.py - Analysis of the weight uncertainty ine each layer of the learned prior (run after creating a prior with main_Meta_Bayes.py)
+* PriorMetaLearning/Analyze_Prior.py - Analysis of the weight uncertainty ine each layer of the learned prior (run after creating a prior with main_Meta_Bayes.py)
 
 ## Other experiments:
 
