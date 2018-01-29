@@ -6,7 +6,7 @@ import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-n_train_tasks = 0  # 0 = infinite
+n_train_tasks = 300  # 0 = infinite
 
 parser = argparse.ArgumentParser()
 
@@ -24,15 +24,15 @@ call(['python', 'main_Meta_Bayes.py',
       '--run-name', 'SmallTasks_SmallImageNet',
       '--data-source', 'SmallImageNet',
       '--N_Way', '5',
-      '--K_Shot_MetaTrain', '50',
-      '--K_Shot_MetaTest', '50',
+      '--K_Shot_MetaTrain', '1000',
+      '--K_Shot_MetaTest', '500',
       '--data-transform', 'None',
       '--limit_train_samples_in_test_tasks', '0',
       '--n_train_tasks',  str(n_train_tasks),
       '--mode', 'MetaTrain',
       '--complexity_type',  complexity_type,
-      '--model-name', 'OmConvNet',
-      '--n_meta_train_epochs', '200',  # 150
+      '--model-name', 'OmConvNet',  ##  OmConvNet
+      '--n_meta_train_epochs', '10',  # 150
       '--n_inner_steps', '500',  # 5000
       '--n_meta_test_epochs', '300',
       '--n_test_tasks', '20',

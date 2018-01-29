@@ -46,11 +46,11 @@ parser.add_argument('--N_Way', type=int, help='Number of classes in a task (for 
 
 parser.add_argument('--K_Shot_MetaTrain', type=int,
                     help='Number of training sample per class in meta-training in N-Way K-Shot data sets',
-                    default=100)  # Note:  test samples are the rest of the data
+                    default=50)  # Note:  test samples are the rest of the data
 
 parser.add_argument('--K_Shot_MetaTest', type=int,
                     help='Number of training sample per class in meta-testing in N-Way K-Shot data sets',
-                    default=100)  # Note:  test samples are the rest of the data
+                    default=50)  # Note:  test samples are the rest of the data
 
 # SmallImageNet Parameters:
 parser.add_argument('--n_meta_train_classes', type=int,
