@@ -63,6 +63,9 @@ def get_model(prm, model_type='Stochastic'):
     elif model_name == 'OmConvNet':
         model = OmConvNet(model_type, model_name, linear_layer, conv2d_layer, task_info)
 
+    elif model_name == 'OmConvNet32':
+        model = OmConvNet(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=32)
+
     else:
         raise ValueError('Invalid model_name')
 
@@ -171,7 +174,7 @@ class ConvNet3(general_model):
 #  OmConvNet
 # -------------------------------------------------------------------------------- -----------
 class OmConvNet(general_model):
-    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info):
+    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=64):
         super(OmConvNet, self).__init__()
         self.model_name = model_name
         self.model_type = model_type
@@ -180,9 +183,9 @@ class OmConvNet(general_model):
         color_channels = input_shape[0]
         n_classes = task_info['n_classes']
         n_in_channels = input_shape[0]
-        n_filt1 = 64
-        n_filt2 = 64
-        n_filt3 = 64
+        n_filt1 = filt_size
+        n_filt2 = filt_size
+        n_filt3 = filt_size
         self.conv1 = conv2d_layer(n_in_channels, n_filt1, kernel_size=3)
         self.bn1 =  nn.BatchNorm2d(n_filt1, momentum=1, affine=True)
         self.relu1 = nn.ReLU(inplace=True)

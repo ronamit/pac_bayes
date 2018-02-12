@@ -14,7 +14,7 @@ base_run_name = 'PermutedLabels_TasksN'
 min_n_tasks = 1  # 1
 max_n_tasks = 10  # 10
 
-run_experiments = True # If false, just analyze the previously saved experiments
+run_experiments = False # If false, just analyze the previously saved experiments
 
 root_saved_dir = 'saved/'
 # -------------------------------------------------------------------------------------------
@@ -78,5 +78,8 @@ plt.errorbar(n_tasks_vec, 100*mean_error_per_tasks_n, yerr=100*std_error_per_tas
 plt.xticks(n_tasks_vec)
 plt.xlabel('Number of training-tasks')
 plt.ylabel('Error on new task [%]')
+
+# plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
+
 plt.show()
 

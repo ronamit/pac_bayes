@@ -5,7 +5,7 @@ https://github.com/cbfinn/maml/blob/master/data/miniImagenet/proc_images.py
 Step 1:
     Download ilsvrc2012_img_train.tar from
      http://www.image-net.org/challenges/LSVRC/2012/nonpub-downloads
-     and place in <data_path>/miniImagenet/images
+     and place in <data_path>/SmallImageNet/images
 
 Step 2:  Run the following commands that extract and DELETES THE ORIGINAL tar file:
     go to images dir
@@ -29,7 +29,7 @@ from PIL import Image
 
 from Data_Path import get_data_path
 
-input_dir = os.path.join(get_data_path(), 'MiniImageNet')
+input_dir = os.path.join(get_data_path(), 'SmallImageNet')
 
 path_to_images = os.path.join(input_dir, 'images')
 

@@ -7,11 +7,11 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from PriorMetaLearning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
 from Data_Path import get_data_path
-from Models.stochastic_models import get_model
 from Utils.data_gen import Task_Generator
 from Utils.common import save_model_state, load_model_state, create_result_dir, set_random_seed, write_to_log, save_run_data
+from Models.stochastic_models import get_model
+from PriorMetaLearning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
 from PriorMetaLearning.Analyze_Prior import run_prior_analysis
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
@@ -131,7 +131,7 @@ create_result_dir(prm)
 # Weights initialization (for Bayesian net):
 prm.log_var_init = {'mean': -10, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
-# Number of Monte-Carlo iterations (for re-parametrization trick):
+# Number of Monte-Carlo iterations:
 prm.n_MC = 1
 
 #  Define optimizer:

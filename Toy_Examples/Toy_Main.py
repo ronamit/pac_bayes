@@ -90,4 +90,8 @@ if learning_type == 'MetaLearnWeights':
     complexity_type = 'PAC_Bayes'  # 'Variational_Bayes' / 'PAC_Bayes' /
     toy_MetaLearnWeights.learn(data_set, complexity_type)
 
+
+plt.savefig('ToyFig1.pdf', format='pdf', bbox_inches='tight')
+
 plt.show()
+

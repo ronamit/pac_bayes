@@ -119,7 +119,7 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 
 def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
     if n_train_tasks == 0:
-        meta_complex_term = 0  # infinite tasks case
+        meta_complex_term = 0.0  # infinite tasks case
     else:
         if prm.complexity_type == 'NewBoundMcAllaster' or  prm.complexity_type == 'NewBoundSeeger':
             delta =  prm.delta
@@ -130,6 +130,9 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 
         elif prm.complexity_type == 'Variational_Bayes':
             meta_complex_term = hyper_kl
+
+        elif prm.complexity_type == 'NoComplexity':
+            meta_complex_term = 0.0
 
         else:
             raise ValueError('Invalid complexity_type')

@@ -147,7 +147,10 @@ def get_loss_criterion(loss_type):
 
     return criterion_dict[loss_type]
 
-
+def boolean_string(s):
+    if s not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return s == 'True'
 # -----------------------------------------------------------------------------------------------------------#
 # Prints
 # -----------------------------------------------------------------------------------------------------------#

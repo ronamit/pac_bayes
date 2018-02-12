@@ -40,7 +40,7 @@ def split_classes(prm):
 
     n_meta_train_classes = prm.n_meta_train_classes
 
-    root_path = os.path.join(prm.data_path, 'MiniImageNet','images')
+    root_path = os.path.join(prm.data_path, 'SmallImageNet','images')
     all_label_dirs = os.listdir(root_path)
 
     # Take random n_meta_train_chars chars as meta-train and rest as meta-test
@@ -62,7 +62,7 @@ def get_task(labels_in_split,  n_labels, k_train_shot, prm):
     # labels_list = labels of current split
 
     # Get data:
-    data_dir = os.path.join(prm.data_path, 'MiniImageNet', 'images')
+    data_dir = os.path.join(prm.data_path, 'SmallImageNet', 'images')
 
     # Draw random  n_labels classes from the labels in the split:
     n_tot_labels = len(labels_in_split)

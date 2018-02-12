@@ -67,6 +67,8 @@ def run_meta_learning(data_loaders, prm):
         # Note: this method ensures each training sample in each task is drawn in each epoch.
         # If all the tasks have the same number of sample, then each sample is drawn exactly once in an epoch.
 
+        # random.shuffle(task_ids_list) # --############ TEMP
+
         # ----------- meta-batches loop (batches of tasks) -----------------------------------#
         # each meta-batch includes several tasks
         # we take a grad step with theta after each meta-batch

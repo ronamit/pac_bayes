@@ -7,13 +7,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 call(['python', 'main_Meta_Bayes.py',
-      '--run-name', 'Omniglot_0',
+      '--run-name', 'Omniglot_1b',
       '--data-source', 'Omniglot',  # MNIST Omniglot
       '--data-transform', 'Rotate90',
       '--N_Way', '5',
       '--K_Shot_MetaTrain', '20',
       '--K_Shot_MetaTest', '5',
-      '--n_train_tasks', '300',
+      '--n_train_tasks', '100',
       '--model-name',   'OmConvNet',
       '--complexity_type', 'NewBoundMcAllaster',
       '--n_test_tasks', '100',
@@ -42,4 +42,4 @@ call(['python', 'main_Meta_Bayes.py',
 # '--n_train_tasks', '100', '--n_meta_train_epochs', '2000'   '--K_Shot_MetaTrain', '5'  23 hours - Meta-Testing - - Avg test err: 10.6%, STD: 6.75%
 
 
-# '--n_train_tasks', '100', '--n_meta_train_epochs', '2000'   '--K_Shot_MetaTrain', '20'
+# '--n_train_tasks', '100', '--n_meta_train_epochs', '2000'   '--K_Shot_MetaTrain', '20' --04 hours,  Meta-Testing - Avg test err: 24.4%, STD: 11.6%
