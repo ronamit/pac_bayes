@@ -45,7 +45,7 @@ parser.add_argument('--n_test_tasks', type=int,
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet",
-                    default='SmallImageNet')
+                    default='MNIST')
 
 parser.add_argument('--n_train_tasks', type=int, help='Number of meta-training tasks (0 = infinite)',
                     default=5)

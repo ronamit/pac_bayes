@@ -10,7 +10,7 @@ from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion,
 # -------------------------------------------------------------------------------------------
 #
 # -------------------------------------------------------------------------------------------
-def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks):
+def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks, prior_weight=1.0):
     '''  Calculate objective based on tasks in meta-batch '''
     # note: it is OK if some tasks appear several times in the meta-batch
 
@@ -79,10 +79,11 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
 
     # Approximated total objective:
-    total_objective = avg_empirical_loss + avg_intra_task_comp + meta_complex_term
+    total_objective = avg_empirical_loss + prior_weight * (avg_intra_task_comp + meta_complex_term)
 
     info = {'sample_count': sample_count, 'correct_count': correct_count,
                   'avg_empirical_loss': get_value(avg_empirical_loss),
                   'avg_intra_task_comp': get_value(avg_intra_task_comp),
-                  'meta_comp': get_value(meta_complex_term)}
+                  'meta_comp': get_value(meta_complex_term),
+                  'prior_weight': prior_weight}
     return total_objective, info
