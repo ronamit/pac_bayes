@@ -18,11 +18,14 @@ import pickle
 
 
 def get_value(x):
+    ''' Returns the value of any scalar type'''
     if isinstance(x, Variable):
-        return x.data[0]
+        if hasattr(x, 'item'):
+            return x.item()
+        else:
+            return x.data[0]
     else:
         return x
-
 
 def set_random_seed(seed):
     torch.manual_seed(seed)
@@ -49,12 +52,12 @@ def randn_gpu(size, mean=0, std=1):
 def count_correct(outputs, targets):
     ''' Deterimne the class prediction by the max output and compare to ground truth'''
     pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
-    return pred.eq(targets.data.view_as(pred)).cpu().sum()
-
+    return get_value(pred.eq(targets.data.view_as(pred)).cpu().sum())
 
 def correct_rate(outputs, targets):
     n_correct = count_correct(outputs, targets)
-    return n_correct / outputs.size()[0]
+    n_samples = get_value(outputs.size()[0])
+    return n_correct / n_samples
 
 
 def save_model_state(model, f_path):
@@ -89,19 +92,24 @@ def load_model_state(model, f_path):
 #  Regularization
 # -------------------------------------------------------------------------------------------
 
-def net_norm(model, p=2):
-    if p == 1:
-        loss_crit = torch.nn.L1Loss(size_average=False)
-    elif p == 2:
-        loss_crit = torch.nn.MSELoss(size_average=False)
-    else:
-        raise ValueError('Unsupported p')
-    total_norm = 0
-    for param in model.parameters():
-        target = Variable(zeros_gpu(param.size()), requires_grad=False)  # dummy target
-        total_norm += loss_crit(param, target)
-    return total_norm
+# def net_norm(model, p=2):
+#     if p == 1:
+#         loss_crit = torch.nn.L1Loss(size_average=False)
+#     elif p == 2:
+#         loss_crit = torch.nn.MSELoss(size_average=False)
+#     else:
+#         raise ValueError('Unsupported p')
+#     total_norm = 0
+#     for param in model.parameters():
+#         target = Variable(zeros_gpu(param.size()), requires_grad=False)  # dummy target
+#         total_norm += loss_crit(param, target)
+#     return total_norm
 
+def net_norm(model, p=2):
+    total_norm = Variable(zeros_gpu(1), requires_grad=True)
+    for param in model.parameters():
+        total_norm = total_norm + param.pow(p).sum()
+    return total_norm
 
 
 # -----------------------------------------------------------------------------------------------------------#
@@ -158,8 +166,10 @@ def boolean_string(s):
 def status_string(i_epoch, num_epochs, batch_idx, n_batches, batch_acc, loss_data):
 
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * num_epochs)
-    return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
-        progress_per, i_epoch, batch_idx, loss_data, batch_acc))
+    # return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
+    #     progress_per, i_epoch, batch_idx, loss_data, batch_acc))
+    return ('({:2.1f}%)\tEpoch: {} \t Batch: {} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
+        progress_per, i_epoch, batch_idx, loss_data, float(batch_acc)))
 
 # def status_string_meta(i_epoch, prm, batch_acc, loss_data):
 #

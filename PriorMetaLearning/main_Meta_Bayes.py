@@ -135,7 +135,8 @@ prm.log_var_init = {'mean': -10, 'std': 0.1} # The initial value for the log-var
 prm.n_MC = 1
 
 #  Define optimizer:
-prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr} #'weight_decay': 1e-4
+prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}  #'weight_decay': 1e-4
+# prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr, 'amsgrad': True}  #'weight_decay': 1e-4
 # prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:

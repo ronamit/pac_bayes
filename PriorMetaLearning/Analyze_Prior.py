@@ -9,7 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from Models.stochastic_models import get_model
-from Utils.common import save_model_state, load_model_state, load_run_data, set_random_seed
+from Utils.common import save_model_state, load_model_state, load_run_data, set_random_seed, get_value
 
 
 # -------------------------------------------------------------------------------------------
@@ -38,8 +38,8 @@ def get_params_statistics(param_list):
     for i_param, named_param in enumerate(param_list):
         param_name = named_param[0]
         param_vals = named_param[1]
-        param_mean = param_vals.mean().data[0]
-        param_std = param_vals.std().data[0]
+        param_mean = get_value(param_vals.mean())
+        param_std = get_value(param_vals.std())
         mean_list[i_param] = param_mean
         std_list[i_param] = param_std
         print('Parameter name: {}, mean value: {:.3}, STD: {:.3}'.format(param_name, param_mean, param_std))
