@@ -5,6 +5,8 @@ import matplotlib
 
 matplotlib.rcParams.update({'font.size': 12})
 matplotlib.rcParams.update({'lines.linewidth': 2})
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 results_dir_names = ['PermutedLabels_TasksN', 'ShuffledPixels100_TasksN', 'ShuffledPixels200_TasksN', 'ShuffledPixels300_TasksN']
 root_saved_dir = 'saved/'
@@ -24,8 +26,7 @@ for i_exp in range(n_expirements):
     plt.errorbar(n_tasks_vec, 100 * mean_error_per_tasks_n, yerr=100 * std_error_per_tasks_n,
                  label=legend_names[i_exp])
     plt.xticks(n_tasks_vec)
-    # plt.ylim(0,20) # zoom
-    # plt.xlim(3,10)
+
 
 
 plt.legend()
@@ -33,5 +34,9 @@ plt.xlabel('Number of training-tasks', fontsize=18)
 plt.ylabel('Error on new task [%]', fontsize=18)
 
 plt.savefig(root_saved_dir + 'TasksN_plot.pdf', format='pdf', bbox_inches='tight')
+
+plt.ylim(0,20) # zoom
+plt.xlim(3,10)
+plt.savefig(root_saved_dir + 'TasksN_plot_zoom.pdf', format='pdf', bbox_inches='tight')
 
 plt.show()

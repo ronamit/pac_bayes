@@ -5,12 +5,11 @@ import torch
 from torchvision import datasets, transforms
 import torch.utils.data as data_utils
 from torch.autograd import Variable
-import multiprocessing, os
+import os
 import numpy as np
 from Utils import omniglot
 from Utils import imagenet_data
 
-import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------
 #  Task generator class
