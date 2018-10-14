@@ -35,8 +35,8 @@ plt.ylabel('Error on new task [%]', fontsize=18)
 
 plt.savefig(root_saved_dir + 'TasksN_plot.pdf', format='pdf', bbox_inches='tight')
 
-plt.ylim(0,20) # zoom
-plt.xlim(3,10)
-plt.savefig(root_saved_dir + 'TasksN_plot_zoom.pdf', format='pdf', bbox_inches='tight')
+# plt.ylim(0,20) # zoom
+plt.xlim(2,10)
+plt.savefig(root_saved_dir + 'TasksN_plot_zoom_New.pdf', format='pdf', bbox_inches='tight')
 
 plt.show()

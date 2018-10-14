@@ -102,13 +102,7 @@ def learn(data_set, complexity_type):
     #  Plots:
     fig1 = plt.figure()
     ax = plt.subplot(111, aspect='equal')
-    # plot prior:
-    plt.plot(w_P_mu[0], w_P_mu[1], 'o', label='prior mean ')
-    ell = Ellipse(xy=(w_P_mu[0], w_P_mu[1]),
-                  width=w_P_sigma[0], height=w_P_sigma[1],
-                  angle=0, color='blue')
-    ell.set_facecolor('none')
-    ax.add_artist(ell)
+
     for i_task in range(n_tasks):
         # plot task data points:
         plt.plot(data_set[i_task][:, 0], data_set[i_task][:, 1], '.',
@@ -120,6 +114,14 @@ def learn(data_set, complexity_type):
                       angle=0, color='black')
         ell.set_facecolor('none')
         ax.add_artist(ell)
+
+    # plot prior:
+    plt.plot(w_P_mu[0], w_P_mu[1], 'o', label='prior mean ')
+    ell = Ellipse(xy=(w_P_mu[0], w_P_mu[1]),
+                  width=w_P_sigma[0], height=w_P_sigma[1],
+                  angle=0, color='black')
+    ell.set_facecolor('none')
+    ax.add_artist(ell)
 
     # plt.plot(0, 0, 'x', label='hyper-prior ')
 

@@ -220,9 +220,20 @@ def kld_element(post, prior, prm, noised_prior):
     post_var = torch.exp(post['log_var'])
     prior_var = torch.exp(prior_log_var)
 
-    numerator = (post['mean'] - prior_mean).pow(2) + post_var
-    denominator = prior_var
-    kld = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+    #==----------------------------------------------------------------------------
+    post_std = torch.exp(0.5*post['log_var'])
+    prior_std = torch.exp(0.5*prior_log_var)
+
+    if prm.divergence_type == 'Wasserstein':
+        # kld = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+        kld = torch.sqrt(torch.relu(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
+        # ==----------------------------------------------------------------------------
+    elif prm.divergence_type == 'KL':
+        numerator = (post['mean'] - prior_mean).pow(2) + post_var
+        denominator = prior_var
+        kld = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+    else:
+        raise ValueError('Invalid prm.divergence_type')
 
     # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 

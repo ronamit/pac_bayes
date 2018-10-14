@@ -96,9 +96,9 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_count / sample_count
-                print(cmn.status_string(i_epoch, prm.n_meta_test_epochs, batch_idx, n_batches, batch_acc, total_objective.data[0]) +
+                print(cmn.status_string(i_epoch, prm.n_meta_test_epochs, batch_idx, n_batches, batch_acc, total_objective.item()) +
                       ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
-                      format(task_empirical_loss.data[0], task_complexity.data[0]))
+                      format(task_empirical_loss.item(), task_complexity.item()))
 
 
     # -----------------------------------------------------------------------------------------------------------#

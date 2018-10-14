@@ -218,7 +218,7 @@ def get_batch_vars(batch_data, args, is_test=False):
     ''' Transform batch to variables '''
     inputs, targets = batch_data
     inputs, targets = inputs.cuda(), targets.cuda(async=True)
-    inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
+    inputs, targets = Variable(inputs), Variable(targets)
     return inputs, targets
 
 

@@ -120,12 +120,20 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
 
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=5)
+
+
+parser.add_argument('--divergence_type', type=str, help="",
+                    default='KL')  # 'KL' / 'Wasserstein'
+
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
 prm.data_path = get_data_path()
+
+
 set_random_seed(prm.seed)
 create_result_dir(prm)
+
 
 
 # Weights initialization (for Bayesian net):
