@@ -227,23 +227,24 @@ def divregnce_element(post, prior, prm, noised_prior):
     prior_std = torch.exp(0.5*prior_log_var)
 
     if prm.divergence_type == 'Wasserstein':
-        # divregnce = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
-        divregnce = torch.sqrt(
+        divergence = torch.sqrt(
            torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+    # divergence = torch.sqrt(
+    #     torch.sum(torch.relu((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
 
     elif prm.divergence_type == 'Wasserstein_NoSqrt':
-            divregnce = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
+            divergence = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
         # ==----------------------------------------------------------------------------
     elif prm.divergence_type == 'KL':
         numerator = (post['mean'] - prior_mean).pow(2) + post_var
         denominator = prior_var
-        divregnce = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+        divergence = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
     else:
         raise ValueError('Invalid prm.divergence_type')
 
     # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 
-    return divregnce
+    return divergence
 
 
 def add_noise(param, std):
