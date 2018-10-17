@@ -22,7 +22,7 @@ call(['python', 'main_Meta_Bayes.py',
       '--data-transform', 'Permute_Labels',
       '--limit_train_samples_in_test_tasks', '2000',
       '--n_train_tasks',  str(n_train_tasks),
-      '--mode', 'LoadMetaModel',  # MetaTrain / LoadMetaModel
+      '--mode', 'MetaTrain',  # MetaTrain / LoadMetaModel
       '--complexity_type',  complexity_type,
       '--model-name', 'ConvNet3',
       '--n_meta_train_epochs', '150',

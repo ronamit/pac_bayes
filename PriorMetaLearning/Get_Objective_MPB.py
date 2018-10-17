@@ -3,9 +3,10 @@ from __future__ import absolute_import, division, print_function
 
 # from Models.stochastic_models import get_model
 from Models.stochastic_models import get_model
+import torch
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_bayes_task_objective, run_test_Bayes, get_meta_complexity_term
-from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, get_value
+from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, get_value, net_weights_dim
 
 # -------------------------------------------------------------------------------------------
 #
@@ -21,8 +22,14 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     correct_count = 0
     sample_count = 0
 
-    # KLD between hyper-posterior and hyper-prior:
-    hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_norm(prior_model, p=2)
+    if prm.divergence_type == 'Wasserstein':
+        d = net_weights_dim(prior_model)
+        hyper_kl = torch.sqrt(net_norm(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post)**2)
+    elif prm.divergence_type == 'KL':
+        # KLD between hyper-posterior and hyper-prior:
+        hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_norm(prior_model, p=2)
+    else:
+        raise ValueError('Invalid prm.divergence_type')
 
     # Hyper-prior term:
     meta_complex_term = get_meta_complexity_term(hyper_kl, prm, n_train_tasks)

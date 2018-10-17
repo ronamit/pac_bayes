@@ -112,6 +112,12 @@ def net_norm(model, p=2):
     return total_norm
 
 
+def net_weights_dim(model):
+    count = Variable(zeros_gpu(1), requires_grad=True)
+    for param in model.parameters():
+        count = count + param.numel()
+    return count
+
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer
 # -----------------------------------------------------------------------------------------------------------#
