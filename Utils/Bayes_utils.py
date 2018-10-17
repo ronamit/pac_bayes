@@ -16,20 +16,22 @@ from Models.stochastic_layers import StochasticLayer
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
 
-    if len(test_loader) == 0:
-        return 0.0, 0.0
+    with torch.no_grad():    # no need for backprop in test
 
-    if prm.test_type == 'MaxPosterior':
-        info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
-    elif prm.test_type == 'MajorityVote':
-        info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
-    elif prm.test_type == 'AvgVote':
-        info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
-    else:
-        raise ValueError('Invalid test_type')
-    if verbose:
-        print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
-                                                                      info['n_test_samples'], float(info['test_loss'])))
+        if len(test_loader) == 0:
+            return 0.0, 0.0
+
+        if prm.test_type == 'MaxPosterior':
+            info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
+        elif prm.test_type == 'MajorityVote':
+            info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        elif prm.test_type == 'AvgVote':
+            info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        else:
+            raise ValueError('Invalid test_type')
+        if verbose:
+            print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
+                                                                          info['n_test_samples'], float(info['test_loss'])))
     return info['test_acc'], info['test_loss']
 
 
@@ -200,14 +202,14 @@ def get_total_kld(prior_model, post_model, prm, noised_prior):
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
         if hasattr(prior_layer, 'w'):
-            total_kld += kld_element(post_layer.w, prior_layer.w, prm, noised_prior)
+            total_kld += divregnce_element(post_layer.w, prior_layer.w, prm, noised_prior)
         if hasattr(prior_layer, 'b'):
-            total_kld += kld_element(post_layer.b, prior_layer.b, prm, noised_prior)
+            total_kld += divregnce_element(post_layer.b, prior_layer.b, prm, noised_prior)
 
     return total_kld
 
 
-def kld_element(post, prior, prm, noised_prior):
+def divregnce_element(post, prior, prm, noised_prior):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
     if noised_prior and prm.kappa_post > 0:
@@ -225,19 +227,23 @@ def kld_element(post, prior, prm, noised_prior):
     prior_std = torch.exp(0.5*prior_log_var)
 
     if prm.divergence_type == 'Wasserstein':
-        # kld = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
-        kld = torch.sqrt(torch.relu(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
+        # divregnce = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+        divregnce = torch.sqrt(
+           torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+
+    elif prm.divergence_type == 'Wasserstein_NoSqrt':
+            divregnce = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
         # ==----------------------------------------------------------------------------
     elif prm.divergence_type == 'KL':
         numerator = (post['mean'] - prior_mean).pow(2) + post_var
         denominator = prior_var
-        kld = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+        divregnce = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
     else:
         raise ValueError('Invalid prm.divergence_type')
 
     # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 
-    return kld
+    return divregnce
 
 
 def add_noise(param, std):
