@@ -236,7 +236,7 @@ def write_final_result(test_acc, run_time, prm, result_name='', verbose=1):
     message = []
     if verbose == 1:
         message.append('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'))
-    message.append(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
+    message.append(result_name + ' Average Test Error: {:.3}%\t Runtime: {:.1f} [sec]'
                      .format(100 * (1 - test_acc), run_time))
     write_to_log(message, prm)
 

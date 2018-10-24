@@ -263,3 +263,14 @@ def add_noise_to_model(model, std):
             add_noise(layer.b['log_var'], std)
             add_noise(layer.b['mean'], std)
 
+
+def set_model_values(model, mean, log_var):
+    layers_list = [layer for layer in model.children() if isinstance(layer, StochasticLayer)]
+
+    for i_layer, layer in enumerate(layers_list):
+        if hasattr(layer, 'w'):
+            layer.w['log_var'].data.fill_(log_var)
+            layer.w['mean'].data.fill_(mean)
+        if hasattr(layer, 'b'):
+            layer.b['log_var'].data.fill_(log_var)
+            layer.b['mean'].data.fill_(mean)

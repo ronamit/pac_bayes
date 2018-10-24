@@ -8,6 +8,10 @@ from Utils import data_gen
 from Utils.common import set_random_seed, create_result_dir, save_run_data
 from Single_Task import learn_single_Bayes
 from Data_Path import get_data_path
+import Utils.common as cmn
+from Models.stochastic_models import get_model
+from Utils.Bayes_utils import set_model_values
+
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
@@ -52,7 +56,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 300
+                    default=50) # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -89,8 +93,8 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Bound parameters
 prm.complexity_type = 'NewBoundMcAllaster'
-prm.divergence_type = 'Wasserstein'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
-prm.delta = 0.1  #  maximal probability that the bound does not hold
+prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
+prm.delta = 0.035   #  maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
 #  Init run
@@ -104,8 +108,6 @@ create_result_dir(prm)
 task_generator = data_gen.Task_Generator(prm)
 data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
 
-
-
 # -------------------------------------------------------------------------------------------
 #  Create Prior
 # -------------------------------------------------------------------------------------------
@@ -113,30 +115,15 @@ data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_
 prior_log_var = -5
 prior_mean = 0
 
-from Models.stochastic_models import get_model
-from Models.stochastic_layers import StochasticLayer
-
-
-# create model of the network (with random init)
+# create model of the network
 prior_model = get_model(prm)
-
-layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
-
-for i_layer, layer in enumerate(layers_list):
-    if hasattr(layer, 'w'):
-        layer.w['log_var'].data.fill_(prior_log_var)
-        layer.w['mean'].data.fill_(prior_mean)
-    if hasattr(layer, 'b'):
-        layer.b['log_var'].data.fill_(prior_log_var)
-        layer.b['mean'].data.fill_(prior_mean)
-
-
-
+set_model_values(prior_model, prior_mean, prior_log_var)
 
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
 
-test_err, _ = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
+test_err, _, test_loss, bound_val = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
 
-save_run_data(prm, {'test_err': test_err})
+save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
+cmn.write_to_log('Test err. {:1.3}, Test loss: test_loss {:.4}, Bound: {:.4}'.format(test_err, test_loss, bound_val), prm)

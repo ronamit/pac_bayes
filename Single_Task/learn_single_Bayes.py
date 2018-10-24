@@ -58,10 +58,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
         # post_model.set_eps_std(0.00) # debug
 
-        complexity_term = 0
-
         post_model.train()
-
+        
+        avg_bound_val = 0
+        
         for batch_idx, batch_data in enumerate(train_loader):
 
             # Monte-Carlo iterations:
@@ -95,6 +95,11 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, get_value(objective)) +
                       ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(empirical_loss), get_value(complexity_term)))
+
+            avg_bound_val += get_value(objective)
+        # End batch loop
+        avg_bound_val /= n_batches
+        return avg_bound_val
     # -------------------------------------------------------------------------------------------
     #  Main Script
     # -------------------------------------------------------------------------------------------
@@ -109,8 +114,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     start_time = timeit.default_timer()
 
     # Run training epochs:
+    bound_val = 0.0
     for i_epoch in range(prm.num_epochs):
-        run_train_epoch(i_epoch)
+        bound_val = run_train_epoch(i_epoch)
 
     # Test:
     test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
@@ -119,4 +125,6 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type)
 
     test_err = 1 - test_acc
-    return test_err, post_model
+    
+ 
+    return test_err, post_model, test_loss, bound_val
