@@ -79,7 +79,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             #  complexity/prior term:
             if prior_model:
                 empirical_loss, complexity_term = get_bayes_task_objective(
-                    prm, prior_model, post_model, n_train_samples, empirical_loss)
+                    prm, prior_model, post_model, n_train_samples, empirical_loss, noised_prior=False)
             else:
                 complexity_term = 0.0
 

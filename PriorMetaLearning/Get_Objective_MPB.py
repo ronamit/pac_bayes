@@ -6,7 +6,7 @@ from Models.stochastic_models import get_model
 import torch
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_bayes_task_objective, run_test_Bayes, get_meta_complexity_term
-from Utils.common import grad_step, net_norm, count_correct, get_loss_criterion, get_value, net_weights_dim
+from Utils.common import grad_step, net_weights_magnitude, count_correct, get_loss_criterion, get_value, net_weights_dim
 
 # -------------------------------------------------------------------------------------------
 #
@@ -24,10 +24,15 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
     if prm.divergence_type == 'Wasserstein':
         d = net_weights_dim(prior_model)
-        hyper_kl = torch.sqrt(net_norm(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post)**2)
+        hyper_kl = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post)**2)
+
+    elif  prm.divergence_type == 'Wasserstein_NoSqrt':
+        d = net_weights_dim(prior_model)
+        hyper_kl = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
+
     elif prm.divergence_type == 'KL':
         # KLD between hyper-posterior and hyper-prior:
-        hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_norm(prior_model, p=2)
+        hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_weights_magnitude(prior_model, p=2)
     else:
         raise ValueError('Invalid prm.divergence_type')
 

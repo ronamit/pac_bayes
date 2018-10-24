@@ -227,13 +227,13 @@ def divregnce_element(post, prior, prm, noised_prior):
     prior_std = torch.exp(0.5*prior_log_var)
 
     if prm.divergence_type == 'Wasserstein':
-        divergence = torch.sqrt(
-           torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+        divergence = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
     # divergence = torch.sqrt(
     #     torch.sum(torch.relu((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
 
-    # elif prm.divergence_type == 'Wasserstein_NoSqrt':
-    #         divergence = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
+    elif prm.divergence_type == 'Wasserstein_NoSqrt':
+            divergence = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
+
         # ==----------------------------------------------------------------------------
     elif prm.divergence_type == 'KL':
         numerator = (post['mean'] - prior_mean).pow(2) + post_var

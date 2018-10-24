@@ -101,6 +101,13 @@ class Task_Generator(object):
             train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
                 n_labels=prm.N_Way, k_train_shot=k_train_shot,
                 final_input_trans=final_input_trans, target_transform=target_trans)
+
+
+        elif  self.data_source == 'binarized_MNIST':
+            assert not target_trans # make sure no transformations
+            target_trans = [create_label_binarize(prm, thresh=5)]
+            train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
+
         else:
             raise ValueError('Invalid data_source')
 
@@ -205,6 +212,10 @@ def get_info(prm):
     elif prm.data_source == 'SmallImageNet':
         info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way}
 
+    elif prm.data_source == 'binarized_MNIST':
+        info = {'input_shape': (1, 28, 28),  'n_classes': 2}
+
+
     else:
         raise ValueError('Invalid data_source')
 
@@ -280,6 +291,14 @@ def create_label_permute_trans(prm):
     inds_permute = torch.randperm(info['n_classes'])
     transform_func = lambda target: inds_permute[target]
     return transform_func
+
+
+def create_label_binarize(prm, thresh):
+    # binarizes the labels (0 or 1)
+    info = get_info(prm)
+    transform_func = lambda target: int(target < thresh)
+    return transform_func
+
 
 
 def create_rotation_trans():

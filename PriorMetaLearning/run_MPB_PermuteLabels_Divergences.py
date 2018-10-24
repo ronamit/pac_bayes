@@ -7,14 +7,14 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='NewBoundSeeger')
+                    default='NewBoundMcAllaster')
 # 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
 
 args = parser.parse_args()
 
 complexity_type = args.complexity_type
 
-divergence_type = 'Wasserstein' # 'KL' / 'Wasserstein' / Wasserstein_NoSqrt
+divergence_type = 'KL' # 'KL' / 'Wasserstein' / Wasserstein_NoSqrt
 
 call(['python', 'main_Meta_Bayes.py',
       '--run-name', 'PermutedLabels_{}_Tasks_{}_Divergence_{}'.format(n_train_tasks, complexity_type, divergence_type),
@@ -30,5 +30,5 @@ call(['python', 'main_Meta_Bayes.py',
       '--n_test_tasks', '20',
       '--meta_batch_size', '16',
       '--divergence_type', divergence_type,
-      '--init_from_prior', 'False',
+      '--init_from_prior', 'True',
       ])
