@@ -46,8 +46,8 @@ parser.add_argument('--limit_train_samples', type=int,
 
 # ----- Algorithm Parameters ---------------------------------------------#
 
-parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM'",
-                    default='CrossEntropy')
+parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM' / Logistic_binary",
+                    default='Logistic_binary')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
                     default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
@@ -126,4 +126,4 @@ set_model_values(prior_model, prior_mean, prior_log_var)
 test_err, _, test_loss, bound_val = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
 
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
-cmn.write_to_log('Test err. {:1.3}, Test loss: test_loss {:.4}, Bound: {:.4}'.format(test_err, test_loss, bound_val), prm)
+cmn.write_to_log('Test-err. {:1.3}, Test-loss:  {:.4}, Bound: {:.4}'.format(test_err, test_loss, bound_val), prm)

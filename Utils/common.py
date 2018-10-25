@@ -12,6 +12,8 @@ import numpy as np
 import random
 import sys
 import pickle
+from Utils import Loss_func
+from Utils.data_gen import get_info
 # -----------------------------------------------------------------------------------------------------------#
 # General - PyTorch
 # -----------------------------------------------------------------------------------------------------------#
@@ -49,9 +51,21 @@ def randn_gpu(size, mean=0, std=1):
     return torch.cuda.FloatTensor(*size).normal_(mean, std)
 
 
+
+
+def get_prediction(outputs):
+
+    if outputs.shape[1] == 1:
+        # binary classification
+        pred = (outputs > 0)
+    else:
+        # multi-class classification
+        ''' Determine the class prediction by the max output and compare to ground truth'''
+        pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
+    return pred
+
 def count_correct(outputs, targets):
-    ''' Deterimne the class prediction by the max output and compare to ground truth'''
-    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
+    pred = get_prediction(outputs)
     return get_value(pred.eq(targets.data.view_as(pred)).cpu().sum())
 
 def correct_rate(outputs, targets):
@@ -165,10 +179,21 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
 def get_loss_criterion(loss_type):
 # Note: the loss use the un-normalized net outputs (scores, not probabilities)
 
-    criterion_dict = {'CrossEntropy':nn.CrossEntropyLoss(reduction='elementwise_mean').cuda(),
-                 'L2_SVM':nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='elementwise_mean')}
 
-    return criterion_dict[loss_type]
+    if loss_type == 'CrossEntropy':
+        return nn.CrossEntropyLoss(reduction='elementwise_mean').cuda()
+
+    elif loss_type == 'L2_SVM':
+        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='elementwise_mean').cuda()
+
+    elif loss_type == 'Logistic_binary':
+        return Loss_func.Logistic_Binary_Loss().cuda()
+
+    else:
+        raise ValueError('Invalid loss_type')
+
+
+
 
 def boolean_string(s):
     if s not in {'False', 'True'}:

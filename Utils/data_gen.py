@@ -201,25 +201,34 @@ def load_CIFAR(final_input_trans, target_trans, prm):
 
 def get_info(prm):
     if prm.data_source == 'MNIST':
-        info = {'input_shape': (1, 28, 28),  'n_classes': 10}
+        info = {'input_shape': (1, 28, 28),  'n_classes': 10, 'type': 'multi_class'}
 
     elif prm.data_source == 'CIFAR10':
-        info = {'input_shape': (3, 32, 32), 'n_classes': 10}
+        info = {'input_shape': (3, 32, 32), 'n_classes': 10, 'type': 'multi_class'}
 
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
+        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way, 'type': 'multi_class'}
 
     elif prm.data_source == 'SmallImageNet':
-        info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way}
+        info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way, 'type': 'multi_class'}
 
     elif prm.data_source == 'binarized_MNIST':
-        info = {'input_shape': (1, 28, 28),  'n_classes': 2}
-
-
+        info = {'input_shape': (1, 28, 28),  'n_classes': 2, 'type': 'binary_class'}
+        # note: since we have two classes, we can have one output
     else:
         raise ValueError('Invalid data_source')
 
+    if info['type'] == 'multi_class':
+        # label is the argmax of the output vector
+        info['output_dim'] =  info['n_classes']
+    elif info['type'] == 'binary_class':
+        # label are -/+1
+        info['output_dim'] =  1
+
     return info
+
+
+
 
 # -------------------------------------------------------------------------------------------
 #  Batch extraction
@@ -296,7 +305,7 @@ def create_label_permute_trans(prm):
 def create_label_binarize(prm, thresh):
     # binarizes the labels (0 or 1)
     info = get_info(prm)
-    transform_func = lambda target: int(target < thresh)
+    transform_func = lambda target: (target >= thresh)
     return transform_func
 
 
