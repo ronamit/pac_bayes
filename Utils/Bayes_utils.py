@@ -44,10 +44,11 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        batch_size = inputs.shape[0]
         old_eps_std = model.set_eps_std(0.0)   # test with max-posterior
         outputs = model(inputs)
         model.set_eps_std(old_eps_std)  # return model to normal behaviour
-        test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
+        test_loss += loss_criterion(outputs, targets) * batch_size # sum the loss contributed from batch
         n_correct += count_correct(outputs, targets)
 
     test_loss /= n_test_samples
@@ -71,14 +72,16 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
+        loss_from_batch = 0.0
         for i_vote in range(n_votes):
 
             outputs = model(inputs)
-            test_loss += loss_criterion(outputs, targets)
+            loss_from_batch += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
             for i_sample in range(batch_size):
                 pred_val = pred[i_sample].cpu().numpy()[0]
                 votes[i_sample, pred_val] += 1
+        test_loss += loss_from_batch * batch_size / n_votes # sum the loss contributed from batch
 
         majority_pred = votes.max(1, keepdim=True)[1] # find argmax class for each sample
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
@@ -103,14 +106,16 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
+        loss_from_batch = 0.0
         for i_vote in range(n_votes):
 
             outputs = model(inputs)
-            test_loss += loss_criterion(outputs, targets)
+            loss_from_batch += loss_criterion(outputs, targets)
             votes += outputs.data
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
+        test_loss += loss_from_batch * batch_size / n_votes  # sum the loss contributed from batch
 
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
