@@ -69,12 +69,11 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
             avg_empiric_loss = 0
             complexity_term = 0
 
-            # get batch:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            # note: we sample data once and then samples several monte-carlo runs of net
-            batch_size = inputs.shape[0]
-
             for i_MC in range(n_MC):
+                # get batch:
+                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+                # note: we sample new batch in eab MC run to get lower variance estimator
+                batch_size = inputs.shape[0]
 
                 # Calculate empirical loss:
                 outputs = post_model(inputs)

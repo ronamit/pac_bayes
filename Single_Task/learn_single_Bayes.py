@@ -65,19 +65,19 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         for batch_idx, batch_data in enumerate(train_loader):
 
             # Monte-Carlo iterations:
-            empirical_loss = 0
+            avg_empiric_loss = 0
             n_MC = prm.n_MC
-
-            # get batch:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            # note: we sample data once and then samples several monte-carlo runs of net
-            batch_size = inputs.shape[0]
 
             for i_MC in range(n_MC):
 
+                # get batch:
+                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+                # note: we sample new batch in eab MC run to get lower variance estimator
+                batch_size = inputs.shape[0]
+
                 # calculate objective:
                 outputs = post_model(inputs)
-                avg_empiric_loss_curr = loss_criterion(outputs, targets)
+                avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
                 avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
 
             #  complexity/prior term:
@@ -100,9 +100,11 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, get_value(objective)) +
                       ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(avg_empiric_loss), get_value(complexity_term)))
 
-            avg_bound_val += get_value(objective)
+            avg_bound_val += get_value(objective)  # save for analysis
         # End batch loop
+
         avg_bound_val /= n_batches
+
         return avg_bound_val
     # -------------------------------------------------------------------------------------------
     #  Main Script

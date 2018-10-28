@@ -58,11 +58,6 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
         # Monte-Carlo iterations:
         n_MC = prm.n_MC
 
-        # get batch variables:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-        # note: we sample data once and then samples several monte-carlo runs of net
-        batch_size = inputs.shape[0]
-
         # Monte-Carlo loop
         for i_MC in range(n_MC):
 
@@ -71,6 +66,11 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
             # import matplotlib.pyplot as plt
             # plt.imshow(inputs[0].cpu().data[0].numpy())  # show first image
             # plt.show()
+
+            # get batch variables:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # note: we sample new batch in eab MC run to get lower variance estimator
+            batch_size = inputs.shape[0]
 
             # Empirical Loss on current task:
             outputs = post_model(inputs)
@@ -94,7 +94,7 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     if prm.complexity_type == 'Variational_Bayes':
         # note that avg_empiric_loss_per_task is estimated by an average over batch samples,
         #  but its weight in the objective should be considered by how many samples there are total in the task
-        total_objective = + (avg_empiric_loss_per_task * n_samples_per_task).sum() + complexity_per_task.sum() + meta_complex_term
+        total_objective = (avg_empiric_loss_per_task * n_samples_per_task).sum() + complexity_per_task.sum() + meta_complex_term
     else:
         total_objective = avg_empiric_loss_per_task.mean() + complexity_per_task.mean() + meta_complex_term
 
