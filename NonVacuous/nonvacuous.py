@@ -73,7 +73,7 @@ prm = parser.parse_args()
 prm.log_var_init = {'mean': -10, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 1
+prm.n_MC = 5
 
 # prm.use_randomness_schedeule = True # False / True
 # prm.randomness_init_epoch = 0
@@ -93,7 +93,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Bound parameters
 prm.complexity_type = 'NewBoundMcAllaster'
-prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
+prm.divergence_type = 'KL'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
 prm.delta = 0.035   #  maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------

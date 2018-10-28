@@ -48,7 +48,7 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
         old_eps_std = model.set_eps_std(0.0)   # test with max-posterior
         outputs = model(inputs)
         model.set_eps_std(old_eps_std)  # return model to normal behaviour
-        test_loss += loss_criterion(outputs, targets) * batch_size # sum the loss contributed from batch
+        test_loss += loss_criterion(outputs, targets) # sum the loss contributed from batch
         n_correct += count_correct(outputs, targets)
 
     test_loss /= n_test_samples
@@ -81,7 +81,7 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
             for i_sample in range(batch_size):
                 pred_val = pred[i_sample].cpu().numpy()[0]
                 votes[i_sample, pred_val] += 1
-        test_loss += loss_from_batch * batch_size / n_votes # sum the loss contributed from batch
+        test_loss += loss_from_batch / n_votes # sum the loss contributed from batch
 
         majority_pred = votes.max(1, keepdim=True)[1] # find argmax class for each sample
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
@@ -115,7 +115,7 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
-        test_loss += loss_from_batch * batch_size / n_votes  # sum the loss contributed from batch
+        test_loss += loss_from_batch / n_votes  # sum the loss contributed from batch
 
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
@@ -150,7 +150,7 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
@@ -165,7 +165,7 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
 
     elif prm.complexity_type == 'NewBoundSeeger':
         seeger_eps = (1 / n_samples) * (tot_kld + hyper_kl + math.log(4 * math.sqrt(n_samples) / delta))
-        sqrt_arg = 2 * seeger_eps * empirical_loss
+        sqrt_arg = 2 * seeger_eps * avg_empiric_loss
         sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
@@ -175,7 +175,6 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,
         # we need to multiply by the average_loss by total number of samples
-        empirical_loss = n_samples * empirical_loss
         complex_term = tot_kld
 
 
@@ -195,7 +194,7 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
     else:
         raise ValueError('Invalid complexity_type')
 
-    return empirical_loss, complex_term
+    return complex_term
 
 
 def get_total_kld(prior_model, post_model, prm, noised_prior):

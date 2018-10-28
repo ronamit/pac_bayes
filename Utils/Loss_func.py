@@ -14,9 +14,9 @@ def _assert_no_grad(variable):
 
 
 class _Loss(Module):
-    def __init__(self, size_average=True):
+    def __init__(self, reduction='sum'):
         super(_Loss, self).__init__()
-        self.size_average = size_average
+        self.reduction = reduction
 
 
 class Logistic_Binary_Loss(_Loss):
@@ -36,8 +36,11 @@ class Logistic_Binary_Loss(_Loss):
         _assert_no_grad(target)
         assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
+        assert self.reduction == 'sum'
+
         # switch labels to {-1,1}
         target = target.float() * 2 - 1
         # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
-        return torch.log(1 + torch.exp(-target * input)).mean() / math.log(2)
+        return torch.log(1 + torch.exp(-target * input)).sum() / math.log(2)
+
 

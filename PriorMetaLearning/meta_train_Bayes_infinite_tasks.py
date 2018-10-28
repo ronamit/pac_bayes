@@ -22,9 +22,6 @@ def run_meta_learning(task_generator, prm):
     optim_func, optim_args, lr_schedule =\
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
-    # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
-
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
     prior_model = get_model(prm)
 

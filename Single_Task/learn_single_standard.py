@@ -121,8 +121,9 @@ def run_test(model, test_loader, loss_criterion, prm):
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        batch_size = inputs.shape[0]
         outputs = model(inputs)
-        test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
+        test_loss += (1 / batch_size) * loss_criterion(outputs, targets)  # sum the mean loss in batch
         n_correct += count_correct(outputs, targets)
 
     n_test_samples = len(test_loader.dataset)

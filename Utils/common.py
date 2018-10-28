@@ -125,7 +125,7 @@ def load_model_state(model, f_path):
 def net_weights_magnitude(model, p=2, exp_on_logs=True):
     ''' Calculates the total p-norm of the weights  |W|_p^p
         If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
-    total_mag = Variable(zeros_gpu(1), requires_grad=True)
+    total_mag = Variable(zeros_gpu(1), requires_grad=True)[0]
     for (param_name, param) in model.named_parameters():
         if exp_on_logs and 'log_var' in param_name:
             w = torch.exp(0.5*param)
@@ -177,17 +177,18 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
 # -----------------------------------------------------------------------------------------------------------#
 
 def get_loss_criterion(loss_type):
-# Note: the loss use the un-normalized net outputs (scores, not probabilities)
+# Note: 1. the loss function use the un-normalized net outputs (scores, not probabilities)
+#       2. The returned loss is summed (not averaged) over samples!!!
 
 
     if loss_type == 'CrossEntropy':
-        return nn.CrossEntropyLoss(reduction='elementwise_mean').cuda()
+        return nn.CrossEntropyLoss(reduction='sum').cuda()
 
     elif loss_type == 'L2_SVM':
-        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='elementwise_mean').cuda()
+        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='sum').cuda()
 
     elif loss_type == 'Logistic_binary':
-        return Loss_func.Logistic_Binary_Loss().cuda()
+        return Loss_func.Logistic_Binary_Loss(reduction='sum').cuda()
 
     else:
         raise ValueError('Invalid loss_type')

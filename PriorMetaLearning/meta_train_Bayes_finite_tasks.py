@@ -91,12 +91,11 @@ def run_meta_learning(data_loaders, prm):
             # prior_weight_steps = 10000
             # # prior_weight = 1 - math.exp(-i_step/prior_weight_steps)
             # prior_weight = min(i_step / prior_weight_steps, 1.0)
-            prior_weight = 1.0
             i_step += 1
 
             # Get objective based on tasks in meta-batch:
             total_objective, info = get_objective(prior_model, prm, mb_data_loaders,
-                                                  mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks, prior_weight)
+                                                  mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks)
 
             # Take gradient step with the shared prior and all tasks' posteriors:
             grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -106,8 +105,8 @@ def run_meta_learning(data_loaders, prm):
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
                 print(cmn.status_string(i_epoch,  prm.n_meta_train_epochs, i_meta_batch, n_meta_batches, batch_acc, get_value(total_objective)) +
-                      ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}\t prior-weight: {:.4}'.
-                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp'], info['prior_weight']))
+                      ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}\t'.
+                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp']))
         # end  meta-batches loop
         return i_step
     # end run_epoch()

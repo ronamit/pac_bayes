@@ -106,7 +106,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=150)
+                    default=150)  # 150
 
 parser.add_argument('--n_inner_steps', type=int,
                     help='For infinite tasks case, number of steps for training per meta-batch of tasks',

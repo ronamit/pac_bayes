@@ -6,7 +6,7 @@ import timeit
 from copy import deepcopy
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import run_test_Bayes, get_bayes_task_objective
+from Utils.Bayes_utils import run_test_Bayes, get_task_complexity
 from Utils.common import grad_step, correct_rate, get_loss_criterion, get_value
 
 
@@ -67,24 +67,28 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             # Monte-Carlo iterations:
             empirical_loss = 0
             n_MC = prm.n_MC
+
+            # get batch:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # note: we sample data once and then samples several monte-carlo runs of net
+            batch_size = inputs.shape[0]
+
             for i_MC in range(n_MC):
-                # get batch:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # calculate objective:
                 outputs = post_model(inputs)
-                empirical_loss_c = loss_criterion(outputs, targets)
-                empirical_loss += (1 / n_MC) * empirical_loss_c
+                avg_empiric_loss_curr = loss_criterion(outputs, targets)
+                avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
 
             #  complexity/prior term:
             if prior_model:
-                empirical_loss, complexity_term = get_bayes_task_objective(
-                    prm, prior_model, post_model, n_train_samples, empirical_loss, noised_prior=False)
+                complexity_term = get_task_complexity(
+                    prm, prior_model, post_model, n_train_samples, avg_empiric_loss, noised_prior=False)
             else:
                 complexity_term = 0.0
 
                 # Total objective:
-            objective = empirical_loss + complexity_term
+            objective = avg_empiric_loss + complexity_term
 
             # Take gradient step:
             grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
@@ -94,7 +98,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, get_value(objective)) +
-                      ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(empirical_loss), get_value(complexity_term)))
+                      ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(avg_empiric_loss), get_value(complexity_term)))
 
             avg_bound_val += get_value(objective)
         # End batch loop

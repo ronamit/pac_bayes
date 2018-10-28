@@ -5,7 +5,7 @@ import timeit
 
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_bayes_task_objective, run_test_Bayes
+from Utils.Bayes_utils import get_task_complexity, run_test_Bayes
 from Utils.common import grad_step, count_correct, get_loss_criterion, write_to_log
 
 
@@ -66,28 +66,32 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
             # Monte-Carlo iterations:
             n_MC = prm.n_MC
-            task_empirical_loss = 0
-            task_complexity = 0
+            avg_empiric_loss = 0
+            complexity_term = 0
+
+            # get batch:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # note: we sample data once and then samples several monte-carlo runs of net
+            batch_size = inputs.shape[0]
+
             for i_MC in range(n_MC):
-                # get batch:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
                 # Calculate empirical loss:
                 outputs = post_model(inputs)
-                curr_empirical_loss = loss_criterion(outputs, targets)
+                avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
 
-                curr_empirical_loss, curr_complexity = get_bayes_task_objective(prm, prior_model, post_model,
-                                                           n_train_samples, curr_empirical_loss, noised_prior=False)
+                complexity_curr = get_task_complexity(prm, prior_model, post_model,
+                                                           n_train_samples, avg_empiric_loss_curr, noised_prior=False)
 
-                task_empirical_loss += (1 / n_MC) * curr_empirical_loss
-                task_complexity += (1 / n_MC) * curr_complexity
+                avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
+                complexity_term += (1 / n_MC) * complexity_curr
 
                 correct_count += count_correct(outputs, targets)
                 sample_count += inputs.size(0)
+            # end monte-carlo loop
 
-            # Total objective:
-
-            total_objective = task_empirical_loss + task_complexity
+            # Total objective (for current batch):
+            total_objective = avg_empiric_loss + complexity_term
 
             # Take gradient step with the posterior:
             grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)
@@ -98,7 +102,9 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 batch_acc = correct_count / sample_count
                 print(cmn.status_string(i_epoch, prm.n_meta_test_epochs, batch_idx, n_batches, batch_acc, total_objective.item()) +
                       ' Empiric Loss: {:.4}\t Intra-Comp. {:.4}'.
-                      format(task_empirical_loss.item(), task_complexity.item()))
+                      format(avg_empiric_loss.item(), complexity_term.item()))
+        # end batch loop
+    # end run_train_epoch()
 
 
     # -----------------------------------------------------------------------------------------------------------#
