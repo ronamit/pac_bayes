@@ -7,7 +7,6 @@ import torch
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_task_complexity, run_test_Bayes, get_meta_complexity_term
 from Utils.common import grad_step, net_weights_magnitude, count_correct, get_value, net_weights_dim, zeros_gpu
-from Utils.Losses import get_loss_criterion
 
 # -------------------------------------------------------------------------------------------
 #
@@ -82,7 +81,7 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
             # Intra-task complexity of current task:
             curr_complexity = get_task_complexity(prm, prior_model, post_model,
-                n_samples, avg_empiric_loss_curr, hyper_kl, n_train_tasks=n_train_tasks)
+                n_samples, avg_empiric_loss_curr, hyper_kl, n_train_tasks=n_train_tasks, noised_prior=True)
 
             avg_empiric_loss_per_task[i_task] += (1 / n_MC) * avg_empiric_loss_curr
             complexity_per_task[i_task] += (1 / n_MC) * curr_complexity

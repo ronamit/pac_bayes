@@ -74,7 +74,7 @@ prm = parser.parse_args()
 prm.log_var_init = {'mean': -10, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
-prm.n_MC = 5
+prm.n_MC = 1
 
 # prm.use_randomness_schedeule = True # False / True
 # prm.randomness_init_epoch = 0
@@ -143,7 +143,7 @@ for loss_type in ['Logistic_binary', 'Zero_One']:
     prt.divergence_type = prm.divergence_type ###
     prt.complexity_type = prm.complexity_type ###
     bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm)
-    write_to_log('Bound: {}\t, Distance: {}\t, Loss: {}\t, Value: {:.4}\t'.
+    write_to_log('Bound: {}, Distance: {}, Loss: {}, Value: {:.4}'.
                  format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
 
 

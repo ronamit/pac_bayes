@@ -81,7 +81,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
 
                 complexity_curr = get_task_complexity(prm, prior_model, post_model,
-                                                           n_train_samples, avg_empiric_loss_curr, noised_prior=False)
+                                                           n_train_samples, avg_empiric_loss_curr)
 
                 avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
                 complexity_term += (1 / n_MC) * complexity_curr

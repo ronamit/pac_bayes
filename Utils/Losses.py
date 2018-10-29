@@ -24,7 +24,7 @@ def get_loss_criterion(loss_type):
         return Logistic_Binary_Loss(reduction='sum').cuda()
 
     elif loss_type == 'Zero_One':
-        return
+        return Zero_One_Loss(reduction='sum').cuda()
 
     else:
         raise ValueError('Invalid loss_type')
@@ -39,13 +39,14 @@ def _assert_no_grad(variable):
     assert not variable.requires_grad, \
         "nn criterions don't compute the gradient w.r.t. targets - please " \
         "mark these variables as volatile or not requiring gradients"
-
-
+# -----------------------------------------------------------------------------------------------------------#
+# Base class for loss functions
 class _Loss(Module):
     def __init__(self, reduction='sum'):
         super(_Loss, self).__init__()
         self.reduction = reduction
 
+# -----------------------------------------------------------------------------------------------------------#
 
 class Logistic_Binary_Loss(_Loss):
     r"""Creates a criterion that optimizes a two-class classification
@@ -54,7 +55,7 @@ class Logistic_Binary_Loss(_Loss):
 
     ::
 
-        loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x.nelement()
+        loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x.nelement()  / math.log(2)
 
     The normalization by the number of elements in the input can be disabled by
     setting `self.size_average` to ``False``.
@@ -71,4 +72,19 @@ class Logistic_Binary_Loss(_Loss):
         # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
         return torch.log(1 + torch.exp(-target * input)).sum() / math.log(2)
 
+# -----------------------------------------------------------------------------------------------------------#
 
+class Zero_One_Loss(_Loss):
+
+    def forward(self, input, target):
+        _assert_no_grad(target)
+        assert input.shape[1] == 1 # this loss works only for binary classification
+        input = input[:, 0]
+        assert self.reduction == 'sum'
+
+        # switch labels to {-1,1}
+        target = target.float() * 2 - 1
+        # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
+        return (target == input).sum()
+
+# -----------------------------------------------------------------------------------------------------------#

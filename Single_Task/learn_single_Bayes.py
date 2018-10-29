@@ -85,7 +85,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             # complexity/prior term:
             if prior_model:
                 complexity_term = get_task_complexity(
-                    prm, prior_model, post_model, n_train_samples, avg_empiric_loss, noised_prior=False)
+                    prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
             else:
                 complexity_term = 0.0
 
@@ -147,7 +147,7 @@ def eval_bound(post_model, prior_model, data_loader, prm):
     n_batches = len(train_loader)
     n_train_samples = data_loader['n_train_samples']
 
-    post_model.test()
+    post_model.eval()
 
     avg_bound_val = 0
 
@@ -170,7 +170,7 @@ def eval_bound(post_model, prior_model, data_loader, prm):
 
         #  complexity/prior term:
         complexity_term = get_task_complexity(
-            prm, prior_model, post_model, n_train_samples, avg_empiric_loss, noised_prior=False)
+            prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
 
 
         # Total objective:

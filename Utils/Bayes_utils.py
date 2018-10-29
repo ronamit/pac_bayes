@@ -150,7 +150,7 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_kl=0, n_train_tasks=1, noised_prior=False):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
