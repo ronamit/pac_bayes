@@ -39,7 +39,7 @@ if data_type == 0:
 elif data_type == 1:
     n_tasks = 2
     # number of samples in each task:
-    n_samples_list = [100, 100]
+    n_samples_list = [1000, 1000]
     # True means vector for each task [n_dim x n_tasks]:
     true_mu = [[2, 1], [4, 1]]
     # True sigma vector for each task [n_dim x n_tasks]:
@@ -80,7 +80,7 @@ if learning_type == 'Bayes_FixedPrior':
 
 if learning_type == 'MetaLearnPosteriors':
     import toy_MetaLearnPosteriors
-    complexity_type = 'PAC_Bayes_McAllaster' # 'PAC_Bayes_McAllaster' \ 'Variational_Bayes' \ 'KL'
+    complexity_type = 'Variational_Bayes' # 'PAC_Bayes_McAllaster' \ 'Variational_Bayes' \ 'KL'
     toy_MetaLearnPosteriors.learn(data_set, complexity_type)
 
 if learning_type == 'MetaLearnWeights':

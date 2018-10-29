@@ -15,7 +15,8 @@ import torch
 from torch.autograd import Variable
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import grad_step, net_norm, correct_rate, get_loss_criterion, write_to_log, count_correct
+from Utils.common import grad_step, net_weights_magnitude, correct_rate, write_to_log, count_correct
+from Utils.Losses import get_loss_criterion
 
 def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
 
@@ -37,6 +38,7 @@ def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
             batch_data = data_gen.get_next_batch_cyclic(mb_iterators[i_task],
                                                         mb_data_loaders[i_task]['train'])
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            batch_size = inputs.shape[0]
 
             # Debug
             # print(targets[0].data[0])  # print first image label
@@ -67,9 +69,9 @@ def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
 
         inputs, targets = data_gen.get_batch_vars(batch_data, prm)
         outputs = model(inputs, fast_weights)
-        total_objective += loss_criterion(outputs, targets)
+        total_objective += (1 / batch_size) * loss_criterion(outputs, targets)
         correct_count += count_correct(outputs, targets)
-        sample_count += inputs.size(0)
+        sample_count += batch_size
     # end loop over tasks in  meta-batch
 
     info = {'sample_count': sample_count, 'correct_count': correct_count}

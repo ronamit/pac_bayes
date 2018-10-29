@@ -19,15 +19,15 @@ def get_model(prm):
     info = data_gen.get_info(prm)
     input_shape = info['input_shape']
     color_channels = input_shape[0]
-    n_classes = info['n_classes']
+    output_dim = info['output_dim']
     input_size = input_shape[0] * input_shape[1] * input_shape[2]
 
     if model_name == 'FcNet3':
-        model = FcNet3(input_size=input_size, n_classes=n_classes)
+        model = FcNet3(input_size=input_size, output_dim=output_dim)
     elif model_name == 'ConvNet3':
-        model = ConvNet3(input_shape=input_shape, n_classes=n_classes)
+        model = ConvNet3(input_shape=input_shape, output_dim=output_dim)
     elif model_name == 'OmConvNet':
-        model = OmConvNet(input_shape=input_shape, n_classes=n_classes)
+        model = OmConvNet(input_shape=input_shape, output_dim=output_dim)
     else:
         raise ValueError('Invalid model_name')
     return model
@@ -87,7 +87,7 @@ class base_model(nn.Module):
 #  3-hidden-layer Fully-Connected Net
 # -------------------------------------------------------------------------------------------
 class FcNet3(base_model):
-    def __init__(self, input_size, n_classes):
+    def __init__(self, input_size, output_dim):
         super(FcNet3, self).__init__()
         self.model_name = 'FcNet3'
         self.input_size = input_size
@@ -101,7 +101,7 @@ class FcNet3(base_model):
                 ('a2', nn.ELU(inplace=True)),
                 ('fc3',  nn.Linear(n_hidden2, n_hidden3)),
                 ('a3', nn.ELU(inplace=True)),
-                ('fc_out', nn.Linear(n_hidden3, n_classes)),
+                ('fc_out', nn.Linear(n_hidden3, output_dim)),
                 ]))
         # Initialize weights
         self._init_weights()
@@ -127,7 +127,7 @@ class FcNet3(base_model):
 #  3-hidden-layer ConvNet
 # -------------------------------------------------------------------------------- -----------
 class ConvNet3(base_model):
-    def __init__(self, input_shape, n_classes):
+    def __init__(self, input_shape, output_dim):
         super(ConvNet3, self).__init__()
         self.model_name = 'ConvNet3'
         n_in_channels = input_shape[0]
@@ -146,7 +146,7 @@ class ConvNet3(base_model):
         conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
         self.add_module('fc1', nn.Linear(conv_out_size, n_hidden_fc1))
         self.add_module('a3', nn.ELU(inplace=True)),
-        self.add_module('fc_out', nn.Linear(n_hidden_fc1, n_classes))
+        self.add_module('fc_out', nn.Linear(n_hidden_fc1, output_dim))
 
         # Initialize weights
         self._init_weights()
@@ -184,7 +184,7 @@ class ConvNet3(base_model):
 #  OmConvNet
 # -------------------------------------------------------------------------------- -----------
 class OmConvNet(base_model):
-    def __init__(self, input_shape, n_classes):
+    def __init__(self, input_shape, output_dim):
         super(OmConvNet, self).__init__()
         self.model_name = 'OmConv'
         n_in_channels = input_shape[0]
@@ -206,7 +206,7 @@ class OmConvNet(base_model):
                 ('pool3', nn.MaxPool2d(kernel_size=2, stride=2)),
                  ]))
         conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
-        self.add_module('fc_out', nn.Linear(conv_out_size, n_classes))
+        self.add_module('fc_out', nn.Linear(conv_out_size, output_dim))
 
         # Initialize weights
         self._init_weights()

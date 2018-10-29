@@ -106,7 +106,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--n_meta_train_epochs', type=int, help='number of epochs to train',
-                    default=150)
+                    default=150)  # 150
 
 parser.add_argument('--n_inner_steps', type=int,
                     help='For infinite tasks case, number of steps for training per meta-batch of tasks',
@@ -120,12 +120,21 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
 
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=5)
+
+
+parser.add_argument('--divergence_type', type=str, help="",
+                    default='KL')  # 'KL' / 'Wasserstein' / 'Wasserstein_NoSqrt'
+
+
+parser.add_argument('--init_from_prior', default=True, type=lambda x: (str(x).lower() == 'true'))
+
+
+# -------------------------------------------------------------------------------------------
+#  More parameters
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
 prm.data_path = get_data_path()
-set_random_seed(prm.seed)
-create_result_dir(prm)
 
 
 # Weights initialization (for Bayesian net):
@@ -144,14 +153,25 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}  #'weight_decay': 1
 prm.lr_schedule = {}  # No decay
 
 # MPB alg  params:
-prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
+# prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
+prm.kappa_prior = 1e2
 prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
+
 prm.delta = 0.1  #  maximal probability that the bound does not hold
 
-init_from_prior = True  #  False \ True . In meta-testing -  init posterior from learned prior
+init_from_prior = prm.init_from_prior  #  False \ True . In meta-testing -  init posterior from learned prior
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote' / 'AvgVote'
+
+# -------------------------------------------------------------------------------------------
+#  Init run
+# -------------------------------------------------------------------------------------------
+
+create_result_dir(prm)
+
+set_random_seed(prm.seed)
+
 
 # path to save the learned meta-parameters
 save_path = os.path.join(prm.result_dir, 'model.pt')

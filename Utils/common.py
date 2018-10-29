@@ -12,10 +12,18 @@ import numpy as np
 import random
 import sys
 import pickle
+from Utils.data_gen import get_info
+
+
 # -----------------------------------------------------------------------------------------------------------#
-# General - PyTorch
+# General auxilary functions
 # -----------------------------------------------------------------------------------------------------------#
 
+def boolean_string(s):
+    if s not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return s == 'True'
+# -----------------------------------------------------------------------------------------------------------#
 
 def get_value(x):
     ''' Returns the value of any scalar type'''
@@ -26,52 +34,69 @@ def get_value(x):
             return x.data[0]
     else:
         return x
+# -----------------------------------------------------------------------------------------------------------#
 
 def set_random_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
     random.seed(seed)
-
+# -----------------------------------------------------------------------------------------------------------#
 
 # Get the parameters from a model:
 def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
+# -----------------------------------------------------------------------------------------------------------#
 
 def zeros_gpu(size):
     if not isinstance(size, tuple):
         size = (size,)
     return torch.cuda.FloatTensor(*size).fill_(0)
+# -----------------------------------------------------------------------------------------------------------#
 
 def randn_gpu(size, mean=0, std=1):
     if not isinstance(size, tuple):
         size = (size,)
     return torch.cuda.FloatTensor(*size).normal_(mean, std)
+# -----------------------------------------------------------------------------------------------------------#
 
+def get_prediction(outputs):
+
+    if outputs.shape[1] == 1:
+        # binary classification
+        pred = (outputs > 0)
+    else:
+        # multi-class classification
+        ''' Determine the class prediction by the max output and compare to ground truth'''
+        pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
+    return pred
+# -----------------------------------------------------------------------------------------------------------#
 
 def count_correct(outputs, targets):
-    ''' Deterimne the class prediction by the max output and compare to ground truth'''
-    pred = outputs.data.max(1, keepdim=True)[1] # get the index of the max output
+    pred = get_prediction(outputs)
     return get_value(pred.eq(targets.data.view_as(pred)).cpu().sum())
+# -----------------------------------------------------------------------------------------------------------#
 
 def correct_rate(outputs, targets):
     n_correct = count_correct(outputs, targets)
     n_samples = get_value(outputs.size()[0])
     return n_correct / n_samples
-
+# -----------------------------------------------------------------------------------------------------------#
 
 def save_model_state(model, f_path):
 
     with open(f_path, 'wb') as f_pointer:
         torch.save(model.state_dict(), f_pointer)
     return f_path
-
+# -----------------------------------------------------------------------------------------------------------#
 
 def load_model_state(model, f_path):
     if not os.path.exists(f_path):
         raise ValueError('No file found with the path: ' + f_path)
     with open(f_path, 'rb') as f_pointer:
         model.load_state_dict(torch.load(f_pointer))
+# -----------------------------------------------------------------------------------------------------------#
+
 
 #
 # def get_data_path():
@@ -85,7 +110,6 @@ def load_model_state(model, f_path):
 #             pth = read_pth
 #     print('Data path: ', pth)
 #     return pth
-
 
 
 # -------------------------------------------------------------------------------------------
@@ -105,16 +129,32 @@ def load_model_state(model, f_path):
 #         total_norm += loss_crit(param, target)
 #     return total_norm
 
-def net_norm(model, p=2):
-    total_norm = Variable(zeros_gpu(1), requires_grad=True)
-    for param in model.parameters():
-        total_norm = total_norm + param.pow(p).sum()
-    return total_norm
 
+
+
+def net_weights_magnitude(model, p=2, exp_on_logs=False):
+    ''' Calculates the total p-norm of the weights  |W|_p^p
+        If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
+    total_mag = Variable(zeros_gpu(1), requires_grad=True)[0]
+    for (param_name, param) in model.named_parameters():
+        if exp_on_logs and 'log_var' in param_name:
+            w = torch.exp(0.5*param)
+        else:
+            w = param
+        total_mag = total_mag + w.pow(p).sum()
+    return total_mag
+
+
+def net_weights_dim(model):
+    count = Variable(zeros_gpu(1), requires_grad=True)
+    for param in model.parameters():
+        count = count + param.numel()
+    return count
 
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer
 # -----------------------------------------------------------------------------------------------------------#
+
 # Gradient step function:
 def grad_step(objective, optimizer, lr_schedule=None, initial_lr=None, i_epoch=None):
     if lr_schedule:
@@ -143,22 +183,7 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
         param_group['lr'] = lr
 
 
-# -----------------------------------------------------------------------------------------------------------#
-#  Configuration
-# -----------------------------------------------------------------------------------------------------------#
 
-def get_loss_criterion(loss_type):
-# Note: the loss use the un-normalized net outputs (scores, not probabilities)
-
-    criterion_dict = {'CrossEntropy':nn.CrossEntropyLoss(size_average=True).cuda(),
-                 'L2_SVM':nn.MultiMarginLoss(p=2, margin=1, weight=None, size_average=True)}
-
-    return criterion_dict[loss_type]
-
-def boolean_string(s):
-    if s not in {'False', 'True'}:
-        raise ValueError('Not a valid boolean string')
-    return s == 'True'
 # -----------------------------------------------------------------------------------------------------------#
 # Prints
 # -----------------------------------------------------------------------------------------------------------#
@@ -221,7 +246,7 @@ def write_final_result(test_acc, run_time, prm, result_name='', verbose=1):
     message = []
     if verbose == 1:
         message.append('Run finished at: ' + datetime.now().strftime(' %Y-%m-%d %H:%M:%S'))
-    message.append(result_name + ' Average Test Error: {:.3}%\t Runtime: {} [sec]'
+    message.append(result_name + ' Average Test Error: {:.3}%\t Runtime: {:.1f} [sec]'
                      .format(100 * (1 - test_acc), run_time))
     write_to_log(message, prm)
 

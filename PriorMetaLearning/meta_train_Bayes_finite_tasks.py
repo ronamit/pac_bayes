@@ -7,7 +7,8 @@ import numpy as np
 from Models.stochastic_models import get_model
 from Utils import common as cmn
 from Utils.Bayes_utils import run_test_Bayes
-from Utils.common import grad_step, get_loss_criterion, write_to_log, get_value
+from Utils.common import grad_step, write_to_log, get_value
+from Utils.Losses import get_loss_criterion
 from PriorMetaLearning.Get_Objective_MPB import get_objective
 
 # -------------------------------------------------------------------------------------------
@@ -28,6 +29,8 @@ def run_meta_learning(data_loaders, prm):
     loss_criterion = get_loss_criterion(prm.loss_type)
 
     n_train_tasks = len(data_loaders)
+
+    assert prm.meta_batch_size <= n_train_tasks
 
     # Create posterior models for each task:
     posteriors_models = [get_model(prm) for _ in range(n_train_tasks)]
@@ -78,7 +81,6 @@ def run_meta_learning(data_loaders, prm):
 
         for i_meta_batch in range(n_meta_batches):
 
-
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]
             # meta-batch size may be less than  prm.meta_batch_size at the last one
@@ -91,12 +93,11 @@ def run_meta_learning(data_loaders, prm):
             # prior_weight_steps = 10000
             # # prior_weight = 1 - math.exp(-i_step/prior_weight_steps)
             # prior_weight = min(i_step / prior_weight_steps, 1.0)
-            prior_weight = 1.0
             i_step += 1
 
             # Get objective based on tasks in meta-batch:
             total_objective, info = get_objective(prior_model, prm, mb_data_loaders,
-                                                  mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks, prior_weight)
+                                                  mb_iterators, mb_posteriors_models, loss_criterion, n_train_tasks)
 
             # Take gradient step with the shared prior and all tasks' posteriors:
             grad_step(total_objective, all_optimizer, lr_schedule, prm.lr, i_epoch)
@@ -106,8 +107,8 @@ def run_meta_learning(data_loaders, prm):
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
                 print(cmn.status_string(i_epoch,  prm.n_meta_train_epochs, i_meta_batch, n_meta_batches, batch_acc, get_value(total_objective)) +
-                      ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}\t prior-weight: {:.4}'.
-                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp'], info['prior_weight']))
+                      ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}\t'.
+                      format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp']))
         # end  meta-batches loop
         return i_step
     # end run_epoch()

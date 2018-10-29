@@ -101,6 +101,13 @@ class Task_Generator(object):
             train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
                 n_labels=prm.N_Way, k_train_shot=k_train_shot,
                 final_input_trans=final_input_trans, target_transform=target_trans)
+
+
+        elif  self.data_source == 'binarized_MNIST':
+            assert not target_trans # make sure no transformations
+            target_trans = [create_label_binarize(prm, thresh=5)]
+            train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
+
         else:
             raise ValueError('Invalid data_source')
 
@@ -194,21 +201,34 @@ def load_CIFAR(final_input_trans, target_trans, prm):
 
 def get_info(prm):
     if prm.data_source == 'MNIST':
-        info = {'input_shape': (1, 28, 28),  'n_classes': 10}
+        info = {'input_shape': (1, 28, 28),  'n_classes': 10, 'type': 'multi_class'}
 
     elif prm.data_source == 'CIFAR10':
-        info = {'input_shape': (3, 32, 32), 'n_classes': 10}
+        info = {'input_shape': (3, 32, 32), 'n_classes': 10, 'type': 'multi_class'}
 
     elif prm.data_source == 'Omniglot':
-        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way}
+        info = {'input_shape': (1, 28, 28), 'n_classes': prm.N_Way, 'type': 'multi_class'}
 
     elif prm.data_source == 'SmallImageNet':
-        info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way}
+        info = {'input_shape': (3, 84, 84), 'n_classes': prm.N_Way, 'type': 'multi_class'}
 
+    elif prm.data_source == 'binarized_MNIST':
+        info = {'input_shape': (1, 28, 28),  'n_classes': 2, 'type': 'binary_class'}
+        # note: since we have two classes, we can have one output
     else:
         raise ValueError('Invalid data_source')
 
+    if info['type'] == 'multi_class':
+        # label is the argmax of the output vector
+        info['output_dim'] =  info['n_classes']
+    elif info['type'] == 'binary_class':
+        # label are -/+1
+        info['output_dim'] =  1
+
     return info
+
+
+
 
 # -------------------------------------------------------------------------------------------
 #  Batch extraction
@@ -218,7 +238,7 @@ def get_batch_vars(batch_data, args, is_test=False):
     ''' Transform batch to variables '''
     inputs, targets = batch_data
     inputs, targets = inputs.cuda(), targets.cuda(async=True)
-    inputs, targets = Variable(inputs, volatile=is_test), Variable(targets, volatile=is_test)
+    inputs, targets = Variable(inputs), Variable(targets)
     return inputs, targets
 
 
@@ -280,6 +300,14 @@ def create_label_permute_trans(prm):
     inds_permute = torch.randperm(info['n_classes'])
     transform_func = lambda target: inds_permute[target]
     return transform_func
+
+
+def create_label_binarize(prm, thresh):
+    # binarizes the labels (0 or 1)
+    info = get_info(prm)
+    transform_func = lambda target: (target >= thresh)
+    return transform_func
+
 
 
 def create_rotation_trans():

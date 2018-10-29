@@ -16,20 +16,22 @@ from Models.stochastic_layers import StochasticLayer
 
 def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
 
-    if len(test_loader) == 0:
-        return 0.0, 0.0
+    with torch.no_grad():    # no need for backprop in test
 
-    if prm.test_type == 'MaxPosterior':
-        info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
-    elif prm.test_type == 'MajorityVote':
-        info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
-    elif prm.test_type == 'AvgVote':
-        info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
-    else:
-        raise ValueError('Invalid test_type')
-    if verbose:
-        print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
-                                                                      info['n_test_samples'], float(info['test_loss'])))
+        if len(test_loader) == 0:
+            return 0.0, 0.0
+
+        if prm.test_type == 'MaxPosterior':
+            info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
+        elif prm.test_type == 'MajorityVote':
+            info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        elif prm.test_type == 'AvgVote':
+            info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+        else:
+            raise ValueError('Invalid test_type')
+        if verbose:
+            print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
+                                                                          info['n_test_samples'], float(info['test_loss'])))
     return info['test_acc'], info['test_loss']
 
 
@@ -42,10 +44,11 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     n_correct = 0
     for batch_data in test_loader:
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        batch_size = inputs.shape[0]
         old_eps_std = model.set_eps_std(0.0)   # test with max-posterior
         outputs = model(inputs)
         model.set_eps_std(old_eps_std)  # return model to normal behaviour
-        test_loss += loss_criterion(outputs, targets)  # sum the mean loss in batch
+        test_loss += loss_criterion(outputs, targets) # sum the loss contributed from batch
         n_correct += count_correct(outputs, targets)
 
     test_loss /= n_test_samples
@@ -69,14 +72,16 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
+        loss_from_batch = 0.0
         for i_vote in range(n_votes):
 
             outputs = model(inputs)
-            test_loss += loss_criterion(outputs, targets)
+            loss_from_batch += loss_criterion(outputs, targets)
             pred = outputs.data.max(1, keepdim=True)[1]  # get the index of the max output
             for i_sample in range(batch_size):
                 pred_val = pred[i_sample].cpu().numpy()[0]
                 votes[i_sample, pred_val] += 1
+        test_loss += loss_from_batch / n_votes # sum the loss contributed from batch
 
         majority_pred = votes.max(1, keepdim=True)[1] # find argmax class for each sample
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
@@ -101,14 +106,16 @@ def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
         votes = cmn.zeros_gpu((batch_size, n_labels))
+        loss_from_batch = 0.0
         for i_vote in range(n_votes):
 
             outputs = model(inputs)
-            test_loss += loss_criterion(outputs, targets)
+            loss_from_batch += loss_criterion(outputs, targets)
             votes += outputs.data
 
         majority_pred = votes.max(1, keepdim=True)[1]
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
+        test_loss += loss_from_batch / n_votes  # sum the loss contributed from batch
 
     test_loss /= n_test_samples
     test_acc = n_correct / n_test_samples
@@ -143,7 +150,7 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
 
-def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_loss, hyper_kl=0, n_train_tasks=1, noised_prior=True):
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_kl=0, n_train_tasks=1, noised_prior=False):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
@@ -158,7 +165,7 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
 
     elif prm.complexity_type == 'NewBoundSeeger':
         seeger_eps = (1 / n_samples) * (tot_kld + hyper_kl + math.log(4 * math.sqrt(n_samples) / delta))
-        sqrt_arg = 2 * seeger_eps * empirical_loss
+        sqrt_arg = 2 * seeger_eps * avg_empiric_loss
         sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
@@ -167,8 +174,8 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
 
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,
-        # we need to multiply by the average_loss by total number of samples
-        empirical_loss = n_samples * empirical_loss
+        # we need to multiply by the average empirical loss by total number of samples
+        # this will be done later
         complex_term = tot_kld
 
 
@@ -188,10 +195,10 @@ def get_bayes_task_objective(prm, prior_model, post_model, n_samples, empirical_
     else:
         raise ValueError('Invalid complexity_type')
 
-    return empirical_loss, complex_term
+    return complex_term
 
 
-def get_total_kld(prior_model, post_model, prm, noised_prior):
+def get_total_kld(prior_model, post_model, prm, noised_prior=False):
 
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
     post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
@@ -200,14 +207,14 @@ def get_total_kld(prior_model, post_model, prm, noised_prior):
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
         if hasattr(prior_layer, 'w'):
-            total_kld += kld_element(post_layer.w, prior_layer.w, prm, noised_prior)
+            total_kld += divregnce_element(post_layer.w, prior_layer.w, prm, noised_prior)
         if hasattr(prior_layer, 'b'):
-            total_kld += kld_element(post_layer.b, prior_layer.b, prm, noised_prior)
+            total_kld += divregnce_element(post_layer.b, prior_layer.b, prm, noised_prior)
 
     return total_kld
 
 
-def kld_element(post, prior, prm, noised_prior):
+def divregnce_element(post, prior, prm, noised_prior=False):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
     if noised_prior and prm.kappa_post > 0:
@@ -220,13 +227,29 @@ def kld_element(post, prior, prm, noised_prior):
     post_var = torch.exp(post['log_var'])
     prior_var = torch.exp(prior_log_var)
 
-    numerator = (post['mean'] - prior_mean).pow(2) + post_var
-    denominator = prior_var
-    kld = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+    #==----------------------------------------------------------------------------
+    post_std = torch.exp(0.5*post['log_var'])
+    prior_std = torch.exp(0.5*prior_log_var)
+
+    if prm.divergence_type == 'Wasserstein':
+        divergence = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
+    # divergence = torch.sqrt(
+    #     torch.sum(torch.relu((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
+
+    elif prm.divergence_type == 'Wasserstein_NoSqrt':
+            divergence = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
+
+        # ==----------------------------------------------------------------------------
+    elif prm.divergence_type == 'KL':
+        numerator = (post['mean'] - prior_mean).pow(2) + post_var
+        denominator = prior_var
+        divergence = 0.5 * torch.sum(prior_log_var - post['log_var'] + numerator / denominator - 1)
+    else:
+        raise ValueError('Invalid prm.divergence_type')
 
     # note: don't add small number to denominator, since we need to have zero KL when post==prior.
 
-    return kld
+    return divergence
 
 
 def add_noise(param, std):
@@ -245,3 +268,14 @@ def add_noise_to_model(model, std):
             add_noise(layer.b['log_var'], std)
             add_noise(layer.b['mean'], std)
 
+
+def set_model_values(model, mean, log_var):
+    layers_list = [layer for layer in model.children() if isinstance(layer, StochasticLayer)]
+
+    for i_layer, layer in enumerate(layers_list):
+        if hasattr(layer, 'w'):
+            layer.w['log_var'].data.fill_(log_var)
+            layer.w['mean'].data.fill_(mean)
+        if hasattr(layer, 'b'):
+            layer.b['log_var'].data.fill_(log_var)
+            layer.b['mean'].data.fill_(mean)

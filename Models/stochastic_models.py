@@ -109,7 +109,7 @@ class FcNet3(general_model):
         self.model_name = model_name
         self.layers_names = ('FC1', 'FC2', 'FC3', 'FC_out')
         input_shape = task_info['input_shape']
-        n_classes = task_info['n_classes']
+        output_dim = task_info['output_dim']
         input_size = input_shape[0] * input_shape[1] * input_shape[2]
 
         self.input_size = input_size
@@ -119,7 +119,7 @@ class FcNet3(general_model):
         self.fc1 = linear_layer(input_size, n_hidden1)
         self.fc2 = linear_layer(n_hidden1, n_hidden2)
         self.fc3 = linear_layer(n_hidden2, n_hidden3)
-        self.fc_out = linear_layer(n_hidden3, n_classes)
+        self.fc_out = linear_layer(n_hidden3, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
         # self.cuda()  # always use GPU
@@ -143,7 +143,7 @@ class ConvNet3(general_model):
         self.layers_names = ('conv1', 'conv2', 'FC1', 'FC_out')
         input_shape = task_info['input_shape']
         color_channels = input_shape[0]
-        n_classes = task_info['n_classes']
+        output_dim = task_info['output_dim']
         n_filt1 = 10
         n_filt2 = 20
         n_hidden_fc1 = 50
@@ -151,7 +151,7 @@ class ConvNet3(general_model):
         self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=5)
         conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
         self.fc1 = linear_layer(conv_feat_size, n_hidden_fc1)
-        self.fc_out = linear_layer(n_hidden_fc1, n_classes)
+        self.fc_out = linear_layer(n_hidden_fc1, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
         # self.cuda()  # always use GPU
@@ -181,7 +181,7 @@ class OmConvNet(general_model):
         self.layers_names = ('conv1', 'conv2', 'conv3', 'FC_out')
         input_shape = task_info['input_shape']
         color_channels = input_shape[0]
-        n_classes = task_info['n_classes']
+        output_dim = task_info['output_dim']
         n_in_channels = input_shape[0]
         n_filt1 = filt_size
         n_filt2 = filt_size
@@ -199,7 +199,7 @@ class OmConvNet(general_model):
         self.relu3 = nn.ReLU(inplace=True)
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
         conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
-        self.fc_out = linear_layer(conv_out_size, n_classes)
+        self.fc_out = linear_layer(conv_out_size, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
         # self.cuda()  # always use GPU
@@ -226,7 +226,7 @@ class OmConvNet(general_model):
 #         self.model_name = model_name
 #         input_shape = task_info['input_shape']
 #         color_channels = input_shape[0]
-#         n_classes = task_info['n_classes']
+#         output_dim = task_info['output_dim']
 #         n_filt1 = 10
 #         n_filt2 = 20
 #         n_hidden_fc1 = 50
@@ -234,7 +234,7 @@ class OmConvNet(general_model):
 #         self.conv2 = nn.Conv2d(n_filt1, n_filt2, kernel_size=5)
 #         conv_feat_size = get_size_of_conv_output(input_shape, self._forward_features)
 #         self.fc1 = linear_layer(conv_feat_size, n_hidden_fc1)
-#         self.fc_out = linear_layer(n_hidden_fc1, n_classes)
+#         self.fc_out = linear_layer(n_hidden_fc1, output_dim)
 # 
 #         # self._init_weights(log_var_init)  # Initialize weights
 #         # self.cuda()  # always use GPU

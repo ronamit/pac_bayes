@@ -5,8 +5,10 @@ import timeit
 from Models.stochastic_models import get_model
 from Utils import common as cmn
 from Utils.Bayes_utils import  run_test_Bayes
-from Utils.common import grad_step, get_loss_criterion, write_to_log
+from Utils.common import grad_step, write_to_log
+from Utils.Losses import get_loss_criterion
 from PriorMetaLearning.Get_Objective_MPB import get_objective
+
 
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -21,9 +23,6 @@ def run_meta_learning(task_generator, prm):
     # Unpack parameters:
     optim_func, optim_args, lr_schedule =\
         prm.optim_func, prm.optim_args, prm.lr_schedule
-
-    # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
 
     # Create a 'dummy' model to generate the set of parameters of the shared prior:
     prior_model = get_model(prm)
