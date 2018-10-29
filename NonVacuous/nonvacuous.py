@@ -93,7 +93,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 
 # Bound parameters
-prm.complexity_type = 'NewBoundMcAllaster'
+prm.complexity_type = 'NewBoundMcAllaster'  # 'NewBoundMcAllaster' / 'NewBoundSeeger'
 prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
 prm.delta = 0.035   #  maximal probability that the bound does not hold
 
@@ -140,10 +140,12 @@ write_to_log('Test-err. {:1.3}, Test-loss:  {:.4}'.format(test_err, test_loss), 
 prt = deepcopy(prm) # temp parameters
 for loss_type in ['Logistic_binary', 'Zero_One']:
     prt.loss_type = loss_type
-    prt.divergence_type = prm.divergence_type ###
-    prt.complexity_type = prm.complexity_type ###
-    bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm)
-    write_to_log('Bound: {}, Distance: {}, Loss: {}, Value: {:.4}'.
-                 format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
+    for  divergence_type in ['KL', 'Wasserstein_NoSqrt']:
+        prt.divergence_type = divergence_type
+        for complexity_type in ['NewBoundMcAllaster', 'NewBoundSeeger']:
+            prt.complexity_type = complexity_type
+            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
+            write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
+                         format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
 
 

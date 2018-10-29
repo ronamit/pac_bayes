@@ -198,7 +198,7 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
     return complex_term
 
 
-def get_total_kld(prior_model, post_model, prm, noised_prior):
+def get_total_kld(prior_model, post_model, prm, noised_prior=False):
 
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
     post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
@@ -214,7 +214,7 @@ def get_total_kld(prior_model, post_model, prm, noised_prior):
     return total_kld
 
 
-def divregnce_element(post, prior, prm, noised_prior):
+def divregnce_element(post, prior, prm, noised_prior=False):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
     if noised_prior and prm.kappa_post > 0:

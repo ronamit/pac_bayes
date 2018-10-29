@@ -1,12 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-
-# from Models.stochastic_models import get_model
-from Models.stochastic_models import get_model
 import torch
-from Utils import common as cmn, data_gen
-from Utils.Bayes_utils import get_task_complexity, run_test_Bayes, get_meta_complexity_term
-from Utils.common import grad_step, net_weights_magnitude, count_correct, get_value, net_weights_dim, zeros_gpu
+from Utils import data_gen
+from Utils.Bayes_utils import get_task_complexity, get_meta_complexity_term
+from Utils.common import net_weights_magnitude, count_correct, get_value, net_weights_dim, zeros_gpu
 
 # -------------------------------------------------------------------------------------------
 #
