@@ -7,8 +7,12 @@ from copy import deepcopy
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_test_Bayes, get_task_complexity
-from Utils.common import grad_step, correct_rate, get_loss_criterion, get_value
+from Utils.common import grad_step, correct_rate, get_value
+from Utils.Losses import get_loss_criterion
 
+# -------------------------------------------------------------------------------------------
+#  Stochastic Single-task learning
+# -------------------------------------------------------------------------------------------
 
 def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbose=1):
 
@@ -59,9 +63,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         # post_model.set_eps_std(0.00) # debug
 
         post_model.train()
-        
-        avg_bound_val = 0
-        
+
         for batch_idx, batch_data in enumerate(train_loader):
 
             # Monte-Carlo iterations:
@@ -80,14 +82,14 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
                 avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
 
-            #  complexity/prior term:
+            # complexity/prior term:
             if prior_model:
                 complexity_term = get_task_complexity(
                     prm, prior_model, post_model, n_train_samples, avg_empiric_loss, noised_prior=False)
             else:
                 complexity_term = 0.0
 
-                # Total objective:
+            # Total objective:
             objective = avg_empiric_loss + complexity_term
 
             # Take gradient step:
@@ -100,12 +102,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, get_value(objective)) +
                       ' Loss: {:.4}\t Comp.: {:.4}'.format(get_value(avg_empiric_loss), get_value(complexity_term)))
 
-            avg_bound_val += get_value(objective)  # save for analysis
         # End batch loop
 
-        avg_bound_val /= n_batches
-
-        return avg_bound_val
+        return
+    # End run_train_epoch()
     # -------------------------------------------------------------------------------------------
     #  Main Script
     # -------------------------------------------------------------------------------------------
@@ -120,9 +120,8 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     start_time = timeit.default_timer()
 
     # Run training epochs:
-    bound_val = 0.0
     for i_epoch in range(prm.num_epochs):
-        bound_val = run_train_epoch(i_epoch)
+         run_train_epoch(i_epoch)
 
     # Test:
     test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
@@ -133,4 +132,53 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     test_err = 1 - test_acc
     
  
-    return test_err, post_model, test_loss, bound_val
+    return post_model, test_err, test_loss
+
+
+# -------------------------------------------------------------------------------------------
+#  Bound evaluation
+# -------------------------------------------------------------------------------------------
+def eval_bound(post_model, prior_model, data_loader, prm):
+
+    # Loss criterion
+    loss_criterion = get_loss_criterion(prm.loss_type)
+
+    train_loader = data_loader['train']
+    n_batches = len(train_loader)
+    n_train_samples = data_loader['n_train_samples']
+
+    post_model.test()
+
+    avg_bound_val = 0
+
+    for batch_idx, batch_data in enumerate(train_loader):
+
+        # Monte-Carlo iterations:
+        avg_empiric_loss = 0
+        n_MC = prm.n_MC
+
+        for i_MC in range(n_MC):
+            # get batch:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # note: we sample new batch in eab MC run to get lower variance estimator
+            batch_size = inputs.shape[0]
+
+            # calculate objective:
+            outputs = post_model(inputs)
+            avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
+            avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
+
+        #  complexity/prior term:
+        complexity_term = get_task_complexity(
+            prm, prior_model, post_model, n_train_samples, avg_empiric_loss, noised_prior=False)
+
+
+        # Total objective:
+        objective = avg_empiric_loss + complexity_term
+
+        avg_bound_val += get_value(objective)  # save for analysis
+    # End batch loop
+
+    avg_bound_val /= n_batches
+
+    return avg_bound_val

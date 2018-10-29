@@ -136,17 +136,17 @@ for i in range(n_experiments):
     write_to_log('--- Generating task #2 with at most {} samples'.format(limit_train_samples), prm)
     task2_data = task_generator.get_data_loader(prm, limit_train_samples = limit_train_samples)
 
-    # #  Run learning of task 2 from scratch:
-    # write_to_log('--- Standard learning of task #2 from scratch', prm)
-    # test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
-    #
-    # #  Run Bayesian-learning of task 2 from scratch:
-    # write_to_log('---- Bayesian learning of task #2 from scratch', prm)
-    # test_err_scratch_bayes[i], _ = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
-    #
-    # #  Run learning of task 2 using transferred initial point:
-    # write_to_log('--- Standard learning of task #2 using transferred weights as initial point', prm)
-    # test_err_transfer[i], _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transferred_model, verbose=0)
+    #  Run learning of task 2 from scratch:
+    write_to_log('--- Standard learning of task #2 from scratch', prm)
+    test_err_scratch[i], _ = learn_single_standard.run_learning(task2_data, prm, verbose=0)
+
+    #  Run Bayesian-learning of task 2 from scratch:
+    write_to_log('---- Bayesian learning of task #2 from scratch', prm)
+    _, test_err_scratch_bayes[i] = learn_single_Bayes.run_learning(task2_data, prm, verbose=0)
+
+    #  Run learning of task 2 using transferred initial point:
+    write_to_log('--- Standard learning of task #2 using transferred weights as initial point', prm)
+    test_err_transfer[i], _ = learn_single_standard.run_learning(task2_data, prm, initial_model=transferred_model, verbose=0)
 
     #  Run learning of task 2 using transferred initial point + freeze some layers:
     write_to_log('--- Standard learning of task #2 using transferred weights as initial point + ' + freeze_description, prm_freeze)

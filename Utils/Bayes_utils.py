@@ -174,7 +174,8 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     elif complexity_type == 'Variational_Bayes':
         # Since we approximate the expectation of the likelihood of all samples,
-        # we need to multiply by the average_loss by total number of samples
+        # we need to multiply by the average empirical loss by total number of samples
+        # this will be done later
         complex_term = tot_kld
 
 

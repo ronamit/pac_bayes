@@ -4,8 +4,36 @@ from torch.nn.modules.module import Module
 from torch.nn.modules.container import Sequential
 from torch.nn.modules.activation import LogSoftmax
 from torch.nn import functional as F
+import torch.nn as nn
 import math
 
+# -----------------------------------------------------------------------------------------------------------#
+# Returns loss function
+# -----------------------------------------------------------------------------------------------------------#
+def get_loss_criterion(loss_type):
+    # Note: 1. the loss function use the un-normalized net outputs (scores, not probabilities)
+    #       2. The returned loss is summed (not averaged) over samples!!!
+
+    if loss_type == 'CrossEntropy':
+        return nn.CrossEntropyLoss(reduction='sum').cuda()
+
+    elif loss_type == 'L2_SVM':
+        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='sum').cuda()
+
+    elif loss_type == 'Logistic_binary':
+        return Logistic_Binary_Loss(reduction='sum').cuda()
+
+    elif loss_type == 'Zero_One':
+        return
+
+    else:
+        raise ValueError('Invalid loss_type')
+
+
+
+# -----------------------------------------------------------------------------------------------------------#
+# Definitions of loss functions
+# -----------------------------------------------------------------------------------------------------------#
 
 def _assert_no_grad(variable):
     assert not variable.requires_grad, \

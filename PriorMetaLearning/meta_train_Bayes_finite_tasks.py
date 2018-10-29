@@ -7,7 +7,8 @@ import numpy as np
 from Models.stochastic_models import get_model
 from Utils import common as cmn
 from Utils.Bayes_utils import run_test_Bayes
-from Utils.common import grad_step, get_loss_criterion, write_to_log, get_value
+from Utils.common import grad_step, write_to_log, get_value
+from Utils.Losses import get_loss_criterion
 from PriorMetaLearning.Get_Objective_MPB import get_objective
 
 # -------------------------------------------------------------------------------------------
@@ -28,6 +29,8 @@ def run_meta_learning(data_loaders, prm):
     loss_criterion = get_loss_criterion(prm.loss_type)
 
     n_train_tasks = len(data_loaders)
+
+    assert prm.meta_batch_size <= n_train_tasks
 
     # Create posterior models for each task:
     posteriors_models = [get_model(prm) for _ in range(n_train_tasks)]
@@ -77,7 +80,6 @@ def run_meta_learning(data_loaders, prm):
         n_meta_batches = len(meta_batch_starts)
 
         for i_meta_batch in range(n_meta_batches):
-
 
             meta_batch_start = meta_batch_starts[i_meta_batch]
             task_ids_in_meta_batch = task_order[meta_batch_start: (meta_batch_start + prm.meta_batch_size)]

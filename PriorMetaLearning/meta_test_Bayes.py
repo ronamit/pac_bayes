@@ -6,7 +6,8 @@ import timeit
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_task_complexity, run_test_Bayes
-from Utils.common import grad_step, count_correct, get_loss_criterion, write_to_log
+from Utils.common import grad_step, count_correct, write_to_log
+from Utils.Losses import get_loss_criterion
 
 
 def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
@@ -89,8 +90,13 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
                 sample_count += inputs.size(0)
             # end monte-carlo loop
 
-            # Total objective (for current batch):
-            total_objective = avg_empiric_loss + complexity_term
+            # Approximated total objective (for current batch):
+            if prm.complexity_type == 'Variational_Bayes':
+                # note that avg_empiric_loss_per_task is estimated by an average over batch samples,
+                #  but its weight in the objective should be considered by how many samples there are total in the task
+                total_objective = avg_empiric_loss * (n_train_samples) + complexity_term
+            else:
+                total_objective = avg_empiric_loss + complexity_term
 
             # Take gradient step with the posterior:
             grad_step(total_objective, optimizer, lr_schedule, prm.lr, i_epoch)

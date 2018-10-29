@@ -5,8 +5,10 @@ import timeit
 from Models.stochastic_models import get_model
 from Utils import common as cmn
 from Utils.Bayes_utils import  run_test_Bayes
-from Utils.common import grad_step, get_loss_criterion, write_to_log
+from Utils.common import grad_step, write_to_log
+from Utils.Losses import get_loss_criterion
 from PriorMetaLearning.Get_Objective_MPB import get_objective
+
 
 # -------------------------------------------------------------------------------------------
 #  Learning function

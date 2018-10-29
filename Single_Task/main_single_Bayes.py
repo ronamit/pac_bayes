@@ -5,7 +5,7 @@ import argparse
 import torch
 import torch.optim as optim
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
 from Single_Task import learn_single_Bayes
 from Data_Path import get_data_path
 
@@ -109,7 +109,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 
 # Learning rate decay schedule:
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
-prm.lr_schedule = {} # No decay
+prm.lr_schedule = {}  # No decay
 
 # Test type:
 prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
@@ -122,6 +122,6 @@ data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_
 #  Run learning
 # -------------------------------------------------------------------------------------------
 
-test_err, _ = learn_single_Bayes.run_learning(data_loader, prm)
+post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm)
+save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 
-save_run_data(prm, {'test_err': test_err})

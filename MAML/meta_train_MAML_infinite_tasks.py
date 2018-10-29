@@ -9,7 +9,8 @@ import timeit
 
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import grad_step, get_loss_criterion, write_to_log
+from Utils.common import grad_step, write_to_log
+from Utils.Losses import get_loss_criterion
 from MAML.MAML_meta_step import meta_step
 # -------------------------------------------------------------------------------------------
 #  Learning function

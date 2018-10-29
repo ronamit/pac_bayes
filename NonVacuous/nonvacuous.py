@@ -4,11 +4,12 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import torch
 import torch.optim as optim
+from copy import deepcopy
+
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
 from Single_Task import learn_single_Bayes
 from Data_Path import get_data_path
-import Utils.common as cmn
 from Models.stochastic_models import get_model
 from Utils.Bayes_utils import set_model_values
 
@@ -93,7 +94,7 @@ prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
 
 # Bound parameters
 prm.complexity_type = 'NewBoundMcAllaster'
-prm.divergence_type = 'KL'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
+prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
 prm.delta = 0.035   #  maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
@@ -122,8 +123,27 @@ set_model_values(prior_model, prior_mean, prior_log_var)
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
+# Learn a posterior which minimizes some bound with some loss function
 
-test_err, _, test_loss, bound_val = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
+post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
 
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
-cmn.write_to_log('Test-err. {:1.3}, Test-loss:  {:.4}, Bound: {:.4}'.format(test_err, test_loss, bound_val), prm)
+write_to_log('Test-err. {:1.3}, Test-loss:  {:.4}'.format(test_err, test_loss), prm)
+
+# -------------------------------------------------------------------------------------------
+#  Evaluate bounds
+# -------------------------------------------------------------------------------------------
+# Calculate bounds the expected risk of the learned posterior
+# Note: the bounds are evaluated using only the training data
+# But they should upper bound the test-loss (with high probability)
+
+prt = deepcopy(prm) # temp parameters
+for loss_type in ['Logistic_binary', 'Zero_One']:
+    prt.loss_type = loss_type
+    prt.divergence_type = prm.divergence_type ###
+    prt.complexity_type = prm.complexity_type ###
+    bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm)
+    write_to_log('Bound: {}\t, Distance: {}\t, Loss: {}\t, Value: {:.4}\t'.
+                 format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
+
+

@@ -6,7 +6,8 @@ from Models.stochastic_models import get_model
 import torch
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_task_complexity, run_test_Bayes, get_meta_complexity_term
-from Utils.common import grad_step, net_weights_magnitude, count_correct, get_loss_criterion, get_value, net_weights_dim, zeros_gpu
+from Utils.common import grad_step, net_weights_magnitude, count_correct, get_value, net_weights_dim, zeros_gpu
+from Utils.Losses import get_loss_criterion
 
 # -------------------------------------------------------------------------------------------
 #
@@ -40,7 +41,7 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
     avg_empiric_loss_per_task = zeros_gpu(n_tasks_in_mb)
     complexity_per_task = zeros_gpu(n_tasks_in_mb)
-    n_samples_per_task  =  zeros_gpu(n_tasks_in_mb)# how many sampels there are total in each task (not just in a batch)
+    n_samples_per_task = zeros_gpu(n_tasks_in_mb)# how many sampels there are total in each task (not just in a batch)
 
     # ----------- loop over tasks in meta-batch -----------------------------------#
     for i_task in range(n_tasks_in_mb):
@@ -94,12 +95,14 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     if prm.complexity_type == 'Variational_Bayes':
         # note that avg_empiric_loss_per_task is estimated by an average over batch samples,
         #  but its weight in the objective should be considered by how many samples there are total in the task
-        total_objective = (avg_empiric_loss_per_task * n_samples_per_task).sum() + complexity_per_task.sum() + meta_complex_term
+        total_objective = (avg_empiric_loss_per_task * n_samples_per_task + complexity_per_task).mean() * n_train_tasks + meta_complex_term
+        # total_objective = ( avg_empiric_loss_per_task * n_samples_per_task + complexity_per_task).mean() + meta_complex_term
+
     else:
         total_objective = avg_empiric_loss_per_task.mean() + complexity_per_task.mean() + meta_complex_term
 
     info = {'sample_count': get_value(sample_count), 'correct_count': get_value(correct_count),
-                  'avg_empirical_loss': get_value(complexity_per_task.mean()),
-                  'avg_intra_task_comp': get_value(avg_empiric_loss_per_task.mean()),
+                  'avg_empirical_loss': get_value(avg_empiric_loss_per_task.mean()),
+                  'avg_intra_task_comp': get_value(complexity_per_task.mean()),
                   'meta_comp': get_value(meta_complex_term)}
     return total_objective, info

@@ -15,7 +15,8 @@ import torch
 from torch.autograd import Variable
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import grad_step, net_weights_magnitude, correct_rate, get_loss_criterion, write_to_log, count_correct
+from Utils.common import grad_step, net_weights_magnitude, correct_rate, write_to_log, count_correct
+from Utils.Losses import get_loss_criterion
 
 def meta_step(prm, model, mb_data_loaders, mb_iterators, loss_criterion):
 
