@@ -128,7 +128,7 @@ set_model_values(prior_model, prior_mean, prior_log_var)
 post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
 
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
-write_to_log('Test-err. {:1.3}, Test-loss:  {:.4}'.format(test_err, test_loss), prm)
+
 
 # -------------------------------------------------------------------------------------------
 #  Evaluate bounds

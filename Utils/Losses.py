@@ -75,7 +75,7 @@ class Logistic_Binary_Loss(_Loss):
 # -----------------------------------------------------------------------------------------------------------#
 
 class Zero_One_Loss(_Loss):
-
+    # zero one-loss of binaty classifier with labels {-1,1}
     def forward(self, input, target):
         _assert_no_grad(target)
         assert input.shape[1] == 1 # this loss works only for binary classification
@@ -85,6 +85,6 @@ class Zero_One_Loss(_Loss):
         # switch labels to {-1,1}
         target = target.float() * 2 - 1
         # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
-        return (target == input).sum()
+        return (target != torch.sign(input)).sum().float()
 
 # -----------------------------------------------------------------------------------------------------------#

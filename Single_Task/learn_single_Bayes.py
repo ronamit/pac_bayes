@@ -7,7 +7,7 @@ from copy import deepcopy
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_test_Bayes, get_task_complexity
-from Utils.common import grad_step, correct_rate, get_value
+from Utils.common import grad_step, correct_rate, get_value, zeros_gpu, write_to_log
 from Utils.Losses import get_loss_criterion
 
 # -------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         for batch_idx, batch_data in enumerate(train_loader):
 
             # Monte-Carlo iterations:
-            avg_empiric_loss = 0
+            avg_empiric_loss = zeros_gpu(1)
             n_MC = prm.n_MC
 
             for i_MC in range(n_MC):
@@ -113,9 +113,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
     #  Update Log file
     update_file = not verbose == 0
-    cmn.write_to_log(cmn.get_model_string(post_model), prm, update_file=update_file)
-    cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
-    cmn.write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
+    write_to_log(cmn.get_model_string(post_model), prm, update_file=update_file)
+    write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
+    write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
 
     start_time = timeit.default_timer()
 
@@ -123,13 +123,22 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     for i_epoch in range(prm.num_epochs):
          run_train_epoch(i_epoch)
 
+    # evaluate final perfomance on train-set
+    train_acc, train_loss = run_test_Bayes(post_model, train_loader, loss_criterion, prm)
+
     # Test:
     test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
+    test_err = 1 - test_acc
+
+    # Log results
+    write_to_log(' Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100*(1-train_acc), train_loss),
+                 prm, update_file=update_file)
+    write_to_log('Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100*(test_err), test_loss), prm)
 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type)
 
-    test_err = 1 - test_acc
+
     
  
     return post_model, test_err, test_loss
@@ -154,7 +163,7 @@ def eval_bound(post_model, prior_model, data_loader, prm):
     for batch_idx, batch_data in enumerate(train_loader):
 
         # Monte-Carlo iterations:
-        avg_empiric_loss = 0
+        avg_empiric_loss = zeros_gpu(1)
         n_MC = prm.n_MC
 
         for i_MC in range(n_MC):
