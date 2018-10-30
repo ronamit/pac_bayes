@@ -11,7 +11,7 @@ from Utils.common import set_random_seed, create_result_dir, save_run_data, writ
 from Single_Task import learn_single_Bayes
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
-from Utils.Bayes_utils import set_model_values
+from Utils.Bayes_utils import set_model_values, run_test_Bayes
 
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
@@ -140,12 +140,20 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 prt = deepcopy(prm) # temp parameters
 for loss_type in ['Logistic_binary', 'Zero_One']:
     prt.loss_type = loss_type
+    test_acc, test_loss = run_test_Bayes(post_model, data_loader['test'], prt)
+    write_to_log('Loss func. {}, Test-loss:  {:.4}'.format(loss_type, test_loss), prm)
+
     for  divergence_type in ['KL', 'Wasserstein_NoSqrt']:
         prt.divergence_type = divergence_type
         for complexity_type in ['NewBoundMcAllaster', 'NewBoundSeeger']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
-            write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
+            write_to_log('Bound-v1: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
                          format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
+            bound_val = learn_single_Bayes.eval_bound2(post_model, prior_model, data_loader, prt)
+            write_to_log('Bound-v2: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
+                         format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
+
+
 
 

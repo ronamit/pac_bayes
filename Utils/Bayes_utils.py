@@ -9,12 +9,13 @@ from Utils import common as cmn, data_gen
 from Utils.common import count_correct, get_value
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticLayer
+from Utils.Losses import get_loss_func
 
 
 
 # -----------------------------------------------------------------------------------------------------------#
 
-def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
+def run_test_Bayes(model, test_loader, prm, verbose=0):
 
     with torch.no_grad():    # no need for backprop in test
 
@@ -22,23 +23,23 @@ def run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=1):
             return 0.0, 0.0
 
         if prm.test_type == 'MaxPosterior':
-            info =  run_test_max_posterior(model, test_loader, loss_criterion, prm)
+            info =  run_test_max_posterior(model, test_loader, prm)
         elif prm.test_type == 'MajorityVote':
-            info = run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+            info = run_test_majority_vote(model, test_loader, prm, n_votes=5)
         elif prm.test_type == 'AvgVote':
-            info = run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5)
+            info = run_test_avg_vote(model, test_loader, prm, n_votes=5)
         else:
             raise ValueError('Invalid test_type')
         if verbose:
-            print('Test Accuracy: {:.3} ({}/{}), Test loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
+            print('Accuracy: {:.3} ({}/{}), loss: {:.4}'.format(float(info['test_acc']), info['n_correct'],
                                                                           info['n_test_samples'], float(info['test_loss'])))
     return info['test_acc'], info['test_loss']
 
 
-def run_test_max_posterior(model, test_loader, loss_criterion, prm):
+def run_test_max_posterior(model, test_loader, prm):
 
     n_test_samples = len(test_loader.dataset)
-
+    loss_criterion = get_loss_func(prm.loss_type)
     model.eval()
     test_loss = 0
     n_correct = 0
@@ -58,8 +59,10 @@ def run_test_max_posterior(model, test_loader, loss_criterion, prm):
     return info
 
 
-def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
-#
+def run_test_majority_vote(model, test_loader, prm, n_votes=9):
+
+
+    loss_criterion = get_loss_func(prm.loss_type)
     n_test_samples = len(test_loader.dataset)
     n_test_batches = len(test_loader)
     model.eval()
@@ -92,8 +95,9 @@ def run_test_majority_vote(model, test_loader, loss_criterion, prm, n_votes=9):
     return info
 
 
-def run_test_avg_vote(model, test_loader, loss_criterion, prm, n_votes=5):
+def run_test_avg_vote(model, test_loader, prm, n_votes=5):
 
+    loss_criterion = get_loss_func(prm.loss_type)
     n_test_samples = len(test_loader.dataset)
     n_test_batches = len(test_loader)
     model.eval()

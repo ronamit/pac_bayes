@@ -10,7 +10,7 @@ import math
 # -----------------------------------------------------------------------------------------------------------#
 # Returns loss function
 # -----------------------------------------------------------------------------------------------------------#
-def get_loss_criterion(loss_type):
+def get_loss_func(loss_type):
     # Note: 1. the loss function use the un-normalized net outputs (scores, not probabilities)
     #       2. The returned loss is summed (not averaged) over samples!!!
 
@@ -62,11 +62,11 @@ class Logistic_Binary_Loss(_Loss):
     """
 
     def forward(self, input, target):
+        # validity checks
         _assert_no_grad(target)
         assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
         assert self.reduction == 'sum'
-
         # switch labels to {-1,1}
         target = target.float() * 2 - 1
         # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
@@ -77,11 +77,11 @@ class Logistic_Binary_Loss(_Loss):
 class Zero_One_Loss(_Loss):
     # zero one-loss of binaty classifier with labels {-1,1}
     def forward(self, input, target):
+        # validity checks
         _assert_no_grad(target)
         assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
         assert self.reduction == 'sum'
-
         # switch labels to {-1,1}
         target = target.float() * 2 - 1
         # return F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)

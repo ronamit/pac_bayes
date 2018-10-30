@@ -6,7 +6,7 @@ import timeit
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import count_correct, grad_step, correct_rate, get_value
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 
 
 def run_learning(data_loader, prm, verbose=1, initial_model=None):
@@ -16,7 +16,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     # The data-sets:
     train_loader = data_loader['train']

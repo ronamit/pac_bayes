@@ -8,7 +8,7 @@ from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_test_Bayes, get_task_complexity
 from Utils.common import grad_step, correct_rate, get_value, zeros_gpu, write_to_log
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic Single-task learning
@@ -25,7 +25,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     train_loader = data_loader['train']
     test_loader = data_loader['test']
@@ -124,19 +124,20 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
          run_train_epoch(i_epoch)
 
     # evaluate final perfomance on train-set
-    train_acc, train_loss = run_test_Bayes(post_model, train_loader, loss_criterion, prm)
+    train_acc, train_loss = run_test_Bayes(post_model, train_loader, prm)
 
     # Test:
-    test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
+    test_acc, test_loss = run_test_Bayes(post_model, test_loader, prm)
     test_err = 1 - test_acc
 
-    # Log results
-    write_to_log(' Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100*(1-train_acc), train_loss),
+    # Log resuls
+    write_to_log('>Train-err. : {:.4}%\t Train-loss: {:.4} ({})'.format(100*(1-train_acc), train_loss, prm.loss_type),
                  prm, update_file=update_file)
-    write_to_log('Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100*(test_err), test_loss), prm)
+    write_to_log('>Test-err. {:1.3}%, Test-loss:  {:.4} ({})'.format(100*(test_err), test_loss, prm.loss_type),
+                 prm, update_file=update_file)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type)
+    cmn.write_final_result(test_acc, stop_time - start_time, prm)
 
 
     
@@ -150,7 +151,53 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 def eval_bound(post_model, prior_model, data_loader, prm):
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
+
+    train_loader = data_loader['train']
+    n_batches = len(train_loader)
+    n_train_samples = data_loader['n_train_samples']
+
+    post_model.eval()
+
+    empiric_loss = 0.0
+
+    for batch_idx, batch_data in enumerate(train_loader):
+
+        # Monte-Carlo iterations:
+
+        n_MC = prm.n_MC
+
+        for i_MC in range(n_MC):
+            # get batch:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            # note: we sample new batch in each MC run to get lower variance estimator
+            batch_size = inputs.shape[0]
+
+            # calculate objective:
+            outputs = post_model(inputs)
+            empiric_loss += (1 / n_MC) * get_value(loss_criterion(outputs, targets))
+
+    # End batch loop
+
+    avg_empiric_loss = empiric_loss / n_train_samples
+
+    #  complexity/prior term:
+    complexity_term = get_task_complexity(
+        prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
+
+    # Total objective:
+    bound_val = avg_empiric_loss + get_value(complexity_term)
+    return bound_val
+
+
+
+# -------------------------------------------------------------------------------------------
+#  Bound evaluation
+# -------------------------------------------------------------------------------------------
+def eval_bound2(post_model, prior_model, data_loader, prm):
+
+    # Loss criterion
+    loss_criterion = get_loss_func(prm.loss_type)
 
     train_loader = data_loader['train']
     n_batches = len(train_loader)

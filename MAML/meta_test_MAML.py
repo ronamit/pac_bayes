@@ -9,7 +9,7 @@ import timeit
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import grad_step, correct_rate, write_to_log, count_correct
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 from torch.optim import SGD
 
 def run_learning(task_data, meta_model, prm, verbose=1):
@@ -19,7 +19,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
     # -------------------------------------------------------------------------------------------
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     # Create model for task:
     task_model = get_model(prm)

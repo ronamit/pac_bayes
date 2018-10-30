@@ -123,5 +123,6 @@ data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_
 # -------------------------------------------------------------------------------------------
 
 post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm)
+
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 

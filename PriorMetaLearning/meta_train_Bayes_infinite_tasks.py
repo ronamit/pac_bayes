@@ -6,7 +6,7 @@ from Models.stochastic_models import get_model
 from Utils import common as cmn
 from Utils.Bayes_utils import  run_test_Bayes
 from Utils.common import grad_step, write_to_log
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 from PriorMetaLearning.Get_Objective_MPB import get_objective
 
 
@@ -74,7 +74,7 @@ def run_meta_iteration(i_iter, prior_model, task_generator, prm):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
     meta_batch_size = prm.meta_batch_size
     n_inner_steps =  prm.n_inner_steps
     n_meta_iterations = prm.n_meta_train_epochs
@@ -144,7 +144,7 @@ def run_test(mb_data_loaders, mb_posteriors_models, loss_criterion, prm):
         model = mb_posteriors_models[i_task]
         test_loader = mb_data_loaders[i_task]['test']
         if len(test_loader) > 0:
-            test_acc, test_loss = run_test_Bayes(model, test_loader, loss_criterion, prm, verbose=0)
+            test_acc, test_loss = run_test_Bayes(model, test_loader, prm, verbose=0)
             n_tests += 1
             test_acc_avg += test_acc
 

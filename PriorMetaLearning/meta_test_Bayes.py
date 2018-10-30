@@ -7,7 +7,7 @@ from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import get_task_complexity, run_test_Bayes
 from Utils.common import grad_step, count_correct, write_to_log
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 
 
 def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
@@ -20,7 +20,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     # Create posterior model for the new task:
     post_model = get_model(prm)
@@ -127,7 +127,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
         run_train_epoch(i_epoch)
 
     # Test:
-    test_acc, test_loss = run_test_Bayes(post_model, test_loader, loss_criterion, prm)
+    test_acc, test_loss = run_test_Bayes(post_model, test_loader, prm)
 
     stop_time = timeit.default_timer()
     cmn.write_final_result(test_acc, stop_time - start_time, prm, result_name=prm.test_type, verbose=verbose)
