@@ -35,7 +35,7 @@ if run_experiments:
               '--n_train_tasks', str(n_train_tasks),
               '--limit_train_samples_in_test_tasks', '2000',
               '--model-name',   'ConvNet3',
-              '--complexity_type',  'NewBoundSeeger',
+              '--complexity_type',  'Seeger',
               '--n_test_tasks', '20',  # 100
               '--n_meta_train_epochs', '150',  # 150
               '--n_meta_test_epochs', '200',  # 200

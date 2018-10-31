@@ -25,17 +25,6 @@ def boolean_string(s):
     return s == 'True'
 # -----------------------------------------------------------------------------------------------------------#
 
-def get_value(x):
-    ''' Returns the value of any scalar type'''
-    if isinstance(x, Variable):
-        if hasattr(x, 'item'):
-            return x.item()
-        else:
-            return x.data[0]
-    else:
-        return x
-# -----------------------------------------------------------------------------------------------------------#
-
 def set_random_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -74,12 +63,12 @@ def get_prediction(outputs):
 
 def count_correct(outputs, targets):
     pred = get_prediction(outputs)
-    return get_value(pred.eq(targets.data.view_as(pred)).cpu().sum())
+    return pred.eq(targets.data.view_as(pred)).cpu().sum().item()
 # -----------------------------------------------------------------------------------------------------------#
 
 def correct_rate(outputs, targets):
     n_correct = count_correct(outputs, targets)
-    n_samples = get_value(outputs.size()[0])
+    n_samples = outputs.shape[0]
     return n_correct / n_samples
 # -----------------------------------------------------------------------------------------------------------#
 

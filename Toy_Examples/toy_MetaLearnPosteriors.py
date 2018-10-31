@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
-from Utils.common import get_value
 import torch
 from torch.autograd import Variable
 import torch.optim as optim
@@ -89,7 +88,7 @@ def learn(data_set, complexity_type):
         optimizer.step()  # Does the update
 
         if i_epoch % 100 == 0:
-            print('Step: {0}, objective: {1}'.format(i_epoch, get_value(objective)))
+            print('Step: {0}, objective: {1}'.format(i_epoch, objective.item()))
 
     # Switch  back to numpy:
     w_mu = w_mu.data.cpu().numpy()

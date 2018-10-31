@@ -112,8 +112,8 @@ prm.lr_schedule = {}  # No decay
 
 
 # MPB alg  params:
-prm.complexity_type = 'NewBoundSeeger'
-#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'PAC_Bayes_Seeger'  / 'KLD' / 'NoComplexity' /  NewBound / NewBoundSeeger
+prm.complexity_type = 'Seeger'
+#  'Variational_Bayes' / 'PAC_Bayes_McAllaster' / 'PAC_Bayes_Pentina' / 'NoComplexity'  / Seeger
 prm.kappa_prior = 2e3  #  parameter of the hyper-prior regularization
 prm.kappa_post = 1e-3  # The STD of the 'noise' added to prior
 prm.delta = 0.1  #  maximal probability that the bound does not hold

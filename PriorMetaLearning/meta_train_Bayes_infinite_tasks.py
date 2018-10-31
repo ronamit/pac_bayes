@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 import timeit
 from Models.stochastic_models import get_model
 from Utils import common as cmn
-from Utils.Bayes_utils import  run_test_Bayes
+from Utils.Bayes_utils import  run_eval_Bayes
 from Utils.common import grad_step, write_to_log
 from Utils.Losses import get_loss_func
 from PriorMetaLearning.Get_Objective_MPB import get_objective
@@ -144,7 +144,7 @@ def run_test(mb_data_loaders, mb_posteriors_models, loss_criterion, prm):
         model = mb_posteriors_models[i_task]
         test_loader = mb_data_loaders[i_task]['test']
         if len(test_loader) > 0:
-            test_acc, test_loss = run_test_Bayes(model, test_loader, prm, verbose=0)
+            test_acc, test_loss = run_eval_Bayes(model, test_loader, prm, verbose=0)
             n_tests += 1
             test_acc_avg += test_acc
 

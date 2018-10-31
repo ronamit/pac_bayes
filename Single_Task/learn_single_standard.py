@@ -5,7 +5,7 @@ import timeit
 
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, correct_rate, get_value
+from Utils.common import count_correct, grad_step, correct_rate
 from Utils.Losses import get_loss_func
 
 
@@ -84,7 +84,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
             # Print status:
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, get_value(loss)))
+                print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, loss.item()))
 
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file
@@ -124,12 +124,12 @@ def run_test(model, test_loader, loss_criterion, prm):
         inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
         batch_size = inputs.shape[0]
         outputs = model(inputs)
-        test_loss += (1 / batch_size) * loss_criterion(outputs, targets)  # sum the mean loss in batch
+        test_loss += (1 / batch_size) * loss_criterion(outputs, targets).item()  # sum the mean loss in batch
         n_correct += count_correct(outputs, targets)
 
     n_test_samples = len(test_loader.dataset)
     n_test_batches = len(test_loader)
-    test_loss = get_value(test_loss) / n_test_batches
+    test_loss = test_loss / n_test_batches
     test_acc = n_correct / n_test_samples
     print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
         test_loss, test_acc, n_correct, n_test_samples))

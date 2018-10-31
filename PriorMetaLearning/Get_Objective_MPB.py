@@ -2,8 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import torch
 from Utils import data_gen
-from Utils.Bayes_utils import get_task_complexity, get_meta_complexity_term
-from Utils.common import net_weights_magnitude, count_correct, get_value, net_weights_dim, zeros_gpu
+from Utils.complexity_terms import get_task_complexity, get_meta_complexity_term, get_hyper_divergnce
+from Utils.common import count_correct, zeros_gpu
 
 # -------------------------------------------------------------------------------------------
 #
@@ -17,22 +17,11 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     correct_count = 0
     sample_count = 0
 
-    if prm.divergence_type == 'Wasserstein':
-        d = net_weights_dim(prior_model)
-        hyper_kl = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post)**2)
 
-    elif  prm.divergence_type == 'Wasserstein_NoSqrt':
-        d = net_weights_dim(prior_model)
-        hyper_kl = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
-
-    elif prm.divergence_type == 'KL':
-        # KLD between hyper-posterior and hyper-prior:
-        hyper_kl = (1 / (2 * prm.kappa_prior**2)) * net_weights_magnitude(prior_model, p=2)
-    else:
-        raise ValueError('Invalid prm.divergence_type')
 
     # Hyper-prior term:
-    meta_complex_term = get_meta_complexity_term(hyper_kl, prm, n_train_tasks)
+    hyper_div = get_hyper_divergnce(prm, prior_model)
+    meta_complex_term = get_meta_complexity_term(hyper_div, prm, n_train_tasks)
 
 
     avg_empiric_loss_per_task = zeros_gpu(n_tasks_in_mb)
@@ -78,7 +67,7 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
             # Intra-task complexity of current task:
             curr_complexity = get_task_complexity(prm, prior_model, post_model,
-                n_samples, avg_empiric_loss_curr, hyper_kl, n_train_tasks=n_train_tasks, noised_prior=True)
+                n_samples, avg_empiric_loss_curr, hyper_div, n_train_tasks=n_train_tasks, noised_prior=True)
 
             avg_empiric_loss_per_task[i_task] += (1 / n_MC) * avg_empiric_loss_curr
             complexity_per_task[i_task] += (1 / n_MC) * curr_complexity
@@ -91,14 +80,16 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     if prm.complexity_type == 'Variational_Bayes':
         # note that avg_empiric_loss_per_task is estimated by an average over batch samples,
         #  but its weight in the objective should be considered by how many samples there are total in the task
-        total_objective = (avg_empiric_loss_per_task * n_samples_per_task + complexity_per_task).mean() * n_train_tasks + meta_complex_term
+        total_objective =\
+            (avg_empiric_loss_per_task * n_samples_per_task + complexity_per_task).mean() * n_train_tasks + meta_complex_term
         # total_objective = ( avg_empiric_loss_per_task * n_samples_per_task + complexity_per_task).mean() + meta_complex_term
 
     else:
-        total_objective = avg_empiric_loss_per_task.mean() + complexity_per_task.mean() + meta_complex_term
+        total_objective =\
+            avg_empiric_loss_per_task.mean() + complexity_per_task.mean() + meta_complex_term
 
-    info = {'sample_count': get_value(sample_count), 'correct_count': get_value(correct_count),
-                  'avg_empirical_loss': get_value(avg_empiric_loss_per_task.mean()),
-                  'avg_intra_task_comp': get_value(complexity_per_task.mean()),
-                  'meta_comp': get_value(meta_complex_term)}
+    info = {'sample_count': sample_count, 'correct_count': correct_count,
+                  'avg_empirical_loss': avg_empiric_loss_per_task.mean().item(),
+                  'avg_intra_task_comp': complexity_per_task.mean().item(),
+                  'meta_comp': meta_complex_term.item()}
     return total_objective, info

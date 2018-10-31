@@ -11,7 +11,7 @@ from Utils.common import set_random_seed, create_result_dir, save_run_data, writ
 from Single_Task import learn_single_Bayes
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
-from Utils.Bayes_utils import set_model_values, run_test_Bayes
+from Utils.Bayes_utils import set_model_values, run_eval_Bayes
 
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
@@ -28,7 +28,7 @@ parser.add_argument('--run-name', type=str, help='Name of dir to save results in
                     default='')
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=13)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
@@ -57,7 +57,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50) # 50
+                    default=50)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -89,11 +89,11 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 prm.lr_schedule = {} # No decay
 
 # Test type:
-prm.test_type = 'MaxPosterior' # 'MaxPosterior' / 'MajorityVote'
-
+prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
+prm.n_MC_eval = 50 # number of monte-carlo runs for expected loss estimation
 
 # Bound parameters
-prm.complexity_type = 'NewBoundMcAllaster'  # 'NewBoundMcAllaster' / 'NewBoundSeeger'
+prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
 prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
 prm.delta = 0.035   #  maximal probability that the bound does not hold
 
@@ -140,18 +140,17 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 prt = deepcopy(prm) # temp parameters
 for loss_type in ['Logistic_binary', 'Zero_One']:
     prt.loss_type = loss_type
-    test_acc, test_loss = run_test_Bayes(post_model, data_loader['test'], prt)
-    write_to_log('Loss func. {}, Test-loss:  {:.4}'.format(loss_type, test_loss), prm)
+    test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)
+    train_acc, train_loss = run_eval_Bayes(post_model, data_loader['train'], prt)
+    print('-'*20)
+    write_to_log('Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
 
     for  divergence_type in ['KL', 'Wasserstein_NoSqrt']:
         prt.divergence_type = divergence_type
-        for complexity_type in ['NewBoundMcAllaster', 'NewBoundSeeger']:
+        for complexity_type in ['McAllaster', 'Seeger']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
             write_to_log('Bound-v1: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
-                         format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
-            bound_val = learn_single_Bayes.eval_bound2(post_model, prior_model, data_loader, prt)
-            write_to_log('Bound-v2: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
                          format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
 
 

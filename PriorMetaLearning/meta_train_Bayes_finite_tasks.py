@@ -6,8 +6,8 @@ import random, math
 import numpy as np
 from Models.stochastic_models import get_model
 from Utils import common as cmn
-from Utils.Bayes_utils import run_test_Bayes
-from Utils.common import grad_step, write_to_log, get_value
+from Utils.Bayes_utils import run_eval_Bayes
+from Utils.common import grad_step, write_to_log
 from Utils.Losses import get_loss_func
 from PriorMetaLearning.Get_Objective_MPB import get_objective
 
@@ -106,7 +106,8 @@ def run_meta_learning(data_loaders, prm):
             log_interval = 200
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
-                print(cmn.status_string(i_epoch,  prm.n_meta_train_epochs, i_meta_batch, n_meta_batches, batch_acc, get_value(total_objective)) +
+                print(cmn.status_string(i_epoch,  prm.n_meta_train_epochs, i_meta_batch,
+                                        n_meta_batches, batch_acc, total_objective.item()) +
                       ' Empiric-Loss: {:.4}\t Task-Comp. {:.4}\t Meta-Comp.: {:.4}\t'.
                       format(info['avg_empirical_loss'], info['avg_intra_task_comp'], info['meta_comp']))
         # end  meta-batches loop
@@ -124,7 +125,7 @@ def run_meta_learning(data_loaders, prm):
             model = posteriors_models[i_task]
             test_loader = data_loaders[i_task]['test']
             if len(test_loader) > 0:
-                test_acc, test_loss = run_test_Bayes(model, test_loader, prm)
+                test_acc, test_loss = run_eval_Bayes(model, test_loader, prm)
                 n_tests += 1
                 test_acc_avg += test_acc
 
