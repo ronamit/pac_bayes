@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 complexity_type = args.complexity_type
 
-divergence_type = 'KL' # 'KL' / 'Wasserstein' / Wasserstein_NoSqrt
+divergence_type = 'KL' # 'KL' / 'W_Sqr' / W_NoSqr
 
 call(['python', 'main_Meta_Bayes.py',
       '--run-name', 'PermutedLabels_{}_Tasks_{}_Divergence_{}'.format(n_train_tasks, complexity_type, divergence_type),

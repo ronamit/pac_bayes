@@ -7,7 +7,6 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from Utils import data_gen
 from Models.layer_inits import init_layers
 # -------------------------------------------------------------------------------------------
@@ -39,7 +38,7 @@ def get_model(prm):
 # generate dummy input sample and forward to get shape after conv layers
 def get_size_of_conv_output(input_shape, conv_func):
     batch_size = 1
-    input = Variable(torch.rand(batch_size, *input_shape))
+    input = torch.rand(batch_size, *input_shape)
     output_feat = conv_func(input)
     conv_out_size = output_feat.data.view(batch_size, -1).size(1)
     return conv_out_size

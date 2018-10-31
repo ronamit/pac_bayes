@@ -17,8 +17,6 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     correct_count = 0
     sample_count = 0
 
-
-
     # Hyper-prior term:
     hyper_div = get_hyper_divergnce(prm, prior_model)
     meta_complex_term = get_meta_complexity_term(hyper_div, prm, n_train_tasks)

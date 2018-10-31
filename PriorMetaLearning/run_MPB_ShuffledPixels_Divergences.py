@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 complexity_type = args.complexity_type
 
-divergence_type = 'Wasserstein' # 'KL' / 'Wasserstein' / Wasserstein_NoSqrt
+divergence_type = 'KL' # 'KL' / 'W_Sqr' / W_NoSqr
 
 call(['python', 'main_Meta_Bayes.py',
       '--run-name', 'Shuffled_{}_Pixels_{}_Tasks_{}_Comp'.format(n_pixels_shuffles, n_train_tasks, complexity_type),

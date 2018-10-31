@@ -72,7 +72,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
         test_loss = 0
         n_correct = 0
         for batch_data in test_loader:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
             batch_size = inputs.shape[0]
             outputs = model(inputs)
             test_loss += (1 / batch_size) * loss_criterion(outputs, targets)  # sum the mean loss in batch

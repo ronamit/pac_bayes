@@ -16,11 +16,11 @@ def get_hyper_divergnce(prm, prior_model):
     ''' calculates a divergence between hyper-prior and hyper-posterior....
      which is, in our case, just a regularization term over the prior parameters  '''
 
-    if prm.divergence_type == 'Wasserstein':
+    if prm.divergence_type == 'W_NoSqr':
         d = net_weights_dim(prior_model)
         hyper_D = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
 
-    elif prm.divergence_type == 'Wasserstein_NoSqrt':
+    elif prm.divergence_type == 'W_Sqr':
         d = net_weights_dim(prior_model)
         hyper_D = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
 
@@ -68,16 +68,29 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     if complexity_type == 'NoComplexity':
         # set as zero
-        complex_term = Variable(cmn.zeros_gpu(1), requires_grad=False)
+        complex_term = torch.zeros(1, requires_grad=False).cuda()
 
     elif prm.complexity_type == 'McAllaster':
-        complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
+        # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
+        # complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
+        complex_term = torch.sqrt((1 / (2 * (n_samples - 1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
 
-    elif prm.complexity_type == 'Seeger':
-        seeger_eps = (1 / n_samples) * (div + hyper_div + math.log(4 * math.sqrt(n_samples) / delta))
+    elif prm.complexity_type == 'Seeger1' or prm.complexity_type == 'Seeger':
+        # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
+        seeger_eps = (1 / n_samples) * (div + hyper_div + math.log(2 * math.sqrt(n_samples) / delta))
         sqrt_arg = 2 * seeger_eps * avg_empiric_loss
-        sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
+        # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
+
+
+    elif prm.complexity_type == 'Seeger2':
+        # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
+        seeger_eps = (1 / (n_samples - 1)) * (div + hyper_div + math.log(n_samples / delta))
+        sqrt_arg = 2 * seeger_eps * avg_empiric_loss
+        # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
+        complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
+
+
 
     elif complexity_type == 'PAC_Bayes_Pentina':
         complex_term = math.sqrt(1 / n_samples) * div + hyper_div * (1 / (n_train_tasks * math.sqrt(n_samples)))
@@ -127,12 +140,14 @@ def divregnce_element(post, prior, prm, noised_prior=False):
     post_std = torch.exp(0.5*post['log_var'])
     prior_std = torch.exp(0.5*prior_log_var)
 
-    if prm.divergence_type == 'Wasserstein':
+    if prm.divergence_type == 'W_NoSqr':
+        # Wasserstein norm with p=2, not-squared
         div_elem = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
     # divergence = torch.sqrt(
     #     torch.sum(torch.relu((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
 
-    elif prm.divergence_type == 'Wasserstein_NoSqrt':
+    elif prm.divergence_type == 'W_Sqr':
+            # Wasserstein norm with p=2, squared
             div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
 
     elif prm.divergence_type == 'KL':

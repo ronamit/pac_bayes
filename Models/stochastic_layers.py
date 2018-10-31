@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from Models.stochastic_inits import init_stochastic_conv2d, init_stochastic_linear
 
 # -------------------------------------------------------------------------------------------
@@ -50,9 +49,7 @@ class StochasticLayer(nn.Module):
             # Draw Gaussian random noise, N(0, eps_std) in the size of the
             # layer output:
             noise = out_mean.data.new(out_mean.size()).normal_(0, eps_std)
-            # noise = randn_gpu(size=out_mean.size(), mean=0, std=eps_std)
-
-            noise = Variable(noise, requires_grad=False)
+            # noise = eps_std * torch.randn_like(out_mean, requires_grad=False)
 
             out_var = F.relu(out_var) # to avoid nan due to numerical errors
             layer_out = out_mean + noise * torch.sqrt(out_var)

@@ -164,15 +164,13 @@ def eval_bound(post_model, prior_model, data_loader, prm):
 
     for batch_idx, batch_data in enumerate(train_loader):
 
+        # get batch:
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+        batch_size = inputs.shape[0]
+
         # Monte-Carlo iterations:
-
-        n_MC = prm.n_MC
-
+        n_MC = prm.n_MC_eval
         for i_MC in range(n_MC):
-            # get batch:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-            # note: we sample new batch in each MC run to get lower variance estimator
-            batch_size = inputs.shape[0]
 
             # calculate objective:
             outputs = post_model(inputs)
@@ -228,7 +226,7 @@ def eval_bound(post_model, prior_model, data_loader, prm):
 #         #  complexity/prior term:
 #         complexity_term = get_task_complexity(
 #             prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
-#         # TODO: maybe compute complexity  after batch loop with the total average empric error
+#         # TO DO: maybe compute complexity  after batch loop with the total average empric error
 #
 #         # Total objective:
 #         objective = avg_empiric_loss + complexity_term

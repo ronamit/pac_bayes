@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function
 
 from datetime import datetime
 import os
-from torch.autograd import Variable
 import torch.nn as nn
 import torch
 import numpy as np
@@ -124,7 +123,8 @@ def load_model_state(model, f_path):
 def net_weights_magnitude(model, p=2, exp_on_logs=False):
     ''' Calculates the total p-norm of the weights  |W|_p^p
         If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
-    total_mag = Variable(zeros_gpu(1), requires_grad=True)[0]
+    device = torch.device('cuda')
+    total_mag = torch.zeros(1, device=device, requires_grad=True)[0]
     for (param_name, param) in model.named_parameters():
         if exp_on_logs and 'log_var' in param_name:
             w = torch.exp(0.5*param)
@@ -135,7 +135,8 @@ def net_weights_magnitude(model, p=2, exp_on_logs=False):
 
 
 def net_weights_dim(model):
-    count = Variable(zeros_gpu(1), requires_grad=True)
+    device = torch.device('cuda')
+    count = torch.zeros(1, device=device, requires_grad=True)
     for param in model.parameters():
         count = count + param.numel()
     return count

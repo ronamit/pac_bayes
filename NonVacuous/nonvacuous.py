@@ -90,11 +90,11 @@ prm.lr_schedule = {} # No decay
 
 # Test type:
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
-prm.n_MC_eval = 50 # number of monte-carlo runs for expected loss estimation
+prm.n_MC_eval = 100 # number of monte-carlo runs for expected loss estimation and bound evaluation
 
 # Bound parameters
 prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
-prm.divergence_type = 'Wasserstein_NoSqrt'    # 'KL' / 'Wasserstein' /  'Wasserstein_NoSqrt'
+prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   #  maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
@@ -145,12 +145,12 @@ for loss_type in ['Logistic_binary', 'Zero_One']:
     print('-'*20)
     write_to_log('Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
 
-    for  divergence_type in ['KL', 'Wasserstein_NoSqrt']:
+    for  divergence_type in ['KL', 'W_Sqr']:
         prt.divergence_type = divergence_type
-        for complexity_type in ['McAllaster', 'Seeger']:
+        for complexity_type in ['McAllaster', 'Seeger1', 'Seeger2']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
-            write_to_log('Bound-v1: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
+            write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
                          format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
 
 

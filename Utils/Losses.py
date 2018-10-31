@@ -1,9 +1,7 @@
-from torch.autograd import Variable
+from __future__ import absolute_import, division, print_function
+
 import torch
 from torch.nn.modules.module import Module
-from torch.nn.modules.container import Sequential
-from torch.nn.modules.activation import LogSoftmax
-from torch.nn import functional as F
 import torch.nn as nn
 import math
 

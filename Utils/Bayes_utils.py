@@ -41,7 +41,7 @@ def run_eval_max_posterior(model, loader, prm):
     avg_loss = 0
     n_correct = 0
     for batch_data in loader:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
         batch_size = inputs.shape[0]
         old_eps_std = model.set_eps_std(0.0)   # test with max-posterior
         outputs = model(inputs)
@@ -63,11 +63,11 @@ def run_eval_expected(model, loader, prm):
     n_samples = len(loader.dataset)
     loss_criterion = get_loss_func(prm.loss_type)
     model.eval()
-    avg_loss = 0
+    avg_loss = 0.0
     n_correct = 0
     n_MC = prm.n_MC_eval # number of monte-carlo runs for expected loss estimation
     for batch_data in loader:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
         batch_size = inputs.shape[0]
         #  monte-carlo runs
         for i_MC in range(n_MC):
@@ -92,7 +92,7 @@ def run_eval_majority_vote(model, loader, prm, n_votes=5):
     avg_loss = 0
     n_correct = 0
     for batch_data in loader:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
         batch_size = inputs.shape[0] # min(prm.test_batch_size, n_samples)
         info = data_gen.get_info(prm)
@@ -128,7 +128,7 @@ def run_eval_avg_vote(model, loader, prm, n_votes=5):
     avg_loss = 0
     n_correct = 0
     for batch_data in loader:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm, is_test=True)
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
 
         batch_size = min(prm.test_batch_size, n_samples)
         info = data_gen.get_info(prm)
