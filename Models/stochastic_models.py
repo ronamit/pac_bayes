@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from Utils import data_gen
-
+from Utils.common import list_mult
 from Models.stochastic_layers import StochasticLinear, StochasticConv2d, StochasticLayer
 from Models.layer_inits import init_layers
 
@@ -23,8 +23,18 @@ def get_size_of_conv_output(input_shape, conv_func):
     conv_out_size = output_feat.data.view(batch_size, -1).size(1)
     return conv_out_size
 
-#
-# -------------------------------------------------------------------------------------------
+def count_weights(model):
+    # note: alsp counts batch-orm parameters
+    count = 0
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            count += list_mult(m.weight.shape)
+        elif  isinstance(m, StochasticLayer):
+            count += m.weights_count
+    return count
+
+
+#  -------------------------------------------------------------------------------------------
 #  Main function
 #  -------------------------------------------------------------------------------------------
 def get_model(prm, model_type='Stochastic'):
@@ -71,9 +81,13 @@ def get_model(prm, model_type='Stochastic'):
     model.cuda() # always use GPU
     init_layers(model, prm.log_var_init) # init model
 
-    # For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)
-    if hasattr(prm, 'override_eps_std'):
-        model.set_eps_std(prm.override_eps_std)  # debug
+    # # For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)
+    # if hasattr(prm, 'override_eps_std'):
+    #     model.set_eps_std(prm.override_eps_std)  # debug
+
+
+    model.weights_count = count_weights(model)
+
     return model
 
 

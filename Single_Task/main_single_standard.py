@@ -72,7 +72,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
+                    default='ConvNet3')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)

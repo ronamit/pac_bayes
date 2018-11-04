@@ -8,7 +8,7 @@ from copy import deepcopy
 
 from Utils import data_gen
 from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
-from Single_Task import learn_single_Bayes
+from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
 from Utils.Bayes_utils import set_model_values, run_eval_Bayes
@@ -28,7 +28,7 @@ parser.add_argument('--run-name', type=str, help='Name of dir to save results in
                     default='')
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=13)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
@@ -51,7 +51,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='Logistic_binary')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='FcNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -71,7 +71,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 prm = parser.parse_args()
 
 
-prm.log_var_init = {'mean': -10, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
+prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -90,12 +90,12 @@ prm.lr_schedule = {} # No decay
 
 # Test type:
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
-prm.n_MC_eval = 100 # number of monte-carlo runs for expected loss estimation and bound evaluation
+prm.n_MC_eval = 10 # number of monte-carlo runs for expected loss estimation and bound evaluation
 
-# Bound parameters
+# Learning objective parameters
 prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
 prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
-prm.delta = 0.035   #  maximal probability that the bound does not hold
+prm.delta = 0.035   # maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
 #  Init run
@@ -124,7 +124,6 @@ set_model_values(prior_model, prior_mean, prior_log_var)
 #  Run learning
 # -------------------------------------------------------------------------------------------
 # Learn a posterior which minimizes some bound with some loss function
-
 post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
 
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
@@ -138,7 +137,7 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 # But they should upper bound the test-loss (with high probability)
 
 prt = deepcopy(prm) # temp parameters
-for loss_type in ['Logistic_binary', 'Zero_One']:
+for loss_type in ['Logistic_Binary_Clipped', 'Zero_One']:
     prt.loss_type = loss_type
     test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)
     train_acc, train_loss = run_eval_Bayes(post_model, data_loader['train'], prt)
@@ -147,12 +146,15 @@ for loss_type in ['Logistic_binary', 'Zero_One']:
 
     for  divergence_type in ['KL', 'W_Sqr']:
         prt.divergence_type = divergence_type
-        for complexity_type in ['McAllaster', 'Seeger1', 'Seeger2']:
+        for complexity_type in ['McAllaster', 'Seeger']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
             write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
                          format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
 
-
+# -------------------------------------------------------------------------------------------
+#  Run standard deterministic learning for comparision
+# -------------------------------------------------------------------------------------------
+# test_err, test_loss = learn_single_standard.run_learning(data_loader, prm)
 
 

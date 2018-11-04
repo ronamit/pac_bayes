@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from Utils import data_gen
 from Models.layer_inits import init_layers
+from Utils.common import list_mult
 # -------------------------------------------------------------------------------------------
 # Main function
 # -------------------------------------------------------------------------------------------
@@ -29,11 +30,24 @@ def get_model(prm):
         model = OmConvNet(input_shape=input_shape, output_dim=output_dim)
     else:
         raise ValueError('Invalid model_name')
+
+    model.weights_count = count_weights(model)
+
     return model
+
+
 
 # -------------------------------------------------------------------------------------------
 # Auxiliary functions
 # -------------------------------------------------------------------------------------------
+def count_weights(model):
+    #     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+    count = 0
+    # note: only count weights! not batch-norm parameters
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            count += list_mult(m.weight.shape)
+    return count
 
 # generate dummy input sample and forward to get shape after conv layers
 def get_size_of_conv_output(input_shape, conv_func):

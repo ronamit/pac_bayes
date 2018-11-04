@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 import timeit
 from copy import deepcopy
+import torch
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_eval_Bayes
@@ -67,16 +68,16 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
         for batch_idx, batch_data in enumerate(train_loader):
 
+            # get batch data:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+
+            batch_size = inputs.shape[0]
+
             # Monte-Carlo iterations:
             avg_empiric_loss = zeros_gpu(1)
             n_MC = prm.n_MC
 
             for i_MC in range(n_MC):
-
-                # get batch:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-                # note: we sample new batch in eab MC run to get lower variance estimator
-                batch_size = inputs.shape[0]
 
                 # calculate objective:
                 outputs = post_model(inputs)
@@ -88,7 +89,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 complexity_term = get_task_complexity(
                     prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
             else:
-                complexity_term = 0.0
+                complexity_term = torch.tensor(0.0).cuda()
 
             # Total objective:
             objective = avg_empiric_loss + complexity_term
@@ -115,8 +116,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     #  Update Log file
     update_file = not verbose == 0
     write_to_log(cmn.get_model_string(post_model), prm, update_file=update_file)
+    write_to_log('Number of weights: {}'.format(post_model.weights_count), prm, update_file=update_file)
     write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
     write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
+
 
     start_time = timeit.default_timer()
 
@@ -172,7 +175,7 @@ def eval_bound(post_model, prior_model, data_loader, prm):
         n_MC = prm.n_MC_eval
         for i_MC in range(n_MC):
 
-            # calculate objective:
+            # calculate loss:
             outputs = post_model(inputs)
             empiric_loss += (1 / n_MC) * loss_criterion(outputs, targets).item()
 
@@ -189,51 +192,3 @@ def eval_bound(post_model, prior_model, data_loader, prm):
     return bound_val
 
 
-
-# # -------------------------------------------------------------------------------------------
-# #  Bound evaluation
-# # -------------------------------------------------------------------------------------------
-# def eval_bound2(post_model, prior_model, data_loader, prm):
-#
-#     # Loss criterion
-#     loss_criterion = get_loss_func(prm.loss_type)
-#
-#     train_loader = data_loader['train']
-#     n_batches = len(train_loader)
-#     n_train_samples = data_loader['n_train_samples']
-#
-#     post_model.eval()
-#
-#     avg_bound_val = 0
-#
-#     for batch_idx, batch_data in enumerate(train_loader):
-#
-#         # Monte-Carlo iterations:
-#         avg_empiric_loss = zeros_gpu(1)
-#         n_MC = prm.n_MC
-#
-#         for i_MC in range(n_MC):
-#             # get batch:
-#             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-#             # note: we sample new batch in each MC run to get lower variance estimator
-#             batch_size = inputs.shape[0]
-#
-#             # calculate objective:
-#             outputs = post_model(inputs)
-#             avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
-#             avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
-#
-#         #  complexity/prior term:
-#         complexity_term = get_task_complexity(
-#             prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
-#         # TO DO: maybe compute complexity  after batch loop with the total average empric error
-#
-#         # Total objective:
-#         objective = avg_empiric_loss + complexity_term
-#
-#         avg_bound_val += objective.item()  # save for analysis
-#     # End batch loop
-#
-#     avg_bound_val /= n_batches
-#
-#     return avg_bound_val

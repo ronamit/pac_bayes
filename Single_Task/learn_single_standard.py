@@ -5,7 +5,7 @@ import timeit
 
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, correct_rate
+from Utils.common import count_correct, grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
 
 
@@ -90,9 +90,10 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
     # Update Log file
     # -----------------------------------------------------------------------------------------------------------#
     update_file = not verbose == 0
-    cmn.write_to_log(cmn.get_model_string(model), prm, update_file=update_file)
-    cmn.write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
-    cmn.write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
+    write_to_log(cmn.get_model_string(model), prm, update_file=update_file)
+    write_to_log('Number of weights: {}'.format(model.weights_count), prm, update_file=update_file)
+    write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
+    write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
 
     # -------------------------------------------------------------------------------------------
     #  Run epochs
@@ -131,6 +132,6 @@ def run_test(model, test_loader, loss_criterion, prm):
     n_test_batches = len(test_loader)
     test_loss = test_loss / n_test_batches
     test_acc = n_correct / n_test_samples
-    print('\nTest set: Average loss: {:.4}, Accuracy: {:.3} ( {}/{})\n'.format(
-        test_loss, test_acc, n_correct, n_test_samples))
+    print('\n Standard learning: test loss: {:.4}, test err: {:.3} ( {}/{})\n'.format(
+        test_loss, 1-test_acc, n_correct, n_test_samples))
     return test_acc

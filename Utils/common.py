@@ -12,7 +12,7 @@ import random
 import sys
 import pickle
 from Utils.data_gen import get_info
-
+from functools import reduce
 
 # -----------------------------------------------------------------------------------------------------------#
 # General auxilary functions
@@ -22,6 +22,11 @@ def boolean_string(s):
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
+
+
+def list_mult(L):
+    return reduce(lambda x, y: x*y, L)
+
 # -----------------------------------------------------------------------------------------------------------#
 
 def set_random_seed(seed):
@@ -120,7 +125,7 @@ def load_model_state(model, f_path):
 
 
 
-def net_weights_magnitude(model, p=2, exp_on_logs=False):
+def net_weights_magnitude(model, p=2, exp_on_logs=True):
     ''' Calculates the total p-norm of the weights  |W|_p^p
         If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
     device = torch.device('cuda')
@@ -133,13 +138,6 @@ def net_weights_magnitude(model, p=2, exp_on_logs=False):
         total_mag = total_mag + w.pow(p).sum()
     return total_mag
 
-
-def net_weights_dim(model):
-    device = torch.device('cuda')
-    count = torch.zeros(1, device=device, requires_grad=True)
-    for param in model.parameters():
-        count = count + param.numel()
-    return count
 
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer

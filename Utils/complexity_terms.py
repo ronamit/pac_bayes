@@ -8,7 +8,7 @@ import math
 from Utils import common as cmn
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticLayer
-from Utils.common import net_weights_magnitude, count_correct, net_weights_dim, zeros_gpu
+from Utils.common import net_weights_magnitude, count_correct, zeros_gpu
 # -----------------------------------------------------------------------------------------------------------#
 
 
@@ -17,11 +17,11 @@ def get_hyper_divergnce(prm, prior_model):
      which is, in our case, just a regularization term over the prior parameters  '''
 
     if prm.divergence_type == 'W_NoSqr':
-        d = net_weights_dim(prior_model)
+        d = prior_model.net_weights_dim
         hyper_D = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
 
     elif prm.divergence_type == 'W_Sqr':
-        d = net_weights_dim(prior_model)
+        d = prior_model.net_weights_dim
         hyper_D = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
 
     elif prm.divergence_type == 'KL':
@@ -83,13 +83,12 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
 
-    elif prm.complexity_type == 'Seeger2':
-        # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-        seeger_eps = (1 / (n_samples - 1)) * (div + hyper_div + math.log(n_samples / delta))
-        sqrt_arg = 2 * seeger_eps * avg_empiric_loss
-        # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
-        complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
-
+    # elif prm.complexity_type == 'Seeger2':
+    #     # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
+    #     seeger_eps = (1 / (n_samples - 1)) * (div + hyper_div + math.log(n_samples / delta))
+    #     sqrt_arg = 2 * seeger_eps * avg_empiric_loss
+    #     # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
+    #     complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
 
 
     elif complexity_type == 'PAC_Bayes_Pentina':

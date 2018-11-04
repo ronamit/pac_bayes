@@ -63,6 +63,10 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
 
         for batch_idx, batch_data in enumerate(train_loader):
 
+            # get batch data:
+            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            batch_size = inputs.shape[0]
+
             correct_count = 0
             sample_count = 0
 
@@ -72,24 +76,22 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
             complexity_term = 0
 
             for i_MC in range(n_MC):
-                # get batch:
-                inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-                # note: we sample new batch in eab MC run to get lower variance estimator
-                batch_size = inputs.shape[0]
 
                 # Calculate empirical loss:
                 outputs = post_model(inputs)
                 avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
 
-                complexity_curr = get_task_complexity(prm, prior_model, post_model,
-                                                           n_train_samples, avg_empiric_loss_curr)
+                # complexity_curr = get_task_complexity(prm, prior_model, post_model,
+                #                                            n_train_samples, avg_empiric_loss_curr)
 
                 avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
-                complexity_term += (1 / n_MC) * complexity_curr
+                # complexity_term += (1 / n_MC) * complexity_curr
 
                 correct_count += count_correct(outputs, targets)
                 sample_count += inputs.size(0)
             # end monte-carlo loop
+
+            complexity_term = get_task_complexity(prm, prior_model, post_model,  n_train_samples, avg_empiric_loss)
 
             # Approximated total objective (for current batch):
             if prm.complexity_type == 'Variational_Bayes':
