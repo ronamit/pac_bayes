@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='NewBoundSeeger')
-# 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
+                    default='McAllaster')
+# 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllaster / Seeger'"
 
 args = parser.parse_args()
 
@@ -29,8 +29,13 @@ call(['python', 'main_Meta_Bayes.py',
       '--n_meta_train_epochs', '150',
       '--n_meta_test_epochs', '200',
       '--n_test_tasks', '20',
-      '--meta_batch_size', '16',
+      '--meta_batch_size', '5',
+      '--divergence_type', 'W_Sqr',  # ['KL', 'W_Sqr']:
       ])
 
-
+# note: I removed the relu in Segger so it gives NaNs
+# W-Seeger-  NaN
+# KL-Seeger- NaN
+# KL-McAllaster- 1.94%, STD: 0.181%
+# W_Sqr-McAllaster- err: 8.18%, STD: 0.674% we get a flat log-var graph with ~-10 (as in initilization)
 

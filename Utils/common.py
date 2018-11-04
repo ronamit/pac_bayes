@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function
 
 from datetime import datetime
 import os
-from torch.autograd import Variable
 import torch.nn as nn
 import torch
 import numpy as np
@@ -13,7 +12,7 @@ import random
 import sys
 import pickle
 from Utils.data_gen import get_info
-
+from functools import reduce
 
 # -----------------------------------------------------------------------------------------------------------#
 # General auxilary functions
@@ -23,17 +22,11 @@ def boolean_string(s):
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
-# -----------------------------------------------------------------------------------------------------------#
 
-def get_value(x):
-    ''' Returns the value of any scalar type'''
-    if isinstance(x, Variable):
-        if hasattr(x, 'item'):
-            return x.item()
-        else:
-            return x.data[0]
-    else:
-        return x
+
+def list_mult(L):
+    return reduce(lambda x, y: x*y, L)
+
 # -----------------------------------------------------------------------------------------------------------#
 
 def set_random_seed(seed):
@@ -74,12 +67,12 @@ def get_prediction(outputs):
 
 def count_correct(outputs, targets):
     pred = get_prediction(outputs)
-    return get_value(pred.eq(targets.data.view_as(pred)).cpu().sum())
+    return pred.eq(targets.data.view_as(pred)).cpu().sum().item()
 # -----------------------------------------------------------------------------------------------------------#
 
 def correct_rate(outputs, targets):
     n_correct = count_correct(outputs, targets)
-    n_samples = get_value(outputs.size()[0])
+    n_samples = outputs.shape[0]
     return n_correct / n_samples
 # -----------------------------------------------------------------------------------------------------------#
 
@@ -132,10 +125,11 @@ def load_model_state(model, f_path):
 
 
 
-def net_weights_magnitude(model, p=2, exp_on_logs=False):
+def net_weights_magnitude(model, p=2, exp_on_logs=True):
     ''' Calculates the total p-norm of the weights  |W|_p^p
         If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
-    total_mag = Variable(zeros_gpu(1), requires_grad=True)[0]
+    device = torch.device('cuda')
+    total_mag = torch.zeros(1, device=device, requires_grad=True)[0]
     for (param_name, param) in model.named_parameters():
         if exp_on_logs and 'log_var' in param_name:
             w = torch.exp(0.5*param)
@@ -144,12 +138,6 @@ def net_weights_magnitude(model, p=2, exp_on_logs=False):
         total_mag = total_mag + w.pow(p).sum()
     return total_mag
 
-
-def net_weights_dim(model):
-    count = Variable(zeros_gpu(1), requires_grad=True)
-    for param in model.parameters():
-        count = count + param.numel()
-    return count
 
 # -----------------------------------------------------------------------------------------------------------#
 # Optimizer

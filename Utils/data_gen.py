@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 import torch
 from torchvision import datasets, transforms
 import torch.utils.data as data_utils
-from torch.autograd import Variable
 import os
 import numpy as np
 from Utils import omniglot
@@ -234,11 +233,10 @@ def get_info(prm):
 #  Batch extraction
 # -------------------------------------------------------------------------------------------
 
-def get_batch_vars(batch_data, args, is_test=False):
+def get_batch_vars(batch_data, prm):
     ''' Transform batch to variables '''
     inputs, targets = batch_data
-    inputs, targets = inputs.cuda(), targets.cuda(async=True)
-    inputs, targets = Variable(inputs), Variable(targets)
+    inputs, targets = inputs.cuda(), targets.cuda()
     return inputs, targets
 
 

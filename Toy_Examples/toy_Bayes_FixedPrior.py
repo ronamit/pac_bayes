@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
 
 import torch
-from torch.autograd import Variable
 import torch.optim as optim
 
 
@@ -19,13 +18,13 @@ def learn(data_set):
 
     # Define prior:
     learn_prior_flag = True
-    w_P_mu = Variable(torch.zeros(n_dim).cuda(), requires_grad=False)
-    w_P_log_sigma = Variable(torch.zeros(n_dim).cuda(), requires_grad=False)
+    w_P_mu = torch.zeros(n_dim, requires_grad=False).cuda()
+    w_P_log_sigma = torch.zeros(n_dim, requires_grad=False).cuda()
     sigma_sqr_prior = torch.exp(2 * w_P_log_sigma)
 
     # Init posteriors:
-    w_mu = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
-    w_log_sigma = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
+    w_mu = torch.randn(n_tasks, n_dim, requires_grad=True).cuda()
+    w_log_sigma = torch.randn(n_tasks, n_dim, requires_grad=True).cuda()
 
 
     learning_rate = 1e-1
@@ -43,11 +42,11 @@ def learn(data_set):
         batch_size_curr = min(n_samples_list[b_task], batch_size)
         batch_inds = np.random.choice(n_samples_list[b_task], batch_size_curr, replace=False)
         task_data = torch.from_numpy(data_set[b_task][batch_inds])
-        task_data = Variable(task_data.cuda(), requires_grad=False)
+        task_data = task_data.cuda()
 
         # Re-Parametrization:
         w_sigma = torch.exp(w_log_sigma[b_task])
-        epsilon = Variable(torch.randn(n_dim).cuda(), requires_grad=False)
+        epsilon = torch.randn(n_dim, requires_grad=False).cuda()
         w = w_mu[b_task] + w_sigma * epsilon
 
         # Empirical Loss:

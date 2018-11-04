@@ -15,7 +15,7 @@ call(['python', 'main_Meta_Bayes.py',
       '--K_Shot_MetaTest', '5',
       '--n_train_tasks', '0',
       '--model-name',   'OmConvNet',
-      '--complexity_type', 'NewBoundMcAllaster',
+      '--complexity_type', 'McAllaster',
       '--n_test_tasks', '100',
       '--n_meta_train_epochs', '2000', # 3000   # 500 = 1 hour
       '--n_inner_steps', '200',

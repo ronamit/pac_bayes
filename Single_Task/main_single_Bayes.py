@@ -71,7 +71,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -123,5 +123,6 @@ data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_
 # -------------------------------------------------------------------------------------------
 
 post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm)
+
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 

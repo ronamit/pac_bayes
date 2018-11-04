@@ -90,7 +90,7 @@ parser.add_argument('--n_meta_train_chars'
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='NewBoundSeeger')  #  'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   NewBoundMcAllaster / NewBoundSeeger'"
+                    default='Seeger')  #  'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllaster / Seeger'"
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
@@ -123,7 +123,7 @@ parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks
 
 
 parser.add_argument('--divergence_type', type=str, help="",
-                    default='KL')  # 'KL' / 'Wasserstein' / 'Wasserstein_NoSqrt'
+                    default='KL')  # 'KL' / 'W_Sqr' / 'W_NoSqr'
 
 
 parser.add_argument('--init_from_prior', default=True, type=lambda x: (str(x).lower() == 'true'))

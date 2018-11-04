@@ -10,7 +10,7 @@ import timeit
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.common import grad_step, write_to_log
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 from MAML.MAML_meta_step import meta_step
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -27,7 +27,7 @@ def run_meta_learning(prm, task_generator):
     n_iterations = prm.n_meta_train_iterations
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     # Create a 'dummy' model to generate the set of parameters of the shared initial point (theta):
     model = get_model(prm)

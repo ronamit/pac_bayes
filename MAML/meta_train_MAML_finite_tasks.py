@@ -12,7 +12,7 @@ import numpy as np
 from Models.deterministic_models import get_model
 from Utils import common as cmn
 from Utils.common import grad_step, write_to_log
-from Utils.Losses import get_loss_criterion
+from Utils.Losses import get_loss_func
 from MAML.MAML_meta_step import meta_step
 # -------------------------------------------------------------------------------------------
 #  Learning function
@@ -27,7 +27,7 @@ def run_meta_learning(train_data_loaders, prm):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_criterion(prm.loss_type)
+    loss_criterion = get_loss_func(prm.loss_type)
 
     n_tasks = len(train_data_loaders)
 

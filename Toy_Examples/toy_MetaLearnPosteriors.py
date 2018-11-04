@@ -4,25 +4,25 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
-from Utils.common import get_value
 import torch
-from torch.autograd import Variable
 import torch.optim as optim
 
 
 def learn(data_set, complexity_type):
 
+
     n_tasks = len(data_set)
     n_dim = data_set[0].shape[1]
     n_samples_list = [task_data.shape[0] for task_data in data_set]
+    device = torch.device("cuda")
 
     # Define prior:
-    w_P_mu = Variable(torch.randn(n_dim).cuda(), requires_grad=True)
-    w_P_log_sigma = Variable(torch.randn(n_dim).cuda(), requires_grad=True)
+    w_P_mu = torch.randn(n_dim, requires_grad=True, device=device)
+    w_P_log_sigma = torch.randn(n_dim, requires_grad=True,  device=device)
 
     # Init posteriors:
-    w_mu = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
-    w_log_sigma = Variable(torch.randn(n_tasks, n_dim).cuda(), requires_grad=True)
+    w_mu = torch.randn(n_tasks, n_dim,requires_grad=True, device=device)
+    w_log_sigma = torch.randn(n_tasks, n_dim, requires_grad=True, device=device)
 
     learning_rate = 1e-1
 
@@ -38,12 +38,11 @@ def learn(data_set, complexity_type):
         b_task = np.random.randint(0, n_tasks)  # sample a random task index
         batch_size_curr = min(n_samples_list[b_task], batch_size)
         batch_inds = np.random.choice(n_samples_list[b_task], batch_size_curr, replace=False)
-        task_data = torch.from_numpy(data_set[b_task][batch_inds])
-        task_data = Variable(task_data.cuda(), requires_grad=False)
+        task_data = torch.from_numpy(data_set[b_task][batch_inds]).cuda()
 
         # Re-Parametrization:
         w_sigma = torch.exp(w_log_sigma[b_task])
-        epsilon = Variable(torch.randn(n_dim).cuda(), requires_grad=False)
+        epsilon = torch.randn(n_dim, device=device, requires_grad=False)
         w = w_mu[b_task] + w_sigma * epsilon
 
         # Empirical Loss:
@@ -77,7 +76,7 @@ def learn(data_set, complexity_type):
 
 
         hyper_prior_factor =  1e-6 * np.sqrt(1 / n_tasks)
-        hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2))  * hyper_prior_factor
+        hyper_prior = torch.sum(sigma_sqr_prior + w_P_mu.pow(2)) * hyper_prior_factor
 
         # Total objective:
         complex_term = (1 / n_tasks) * complex_term_sum
@@ -89,7 +88,7 @@ def learn(data_set, complexity_type):
         optimizer.step()  # Does the update
 
         if i_epoch % 100 == 0:
-            print('Step: {0}, objective: {1}'.format(i_epoch, get_value(objective)))
+            print('Step: {0}, objective: {1}'.format(i_epoch, objective.item()))
 
     # Switch  back to numpy:
     w_mu = w_mu.data.cpu().numpy()

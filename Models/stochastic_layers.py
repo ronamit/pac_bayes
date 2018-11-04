@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from Models.stochastic_inits import init_stochastic_conv2d, init_stochastic_linear
+from Utils.common import list_mult
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic linear layer
@@ -13,16 +13,19 @@ class StochasticLayer(nn.Module):
     # base class of stochastic layers with re-parametrization
     # self.init  and self.operation should be filled by derived classes
 
-    def create_stochastic_layer(self, weights_size, bias_size, prm):
+    def create_stochastic_layer(self, weights_shape, bias_size, prm):
         # create the layer parameters
         # values initialization is done later
-        self.w_mu = get_param(weights_size)
-        self.w_log_var = get_param(weights_size)
+        self.weights_shape = weights_shape
+        self.weights_count = list_mult(weights_shape)
+        self.w_mu = get_param(weights_shape)
+        self.w_log_var = get_param(weights_shape)
         self.w = {'mean': self.w_mu, 'log_var': self.w_log_var}
         if bias_size is not None:
             self.b_mu = get_param(bias_size)
             self.b_log_var = get_param(bias_size)
             self.b = {'mean': self.b_mu, 'log_var': self.b_log_var}
+
 
 
     def forward(self, x):
@@ -50,9 +53,7 @@ class StochasticLayer(nn.Module):
             # Draw Gaussian random noise, N(0, eps_std) in the size of the
             # layer output:
             noise = out_mean.data.new(out_mean.size()).normal_(0, eps_std)
-            # noise = randn_gpu(size=out_mean.size(), mean=0, std=eps_std)
-
-            noise = Variable(noise, requires_grad=False)
+            # noise = eps_std * torch.randn_like(out_mean, requires_grad=False)
 
             out_var = F.relu(out_var) # to avoid nan due to numerical errors
             layer_out = out_mean + noise * torch.sqrt(out_var)
@@ -108,13 +109,12 @@ class StochasticConv2d(StochasticLayer):
         self.dilation = dilation
         kernel_size = make_pair(kernel_size)
         self.kernel_size = kernel_size
-
-        weights_size = (out_channels, in_channels, kernel_size[0], kernel_size[1])
+        weights_shape = (out_channels, in_channels, kernel_size[0], kernel_size[1])
         if use_bias:
             bias_size = (out_channels)
         else:
             bias_size = None
-        self.create_stochastic_layer(weights_size, bias_size, prm)
+        self.create_stochastic_layer(weights_shape, bias_size, prm)
         init_stochastic_conv2d(self, prm.log_var_init)
         self.eps_std = 1.0
 
