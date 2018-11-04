@@ -87,7 +87,7 @@ def run_meta_learning(train_data_loaders, prm):
             log_interval = 200
             if i_meta_batch % log_interval == 0:
                 batch_acc = info['correct_count'] / info['sample_count']
-                print(cmn.status_string(i_epoch, num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.data[0]))
+                print(cmn.status_string(i_epoch, num_epochs, i_meta_batch, n_meta_batches, batch_acc, total_objective.item()))
         # end  meta-batches loop
 
     # end run_epoch()

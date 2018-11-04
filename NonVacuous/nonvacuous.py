@@ -86,7 +86,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 
 # Learning rate decay schedule:
 # prm.lr_schedule = {'decay_factor': 0.1, 'decay_epochs': [10, 30]}
-prm.lr_schedule = {} # No decay
+prm.lr_schedule = {}  # No decay
 
 # Test type:
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
@@ -146,7 +146,7 @@ for loss_type in ['Logistic_Binary_Clipped', 'Zero_One']:
 
     for  divergence_type in ['KL', 'W_Sqr']:
         prt.divergence_type = divergence_type
-        for complexity_type in ['McAllaster', 'Seeger']:
+        for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
             write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
