@@ -28,7 +28,7 @@ call(['python', 'main_Meta_Bayes.py',
       '--n_meta_test_epochs', '200',
       '--n_test_tasks', '20',
       '--meta_batch_size', '5',
-      '--divergence_type', 'W_Sqr',  # ['KL', 'W_Sqr']:
+      '--divergence_type', 'KL',  # ['KL', 'W_Sqr']:
       ])
 
 

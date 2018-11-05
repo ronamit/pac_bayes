@@ -17,11 +17,11 @@ def get_hyper_divergnce(prm, prior_model):
      which is, in our case, just a regularization term over the prior parameters  '''
 
     if prm.divergence_type == 'W_NoSqr':
-        d = prior_model.net_weights_dim
+        d = prior_model.weights_count
         hyper_D = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
 
     elif prm.divergence_type == 'W_Sqr':
-        d = prior_model.net_weights_dim
+        d = prior_model.weights_count
         hyper_D = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
 
     elif prm.divergence_type == 'KL':
@@ -75,12 +75,17 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
         # complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
         complex_term = torch.sqrt((1 / (2 * (n_samples - 1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
 
-    elif prm.complexity_type == 'Seeger1' or prm.complexity_type == 'Seeger':
+    elif prm.complexity_type == 'Seeger':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         seeger_eps = (1 / n_samples) * (div + hyper_div + math.log(2 * math.sqrt(n_samples) / delta))
         sqrt_arg = 2 * seeger_eps * avg_empiric_loss
         # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
+
+    elif prm.complexity_type == 'Catoni':
+        # See "From PAC-Bayes Bounds to KL Regularization" Germain 2009
+        # & Olivier Catoni. PAC-Bayesian surpevised classification: the thermodynamics of statistical learning
+        complex_term = avg_empiric_loss + (2 / n_samples) * (hyper_div + div + math.log(1/ delta))
 
 
     # elif prm.complexity_type == 'Seeger2':
