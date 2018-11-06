@@ -144,7 +144,7 @@ for loss_type in ['Logistic_Binary_Clipped', 'Zero_One']:
     print('-'*20)
     write_to_log('Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
 
-    for  divergence_type in ['KL', 'W_Sqr']:
+    for  divergence_type in ['KL', 'W_Sqr', 'W_NoSqr']:
         prt.divergence_type = divergence_type
         for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type

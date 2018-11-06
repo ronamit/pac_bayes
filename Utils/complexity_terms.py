@@ -126,6 +126,9 @@ def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=Fals
         if hasattr(prior_layer, 'b'):
             total_div += divregnce_element(post_layer.b, prior_layer.b, prm, noised_prior)
 
+    if prm.divergence_type == 'W_NoSqr':
+        total_div = torch.sqrt(total_div)
+
     return total_div
 # -------------------------------------------------------------------------------------------
 
@@ -144,14 +147,8 @@ def divregnce_element(post, prior, prm, noised_prior=False):
     post_std = torch.exp(0.5*post['log_var'])
     prior_std = torch.exp(0.5*prior_log_var)
 
-    if prm.divergence_type == 'W_NoSqr':
-        # Wasserstein norm with p=2, not-squared
-        div_elem = torch.sqrt(torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2)))
-    # divergence = torch.sqrt(
-    #     torch.sum(torch.relu((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))))
-
-    elif prm.divergence_type == 'W_Sqr':
-            # Wasserstein norm with p=2, squared
+    if  prm.divergence_type == 'W_Sqr' or prm.divergence_type == 'W_NoSqr':
+            # Wasserstein norm with p=2
             div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
 
     elif prm.divergence_type == 'KL':
