@@ -154,34 +154,37 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 # -------------------------------------------------------------------------------------------
 def eval_bound(post_model, prior_model, data_loader, prm):
 
-    # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
-
-    train_loader = data_loader['train']
-    n_batches = len(train_loader)
+    # # Loss criterion
+    # loss_criterion = get_loss_func(prm.loss_type)
+    #
+    # train_loader = data_loader['train']
+    # n_batches = len(train_loader)
     n_train_samples = data_loader['n_train_samples']
+    #
+    # post_model.eval()
+    #
+    # empiric_loss = 0.0
+    #
+    # for batch_idx, batch_data in enumerate(train_loader):
+    #
+    #     # get batch:
+    #     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+    #     batch_size = inputs.shape[0]
+    #
+    #     # Monte-Carlo iterations:
+    #     n_MC = prm.n_MC_eval
+    #     for i_MC in range(n_MC):
+    #
+    #         # calculate loss:
+    #         outputs = post_model(inputs)
+    #         empiric_loss += (1 / n_MC) * loss_criterion(outputs, targets).item()
+    #
+    # # End batch loop
+    #
+    # avg_empiric_loss = empiric_loss / n_train_samples
 
-    post_model.eval()
+    _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
 
-    empiric_loss = 0.0
-
-    for batch_idx, batch_data in enumerate(train_loader):
-
-        # get batch:
-        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-        batch_size = inputs.shape[0]
-
-        # Monte-Carlo iterations:
-        n_MC = prm.n_MC_eval
-        for i_MC in range(n_MC):
-
-            # calculate loss:
-            outputs = post_model(inputs)
-            empiric_loss += (1 / n_MC) * loss_criterion(outputs, targets).item()
-
-    # End batch loop
-
-    avg_empiric_loss = empiric_loss / n_train_samples
 
     #  complexity/prior term:
     complexity_term = get_task_complexity(

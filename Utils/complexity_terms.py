@@ -147,7 +147,7 @@ def divregnce_element(post, prior, prm, noised_prior=False):
     post_std = torch.exp(0.5*post['log_var'])
     prior_std = torch.exp(0.5*prior_log_var)
 
-    if  prm.divergence_type == 'W_Sqr' or prm.divergence_type == 'W_NoSqr':
+    if  prm.divergence_type in ['W_Sqr', 'W_NoSqr']:
             # Wasserstein norm with p=2
             div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
 

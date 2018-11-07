@@ -12,7 +12,7 @@ from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
 from Utils.Bayes_utils import set_model_values, run_eval_Bayes
-
+from Utils.complexity_terms import get_net_densities_divergence
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
@@ -28,7 +28,7 @@ parser.add_argument('--run-name', type=str, help='Name of dir to save results in
                     default='')
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=1)
+                    default=111)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
@@ -51,7 +51,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='Logistic_binary')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='FcNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -94,7 +94,7 @@ prm.n_MC_eval = 10 # number of monte-carlo runs for expected loss estimation and
 
 # Learning objective parameters
 prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
-prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
+prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
@@ -142,15 +142,17 @@ for loss_type in ['Logistic_Binary_Clipped', 'Zero_One']:
     test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)
     train_acc, train_loss = run_eval_Bayes(post_model, data_loader['train'], prt)
     print('-'*20)
-    write_to_log('Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
+    write_to_log('-Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
 
-    for  divergence_type in ['KL', 'W_Sqr', 'W_NoSqr']:
+    for divergence_type in ['KL', 'W_Sqr', 'W_NoSqr']:
         prt.divergence_type = divergence_type
+        div_val = get_net_densities_divergence(prior_model, post_model, prt)
+        write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, div_val), prm)
         for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
-            write_to_log('Bound: {},\tDistance: {},\tLoss: {},\tValue: {:.4}'.
-                         format(prt.complexity_type, prt.divergence_type, prt.loss_type, bound_val), prm)
+            write_to_log('\t\tBound: {} =  {:.4}'.
+                         format(prt.complexity_type, bound_val), prm)
 
 # -------------------------------------------------------------------------------------------
 #  Run standard deterministic learning for comparision
