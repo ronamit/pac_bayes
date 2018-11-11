@@ -13,20 +13,23 @@ def get_loss_func(loss_type):
     #       2. The returned loss is summed (not averaged) over samples!!!
 
     if loss_type == 'CrossEntropy':
-        return nn.CrossEntropyLoss(reduction='sum').cuda()
+        return nn.CrossEntropyLoss(reduction='sum')
 
     elif loss_type == 'L2_SVM':
-        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='sum').cuda()
+        return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='sum')
 
     elif loss_type == 'Logistic_binary':
-        return Logistic_Binary_Loss(reduction='sum').cuda()
+        return Logistic_Binary_Loss(reduction='sum')
 
     elif loss_type == 'Logistic_Binary_Clipped':
-        return Logistic_Binary_Loss_Clipped(reduction='sum').cuda()
+        return Logistic_Binary_Loss_Clipped(reduction='sum')
 
 
-    elif loss_type == 'Zero_One':
-        return Zero_One_Loss(reduction='sum').cuda()
+    elif loss_type == 'Zero_One_Binary':
+        return Zero_One_Binary(reduction='sum')
+
+    elif loss_type == 'Zero_One_Multi':
+        return Zero_One_Multi(reduction='sum')
 
     else:
         raise ValueError('Invalid loss_type')
@@ -105,8 +108,8 @@ class Logistic_Binary_Loss_Clipped(_Loss):
 
 # -----------------------------------------------------------------------------------------------------------#
 
-class Zero_One_Loss(_Loss):
-    # zero one-loss of binaty classifier with labels {-1,1}
+class Zero_One_Binary(_Loss):
+    # zero one-loss of binary classifier with labels {-1,1}
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
@@ -115,8 +118,20 @@ class Zero_One_Loss(_Loss):
         assert self.reduction == 'sum'
         # switch labels to {-1,1}
         target = target.float() * 2 - 1
-        # loss_sum =  F.soft_margin_loss(input_, target_, size_average=self.size_average) / math.log(2)
         loss_sum = (target != torch.sign(input)).sum().float()
+        return loss_sum
+
+# -----------------------------------------------------------------------------------------------------------#
+
+class Zero_One_Multi(_Loss):
+    # zero one-loss of multi-class classifier
+    # labels are {0,1,..,n_classes-1}
+    def forward(self, input, target):
+        # validity checks
+        _assert_no_grad(target)
+        input = input[:, 0].long()
+        assert self.reduction == 'sum'
+        loss_sum = (target != input).sum().float()
         return loss_sum
 
 # -----------------------------------------------------------------------------------------------------------#

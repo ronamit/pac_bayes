@@ -13,9 +13,12 @@ from Data_Path import get_data_path
 from Models.stochastic_models import get_model
 from Utils.Bayes_utils import set_model_values, run_eval_Bayes
 from Utils.complexity_terms import get_net_densities_divergence
+from Utils.data_gen import get_info
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 # -------------------------------------------------------------------------------------------
 #  Set Parameters
 # -------------------------------------------------------------------------------------------
@@ -28,14 +31,14 @@ parser.add_argument('--run-name', type=str, help='Name of dir to save results in
                     default='')
 
 parser.add_argument('--seed', type=int,  help='random seed',
-                    default=111)
+                    default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
 
 # ----- Task Parameters ---------------------------------------------#
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet",
+parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
                     default='binarized_MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
@@ -51,13 +54,13 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='Logistic_binary')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='FcNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)  # 50
+                    default=1)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -94,7 +97,7 @@ prm.n_MC_eval = 10 # number of monte-carlo runs for expected loss estimation and
 
 # Learning objective parameters
 prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
-prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
+prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
 # -------------------------------------------------------------------------------------------
@@ -136,8 +139,18 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 # Note: the bounds are evaluated using only the training data
 # But they should upper bound the test-loss (with high probability)
 
-prt = deepcopy(prm) # temp parameters
-for loss_type in ['Logistic_Binary_Clipped', 'Zero_One']:
+
+# Choose the appropriate loss functions for evaluation:
+info = get_info(prm)
+if info['type'] == 'multi_class':
+    losses = ['Zero_One_Multi']
+elif info['type'] == 'multi_class':
+    losses = ['Logistic_Binary_Clipped', 'Zero_One_Binary']
+else:
+    raise ValueError
+
+prt = deepcopy(prm) #  temp parameters
+for loss_type in losses:
     prt.loss_type = loss_type
     test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)
     train_acc, train_loss = run_eval_Bayes(post_model, data_loader['train'], prt)
