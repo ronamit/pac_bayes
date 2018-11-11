@@ -24,12 +24,14 @@ def get_size_of_conv_output(input_shape, conv_func):
     return conv_out_size
 
 def count_weights(model):
-    # note: alsp counts batch-orm parameters
+    # note: don't counts batch-norm parameters
     count = 0
     for m in model.modules():
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             count += list_mult(m.weight.shape)
-        elif  isinstance(m, StochasticLayer):
+            if hasattr(m, 'bias'):
+                count += list_mult(m.bias.shape)
+        elif isinstance(m, StochasticLayer):
             count += m.weights_count
     return count
 

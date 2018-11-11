@@ -60,7 +60,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1)  # 50
+                    default=50)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -123,6 +123,24 @@ prior_mean = 0
 prior_model = get_model(prm)
 set_model_values(prior_model, prior_mean, prior_log_var)
 
+#### DEBUG #########################3
+# import math
+# prt = deepcopy(prm) #  temp parameters
+# prt.divergence_type = 'W_Sqr'
+# model1 = get_model(prm)
+# m1 = 0.0
+# m2 = 0.0
+# s1 = 2.0
+# s2 = 5.0
+# d = model1.weights_count
+# set_model_values(model1, mean=m1, log_var=2*math.log(s1))
+# model2 = get_model(prm)
+# set_model_values(model2, mean=m2, log_var=2*math.log(s2))
+# div_val = get_net_densities_divergence(model1, model2, prt)
+# print('DEBUG: Divergence value computed {}'.format(div_val))
+# print('DEBUG: Divergence value analytic {}'.format(d*((m1-m2)**2 + (s1-s2)**2)))
+####################
+
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
@@ -144,7 +162,7 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 info = get_info(prm)
 if info['type'] == 'multi_class':
     losses = ['Zero_One_Multi']
-elif info['type'] == 'multi_class':
+elif info['type'] == 'binary_class':
     losses = ['Logistic_Binary_Clipped', 'Zero_One_Binary']
 else:
     raise ValueError

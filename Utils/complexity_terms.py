@@ -149,6 +149,7 @@ def divregnce_element(post, prior, prm, noised_prior=False):
 
     if  prm.divergence_type in ['W_Sqr', 'W_NoSqr']:
             # Wasserstein norm with p=2
+            # according to DOWSON & LANDAU 1982
             div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
 
     elif prm.divergence_type == 'KL':

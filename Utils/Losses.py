@@ -126,12 +126,13 @@ class Zero_One_Binary(_Loss):
 class Zero_One_Multi(_Loss):
     # zero one-loss of multi-class classifier
     # labels are {0,1,..,n_classes-1}
+    # inputs are the class scores outputed by the network
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
-        input = input[:, 0].long()
+        label_est = input.argmax(dim=1)
         assert self.reduction == 'sum'
-        loss_sum = (target != input).sum().float()
+        loss_sum = (target != label_est).sum().float()
         return loss_sum
 
 # -----------------------------------------------------------------------------------------------------------#

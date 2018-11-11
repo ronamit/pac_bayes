@@ -47,6 +47,8 @@ def count_weights(model):
     for m in model.modules():
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             count += list_mult(m.weight.shape)
+            if hasattr(m,'bias'):
+                count += list_mult(m.bias.shape)
     return count
 
 # generate dummy input sample and forward to get shape after conv layers

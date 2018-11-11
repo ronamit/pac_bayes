@@ -18,6 +18,8 @@ class StochasticLayer(nn.Module):
         # values initialization is done later
         self.weights_shape = weights_shape
         self.weights_count = list_mult(weights_shape)
+        if bias_size is not None:
+            self.weights_count += bias_size
         self.w_mu = get_param(weights_shape)
         self.w_log_var = get_param(weights_shape)
         self.w = {'mean': self.w_mu, 'log_var': self.w_log_var}
