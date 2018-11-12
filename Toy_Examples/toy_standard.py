@@ -12,13 +12,13 @@ import torch.optim as optim
 #  Standard Learning
 # -------------------------------------------------------------------------------------------
 def learn(data_set):
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     n_tasks = len(data_set)
     n_dim = data_set[0].shape[1]
     n_samples_list = [task_data.shape[0] for task_data in data_set]
 
     # Init weights:
-    w = torch.randn(n_tasks, n_dim, requires_grad=True).cuda()
+    w = torch.randn(n_tasks, n_dim, requires_grad=True, device=device)
 
     learning_rate = 1e-1
 
@@ -34,7 +34,7 @@ def learn(data_set):
         b_task = np.random.randint(0, n_tasks)  # sample a random task index
         batch_size_curr = min(n_samples_list[b_task], batch_size)
         batch_inds = np.random.choice(n_samples_list[b_task], batch_size_curr, replace=False)
-        task_data = torch.from_numpy(data_set[b_task][batch_inds]).cuda()
+        task_data = torch.from_numpy(data_set[b_task][batch_inds]).to(device)
 
         # Loss:
         loss = (w[b_task] - task_data).pow(2).mean()

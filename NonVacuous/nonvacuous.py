@@ -76,7 +76,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
@@ -99,7 +99,7 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
+prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
 prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
@@ -182,7 +182,7 @@ for loss_type in losses:
         prt.divergence_type = divergence_type
         div_val = get_net_densities_divergence(prior_model, post_model, prt)
         write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, div_val), prm)
-        for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
+        for complexity_type in ['McAllester', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type
             bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt, train_loss)
             write_to_log('\t\tBound: {} =  {:.4}'.

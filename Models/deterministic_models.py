@@ -32,6 +32,7 @@ def get_model(prm):
         raise ValueError('Invalid model_name')
 
     model.weights_count = count_weights(model)
+    model.to(prm.device)  # GPU or CPU
 
     return model
 
@@ -65,8 +66,8 @@ def batchnorm(input, weight=None, bias=None, running_mean=None, running_var=None
     # This hack only works when momentum is 1 and avoids needing to track running stats
     # by substuting dummy variables
     in_dim = input.data.size()[1]
-    running_mean = torch.zeros(in_dim).cuda()
-    running_var = torch.ones(in_dim).cuda()
+    running_mean = torch.zeros(in_dim)
+    running_var = torch.ones(in_dim)
     return F.batch_norm(input, running_mean, running_var, weight, bias, training, momentum, eps)
 
 # -------------------------------------------------------------------------------------------
@@ -120,7 +121,7 @@ class FcNet3(base_model):
                 ]))
         # Initialize weights
         self._init_weights()
-        self.cuda()  # always use GPU
+
 
     def forward(self, x, weights=None):
         ''' Define what happens to data in the net '''
@@ -165,7 +166,7 @@ class ConvNet3(base_model):
 
         # Initialize weights
         self._init_weights()
-        self.cuda()  # always use GPU
+
 
     def _forward_conv_layers(self, x, weights=None):
         if weights is None:
@@ -225,7 +226,6 @@ class OmConvNet(base_model):
 
         # Initialize weights
         self._init_weights()
-        self.cuda()  # always use GPU
 
     def _forward_conv_layers(self, x, weights=None):
         if weights is None:

@@ -9,12 +9,11 @@ import torch.optim as optim
 
 
 def learn(data_set, complexity_type):
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     n_tasks = len(data_set)
     n_dim = data_set[0].shape[1]
     n_samples_list = [task_data.shape[0] for task_data in data_set]
-    device = torch.device("cuda")
 
     # Define prior:
     w_P_mu = torch.randn(n_dim, requires_grad=True, device=device)
@@ -38,7 +37,7 @@ def learn(data_set, complexity_type):
         b_task = np.random.randint(0, n_tasks)  # sample a random task index
         batch_size_curr = min(n_samples_list[b_task], batch_size)
         batch_inds = np.random.choice(n_samples_list[b_task], batch_size_curr, replace=False)
-        task_data = torch.from_numpy(data_set[b_task][batch_inds]).cuda()
+        task_data = torch.from_numpy(data_set[b_task][batch_inds]).to(device)
 
         # Re-Parametrization:
         w_sigma = torch.exp(w_log_sigma[b_task])
@@ -61,7 +60,7 @@ def learn(data_set, complexity_type):
 
             n_samples = n_samples_list[i_task]
 
-            if complexity_type == 'PAC_Bayes_McAllaster':
+            if complexity_type == 'PAC_Bayes_McAllester':
                 delta = 0.95
                 complex_term_sum += torch.sqrt((1 / (2 * n_samples)) *
                                            (kl_dist + np.log(2 * np.sqrt(n_samples) / delta)))

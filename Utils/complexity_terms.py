@@ -42,7 +42,7 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
     if n_train_tasks == 0:
         meta_complex_term = 0.0  # infinite tasks case
     else:
-        if prm.complexity_type == 'McAllaster' or  prm.complexity_type == 'Seeger':
+        if prm.complexity_type == 'McAllester' or  prm.complexity_type == 'Seeger':
             delta = prm.delta
             meta_complex_term = torch.sqrt(hyper_kl / (2*n_train_tasks) + math.log(4*math.sqrt(n_train_tasks) / delta))
 
@@ -71,9 +71,9 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     if complexity_type == 'NoComplexity':
         # set as zero
-        complex_term = torch.zeros(1, requires_grad=False).cuda()
+        complex_term = torch.zeros(1, requires_grad=False, device=prm.device)
 
-    elif prm.complexity_type == 'McAllaster':
+    elif prm.complexity_type == 'McAllester':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         # complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
         complex_term = torch.sqrt((1 / (2 * (n_samples - 1))) * (hyper_div + div + math.log(2 * n_samples / delta)))

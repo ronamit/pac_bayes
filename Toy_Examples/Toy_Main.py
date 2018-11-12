@@ -80,7 +80,7 @@ if learning_type == 'Bayes_FixedPrior':
 
 if learning_type == 'MetaLearnPosteriors':
     import toy_MetaLearnPosteriors
-    complexity_type = 'Variational_Bayes' # 'PAC_Bayes_McAllaster' \ 'Variational_Bayes' \ 'KL'
+    complexity_type = 'Variational_Bayes' # 'McAllester \ 'Variational_Bayes' \ 'KL'
     toy_MetaLearnPosteriors.learn(data_set, complexity_type)
 
 if learning_type == 'MetaLearnWeights':

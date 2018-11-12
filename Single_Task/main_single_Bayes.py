@@ -89,6 +89,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 prm.data_path = get_data_path()
 set_random_seed(prm.seed)
 create_result_dir(prm)

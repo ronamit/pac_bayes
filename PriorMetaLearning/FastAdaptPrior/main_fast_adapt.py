@@ -89,7 +89,7 @@ parser.add_argument('--n_meta_train_chars'
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='McAllaster')  #  'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllaster / Seeger'"
+                    default='McAllester')  #  'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllester / Seeger'"
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',

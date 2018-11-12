@@ -46,7 +46,7 @@ if run_experiments:
               '--n_test_tasks', '20',  # 100
               '--n_meta_train_epochs', '150',  # 150
               '--n_meta_test_epochs', '200',  # 200
-              '--meta_batch_size', '16',
+              '--meta_batch_size', '5',
               '--mode', 'MetaTrain',  # 'MetaTrain'  \ 'LoadMetaModel'
               ])
     stop_time = timeit.default_timer()

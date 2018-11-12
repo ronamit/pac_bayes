@@ -89,7 +89,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 complexity_term = get_task_complexity(
                     prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
             else:
-                complexity_term = torch.tensor(0.0).cuda()
+                complexity_term = torch.tensor(0.0, device=prm.device)
 
             # Total objective:
             objective = avg_empiric_loss + complexity_term
@@ -98,7 +98,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
 
             # Print status:
-            log_interval = 500
+            log_interval = 1000
             if batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, objective.item()) +
@@ -114,11 +114,11 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
 
     #  Update Log file
-    update_file = not verbose == 0
-    write_to_log(cmn.get_model_string(post_model), prm, update_file=update_file)
-    write_to_log('Number of weights: {}'.format(post_model.weights_count), prm, update_file=update_file)
-    write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm, update_file=update_file)
-    write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm, update_file=update_file)
+    if verbose:
+        write_to_log(cmn.get_model_string(post_model), prm)
+        write_to_log('Number of weights: {}'.format(post_model.weights_count), prm)
+        write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
+        write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm)
 
 
     start_time = timeit.default_timer()
@@ -134,18 +134,15 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     test_acc, test_loss = run_eval_Bayes(post_model, test_loader, prm)
     test_err = 1 - test_acc
 
-    # Log resuls
-    write_to_log('>Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100*(1-train_acc), train_loss),
-                 prm, update_file=update_file)
-    write_to_log('>Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100*(test_err), test_loss),
-                 prm, update_file=update_file)
+    # Log results
+    if verbose:
+        write_to_log('>Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100*(1-train_acc), train_loss), prm)
+        write_to_log('>Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100*(test_err), test_loss), prm)
 
     stop_time = timeit.default_timer()
-    cmn.write_final_result(test_acc, stop_time - start_time, prm)
+    if verbose:
+        cmn.write_final_result(test_acc, stop_time - start_time, prm)
 
-
-    
- 
     return post_model, test_err, test_loss
 
 

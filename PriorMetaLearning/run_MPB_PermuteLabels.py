@@ -7,8 +7,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--complexity_type', type=str,
                     help=" The learning objective complexity type",
-                    default='McAllaster')
-# 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllaster / Seeger'"
+                    default='McAllester')
+# 'NoComplexity' /  'Variational_Bayes' / 'PAC_Bayes_Pentina'   McAllester / Seeger'"
 
 args = parser.parse_args()
 
@@ -33,5 +33,5 @@ call(['python', 'main_Meta_Bayes.py',
 
 
 # KL-Seeger-  err: 0.756%, STD: 0.09%
-# KL-McAllaster- err: 0.94%, STD: 0.0901%
-# W_Sqr-McAllaster-  err: 3.69%, STD: 0.324%
+# KL-McAllester- err: 0.94%, STD: 0.0901%
+# W_Sqr-McAllester-  err: 3.69%, STD: 0.324%

@@ -222,7 +222,7 @@ def get_info(prm):
         info['output_dim'] =  info['n_classes']
     elif info['type'] == 'binary_class':
         # label are -/+1
-        info['output_dim'] =  1
+        info['output_dim'] = 1
 
     return info
 
@@ -236,7 +236,7 @@ def get_info(prm):
 def get_batch_vars(batch_data, prm):
     ''' Transform batch to variables '''
     inputs, targets = batch_data
-    inputs, targets = inputs.cuda(), targets.cuda()
+    inputs, targets = inputs.to(prm.device), targets.to(prm.device)
     return inputs, targets
 
 

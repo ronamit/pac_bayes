@@ -11,7 +11,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, ensure_dir
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
@@ -68,7 +68,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=1)  # 50
+                    default=50)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -80,7 +80,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
 
@@ -103,7 +103,7 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
+prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
 prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
@@ -111,18 +111,21 @@ prm.prior_log_var = -5
 prm.prior_mean = 0
 
 
+root_saved_dir = 'grid_runs/'
+base_run_name = 'BinMnist_ConvNet3_10k_grid'
+file_name = 'results.pkl'
+path_to_result_dir = os.path.join(root_saved_dir, base_run_name)
+ensure_dir(path_to_result_dir)
+path_to_result_file =  os.path.join(path_to_result_dir, file_name)
 
-root_saved_dir = 'saved/'
-base_run_name = 'nonvacuous_grid'
-path_to_result_files = os.path.join(root_saved_dir, base_run_name, 'runs_analysis.pkl')
-
-run_experiments = True # If false, just analyze the previously saved experiments
+run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
-loss_type_eval = 'Zero_One_Binary'
-train_samples_vec = np.arange(1, 11) * 2000
-val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllaster', 'KL'], ['Bound', 'McAllaster', 'W_Sqr']]
-
+loss_type_eval = 'Zero_One_Binary'   # Zero_One_Binary' / 'Zero_One_Multi'
+samp_grid_delta = 10000
+train_samples_vec = np.arange(1, 1 + np.floor(60000/samp_grid_delta)).astype(int) * samp_grid_delta
+val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
+n_reps = 1
 
 if run_experiments:
     # -------------------------------------------------------------------------------------------
@@ -141,13 +144,8 @@ if run_experiments:
     prior_model = get_model(prm)
     set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 
-
-
-    n_reps = 2
-
     n_val_types = len(val_types)
     n_grid = len(train_samples_vec)
-
     val_mat = np.zeros((n_val_types, n_grid, n_reps))
 
     # -------------------------------------------------------------------------------------------
@@ -191,23 +189,29 @@ if run_experiments:
         # end reps loop
     # end grid loop
     # Saving the analysis:
-    with open(path_to_result_files, 'wb') as f:
+    with open(path_to_result_file, 'wb') as f:
         pickle.dump([val_mat, prm, loss_type_eval, train_samples_vec, val_types], f)
 else:
-    with open(path_to_result_files, 'rb') as f:
+    with open(path_to_result_file, 'rb') as f:
         val_mat, prm, loss_type_eval, train_samples_vec, val_types = pickle.load(f)
+        print(prm)
 
 # end if run_experiments
 
 
 # Plot the analysis:
 plt.figure()
-plt.errorbar(train_samples_vec, val_mat.mean(axis=2), yerr=val_mat.std(axis=2))
+for i_val_type, val_type in enumerate(val_types):
+    plt.errorbar(train_samples_vec,
+                 val_mat[i_val_type].mean(axis=1),
+                 yerr=val_mat[i_val_type].std(axis=1),
+                 label=str(val_type))
 
 plt.xticks(train_samples_vec)
 plt.xlabel('Number of Samples')
-plt.ylabel('Zero-One-Loss')
-
+plt.ylabel(loss_type_eval)
+plt.legend()
+plt.title(path_to_result_file)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-
+plt.ylim([0, 0.125])
 plt.show()

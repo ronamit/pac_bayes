@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     root_saved_dir = 'saved/'
     #***** Enter here the relative path to results dir (with the learned prior you want to analyze):
-    result_name = 'PermutedLabels_5_Tasks_McAllaster_Comp'
+    result_name = 'PermutedLabels_5_Tasks_McAllester_Comp'
     # result_name = 'Shuffled_200_Pixels_10_Tasks_Seeger_Comp'
     result_path = root_saved_dir + result_name
     prm, info_dict = load_run_data(result_path)

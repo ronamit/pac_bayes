@@ -80,7 +80,7 @@ def get_model(prm, model_type='Stochastic'):
     else:
         raise ValueError('Invalid model_name')
 
-    model.cuda() # always use GPU
+    model.to(prm.device)  # GPU or CPU
     init_layers(model, prm.log_var_init) # init model
 
     # # For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)
@@ -137,7 +137,6 @@ class FcNet3(general_model):
         self.fc_out = linear_layer(n_hidden3, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
-        # self.cuda()  # always use GPU
 
     def forward(self, x):
         x = x.view(-1, self.input_size)  # flatten image
@@ -169,7 +168,6 @@ class ConvNet3(general_model):
         self.fc_out = linear_layer(n_hidden_fc1, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
-        # self.cuda()  # always use GPU
 
     def _forward_features(self, x):
         x = F.elu(F.max_pool2d(self.conv1(x), 2))
@@ -217,7 +215,7 @@ class OmConvNet(general_model):
         self.fc_out = linear_layer(conv_out_size, output_dim)
 
         # self._init_weights(log_var_init)  # Initialize weights
-        # self.cuda()  # always use GPU
+
 
     def _forward_conv_layers(self, x):
         x = self.pool1(self.relu1(self.bn1(self.conv1(x))))
@@ -252,8 +250,7 @@ class OmConvNet(general_model):
 #         self.fc_out = linear_layer(n_hidden_fc1, output_dim)
 # 
 #         # self._init_weights(log_var_init)  # Initialize weights
-#         # self.cuda()  # always use GPU
-# 
+
 #     def _forward_features(self, x):
 #         x = F.elu(F.max_pool2d(self.conv1(x), 2))
 #         x = F.elu(F.max_pool2d(self.conv2(x), 2))
