@@ -46,6 +46,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
                     default=1000)
 
 prm = parser.parse_args()
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 prm.data_path = get_data_path()
 set_random_seed(prm.seed)
 

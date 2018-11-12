@@ -134,6 +134,7 @@ parser.add_argument('--init_from_prior', default=True, type=lambda x: (str(x).lo
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 prm.data_path = get_data_path()
 
 

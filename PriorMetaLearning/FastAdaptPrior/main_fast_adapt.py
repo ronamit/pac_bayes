@@ -129,6 +129,7 @@ parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 prm.data_path = get_data_path()
 set_random_seed(prm.seed)
 create_result_dir(prm)
