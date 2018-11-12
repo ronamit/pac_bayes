@@ -152,7 +152,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 # -------------------------------------------------------------------------------------------
 #  Bound evaluation
 # -------------------------------------------------------------------------------------------
-def eval_bound(post_model, prior_model, data_loader, prm):
+def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None):
 
     # # Loss criterion
     # loss_criterion = get_loss_func(prm.loss_type)
@@ -183,7 +183,8 @@ def eval_bound(post_model, prior_model, data_loader, prm):
     #
     # avg_empiric_loss = empiric_loss / n_train_samples
 
-    _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
+    if not avg_empiric_loss:
+        _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
 
 
     #  complexity/prior term:

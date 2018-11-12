@@ -36,6 +36,10 @@ parser.add_argument('--seed', type=int,  help='random seed',
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
                     default=128)
 
+parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
+                    default=10)
+
+
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
@@ -46,7 +50,7 @@ parser.add_argument('--data-transform', type=str, help="Data transformation:  'N
 
 parser.add_argument('--limit_train_samples', type=int,
                     help='Upper limit for the number of training samples (0 = unlimited)',
-                    default=0)
+                    default=0) # 0
 
 # ----- Algorithm Parameters ---------------------------------------------#
 
@@ -54,7 +58,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='Logistic_binary')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='FcNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -93,7 +97,6 @@ prm.lr_schedule = {}  # No decay
 
 # Test type:
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
-prm.n_MC_eval = 10 # number of monte-carlo runs for expected loss estimation and bound evaluation
 
 # Learning objective parameters
 prm.complexity_type = 'McAllaster'  # 'McAllaster' / 'Seeger'
@@ -181,7 +184,7 @@ for loss_type in losses:
         write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, div_val), prm)
         for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type
-            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt)
+            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt, train_loss)
             write_to_log('\t\tBound: {} =  {:.4}'.
                          format(prt.complexity_type, bound_val), prm)
 

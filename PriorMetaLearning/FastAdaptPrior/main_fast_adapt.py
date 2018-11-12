@@ -10,6 +10,7 @@ import torch.optim as optim
 from Data_Path import get_data_path
 from Utils.data_gen import Task_Generator
 from Utils.common import save_model_state, load_model_state, create_result_dir, set_random_seed, write_to_log, save_run_data
+from PriorMetaLearning import meta_train_Bayes_finite_tasks
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 # -------------------------------------------------------------------------------------------
