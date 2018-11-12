@@ -51,7 +51,7 @@ def run_eval_max_posterior(model, loader, prm):
 
     avg_loss /= n_samples
     acc = n_correct / n_samples
-    info = {'acc':acc, 'n_correct':n_correct, 'test_type':'max_posterior',
+    info = {'acc':acc, 'n_correct':n_correct,
             'n_samples':n_samples, 'avg_loss':avg_loss}
     return info
 
@@ -77,7 +77,7 @@ def run_eval_expected(model, loader, prm):
 
     avg_loss /= (n_MC * n_samples)
     acc = n_correct / (n_MC * n_samples)
-    info = {'acc':acc, 'n_correct':n_correct, 'test_type':'max_posterior',
+    info = {'acc':acc, 'n_correct':n_correct,
             'n_samples':n_samples, 'avg_loss':avg_loss}
     return info
 
@@ -113,7 +113,7 @@ def run_eval_majority_vote(model, loader, prm, n_votes=5):
         n_correct += majority_pred.eq(targets.data.view_as(majority_pred)).cpu().sum()
     avg_loss /= n_samples
     acc = n_correct / n_samples
-    info = {'acc': acc, 'n_correct': n_correct, 'test_type': 'majority_vote',
+    info = {'acc': acc, 'n_correct': n_correct,
             'n_samples': n_samples, 'avg_loss': avg_loss}
     return info
 # -------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ def run_eval_avg_vote(model, loader, prm, n_votes=5):
 
     avg_loss /= n_samples
     acc = n_correct / n_samples
-    info = {'acc': acc, 'n_correct': n_correct, 'test_type': 'AvgVote',
+    info = {'acc': acc, 'n_correct': n_correct,
             'n_samples': n_samples, 'avg_loss': avg_loss}
     return info
 # -------------------------------------------------------------------------------------------

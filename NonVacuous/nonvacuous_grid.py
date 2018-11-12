@@ -2,9 +2,13 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
+import os
 import torch
 import torch.optim as optim
+import numpy as np
 from copy import deepcopy
+import pickle
+import matplotlib.pyplot as plt
 
 from Utils import data_gen
 from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
@@ -37,7 +41,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
                     default=128)
 
 parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
-                    default=10)
+                    default=3)
 
 
 # ----- Task Parameters ---------------------------------------------#
@@ -64,7 +68,7 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)  # 50
+                    default=1)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -106,91 +110,104 @@ prm.delta = 0.035   # maximal probability that the bound does not hold
 prm.prior_log_var = -5
 prm.prior_mean = 0
 
-# -------------------------------------------------------------------------------------------
-#  Init run
-# -------------------------------------------------------------------------------------------
-
-prm.data_path = get_data_path()
-set_random_seed(prm.seed)
-create_result_dir(prm)
-
-# Generate task data set:
-task_generator = data_gen.Task_Generator(prm)
-data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
-
-# -------------------------------------------------------------------------------------------
-#  Create Prior
-# ------------------------------------------------------------------------------------------
-
-# create model of the network
-prior_model = get_model(prm)
-set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
-
-#### DEBUG #########################3
-# import math
-# prt = deepcopy(prm) #  temp parameters
-# prt.divergence_type = 'W_Sqr'
-# model1 = get_model(prm)
-# m1 = 0.0
-# m2 = 0.0
-# s1 = 2.0
-# s2 = 5.0
-# d = model1.weights_count
-# set_model_values(model1, mean=m1, log_var=2*math.log(s1))
-# model2 = get_model(prm)
-# set_model_values(model2, mean=m2, log_var=2*math.log(s2))
-# div_val = get_net_densities_divergence(model1, model2, prt)
-# print('DEBUG: Divergence value computed {}'.format(div_val))
-# print('DEBUG: Divergence value analytic {}'.format(d*((m1-m2)**2 + (s1-s2)**2)))
-####################
-
-# -------------------------------------------------------------------------------------------
-#  Run learning
-# -------------------------------------------------------------------------------------------
-# Learn a posterior which minimizes some bound with some loss function
-post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
-
-save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 
 
-# -------------------------------------------------------------------------------------------
-#  Evaluate bounds
-# -------------------------------------------------------------------------------------------
-# Calculate bounds the expected risk of the learned posterior
-# Note: the bounds are evaluated using only the training data
-# But they should upper bound the test-loss (with high probability)
+root_saved_dir = 'saved/'
+base_run_name = 'nonvacuous_grid'
+path_to_result_files = os.path.join(root_saved_dir, base_run_name, 'runs_analysis.pkl')
+
+run_experiments = True # If false, just analyze the previously saved experiments
+
+# grid parameters:
+loss_type_eval = 'Zero_One_Binary'
+train_samples_vec = np.arange(1, 11) * 2000
+val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllaster', 'KL'], ['Bound', 'McAllaster', 'W_Sqr']]
 
 
-# Choose the appropriate loss functions for evaluation:
-info = get_info(prm)
-if info['type'] == 'multi_class':
-    losses = ['Zero_One_Multi']
-elif info['type'] == 'binary_class':
-    losses = ['Logistic_Binary_Clipped', 'Zero_One_Binary']
+if run_experiments:
+    # -------------------------------------------------------------------------------------------
+    #  Init run
+    # -------------------------------------------------------------------------------------------
+
+    prm.data_path = get_data_path()
+    set_random_seed(prm.seed)
+    create_result_dir(prm)
+
+    # Generate task data set:
+    task_generator = data_gen.Task_Generator(prm)
+
+
+    #  Create Prior
+    prior_model = get_model(prm)
+    set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
+
+
+
+    n_reps = 2
+
+    n_val_types = len(val_types)
+    n_grid = len(train_samples_vec)
+
+    val_mat = np.zeros((n_val_types, n_grid, n_reps))
+
+    # -------------------------------------------------------------------------------------------
+    #  Run grid
+    # -------------------------------------------------------------------------------------------
+    prm_eval = deepcopy(prm) #   parameters for evaluation
+    prm_eval.loss_type = loss_type_eval
+
+
+    for i_grid, n_train_samples in enumerate(train_samples_vec):
+
+        for i_rep in range(n_reps):
+
+            data_loader = task_generator.get_data_loader(prm, limit_train_samples=n_train_samples)
+
+            # Learn a posterior which minimizes some bound with the training loss function
+            post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
+                                                                              init_from_prior=True, verbose=0)
+
+            # evaluation
+            _, train_loss = run_eval_Bayes(post_model, data_loader['train'], prm_eval)
+            _, test_loss = run_eval_Bayes(post_model, data_loader['test'], prm_eval)
+            write_to_log('n_samples: {}, rep: {}.  Train-loss :{:.4}, Test-loss:  {:.4}'.format(n_train_samples, i_rep, train_loss, test_loss),
+                         prm)
+
+            for i_val_type, val_type in enumerate(val_types):
+                if val_type[0] == 'train_loss':
+                    val = train_loss
+                elif val_type[0] == 'test_loss':
+                    val = test_loss
+                elif val_type[0] == 'Bound':
+                    prm_eval.complexity_type = val_type[1]
+                    prm_eval.divergence_type = val_type[2]
+                    val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm_eval, train_loss)
+                    write_to_log(str(val_type)+' = '+str(val), prm)
+                else:
+                    raise ValueError('Invalid val_types')
+
+                val_mat[i_val_type, i_grid, i_rep] = val
+            # end val_types loop
+        # end reps loop
+    # end grid loop
+    # Saving the analysis:
+    with open(path_to_result_files, 'wb') as f:
+        pickle.dump([val_mat, prm, loss_type_eval, train_samples_vec, val_types], f)
 else:
-    raise ValueError
+    with open(path_to_result_files, 'rb') as f:
+        val_mat, prm, loss_type_eval, train_samples_vec, val_types = pickle.load(f)
 
-prt = deepcopy(prm) #  temp parameters
-for loss_type in losses:
-    prt.loss_type = loss_type
-    test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)
-    train_acc, train_loss = run_eval_Bayes(post_model, data_loader['train'], prt)
-    print('-'*20)
-    write_to_log('-Loss func. {}, Train-loss :{:.4}, Test-loss:  {:.4}'.format(loss_type, train_loss, test_loss), prm)
-
-    for divergence_type in ['KL', 'W_Sqr', 'W_NoSqr']:
-        prt.divergence_type = divergence_type
-        div_val = get_net_densities_divergence(prior_model, post_model, prt)
-        write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, div_val), prm)
-        for complexity_type in ['McAllaster', 'Seeger', 'Catoni']:
-            prt.complexity_type = complexity_type
-            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt, train_loss)
-            write_to_log('\t\tBound: {} =  {:.4}'.
-                         format(prt.complexity_type, bound_val), prm)
-
-# -------------------------------------------------------------------------------------------
-#  Run standard deterministic learning for comparision
-# -------------------------------------------------------------------------------------------
-# test_err, test_loss = learn_single_standard.run_learning(data_loader, prm)
+# end if run_experiments
 
 
+# Plot the analysis:
+plt.figure()
+plt.errorbar(train_samples_vec, val_mat.mean(axis=2), yerr=val_mat.std(axis=2))
+
+plt.xticks(train_samples_vec)
+plt.xlabel('Number of Samples')
+plt.ylabel('Zero-One-Loss')
+
+# plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
+
+plt.show()

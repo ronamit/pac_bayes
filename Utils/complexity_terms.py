@@ -16,6 +16,9 @@ def get_hyper_divergnce(prm, prior_model):
     ''' calculates a divergence between hyper-prior and hyper-posterior....
      which is, in our case, just a regularization term over the prior parameters  '''
 
+    # Note:  the hyper-prior is N(0, kappa_prior^2 * I)
+    # Note:  the hyper-posterior is N(parameters-of-prior-distribution, kappa_post^2 * I)
+
     if prm.divergence_type == 'W_NoSqr':
         d = prior_model.weights_count
         hyper_D = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
@@ -122,9 +125,9 @@ def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=Fals
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
         if hasattr(prior_layer, 'w'):
-            total_div += divregnce_element(post_layer.w, prior_layer.w, prm, noised_prior)
+            total_div += div_element(post_layer.w, prior_layer.w, prm, noised_prior)
         if hasattr(prior_layer, 'b'):
-            total_div += divregnce_element(post_layer.b, prior_layer.b, prm, noised_prior)
+            total_div += div_element(post_layer.b, prior_layer.b, prm, noised_prior)
 
     if prm.divergence_type == 'W_NoSqr':
         total_div = torch.sqrt(total_div)
@@ -132,7 +135,7 @@ def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=Fals
     return total_div
 # -------------------------------------------------------------------------------------------
 
-def divregnce_element(post, prior, prm, noised_prior=False):
+def div_element(post, prior, prm, noised_prior=False):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
     if noised_prior and prm.kappa_post > 0:
