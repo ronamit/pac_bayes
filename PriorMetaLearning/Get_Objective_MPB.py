@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import torch
 from Utils import data_gen
 from Utils.complexity_terms import get_task_complexity, get_meta_complexity_term, get_hyper_divergnce
-from Utils.common import count_correct, zeros_gpu
+from Utils.common import count_correct
 
 # -------------------------------------------------------------------------------------------
 #
@@ -22,9 +22,9 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     meta_complex_term = get_meta_complexity_term(hyper_div, prm, n_train_tasks)
 
 
-    avg_empiric_loss_per_task = zeros_gpu(n_tasks_in_mb)
-    complexity_per_task = zeros_gpu(n_tasks_in_mb)
-    n_samples_per_task = zeros_gpu(n_tasks_in_mb)# how many sampels there are total in each task (not just in a batch)
+    avg_empiric_loss_per_task = torch.zeros(n_tasks_in_mb, device=prm.device)
+    complexity_per_task = torch.zeros(n_tasks_in_mb, device=prm.device)
+    n_samples_per_task = torch.zeros(n_tasks_in_mb, device=prm.device)  # how many sampels there are total in each task (not just in a batch)
 
     # ----------- loop over tasks in meta-batch -----------------------------------#
     for i_task in range(n_tasks_in_mb):

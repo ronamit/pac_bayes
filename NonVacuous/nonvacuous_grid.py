@@ -38,7 +38,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
                     default=3)
@@ -46,8 +46,8 @@ parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs fo
 
 # ----- Task Parameters ---------------------------------------------#
 
-parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
-                    default='binarized_MNIST')
+# parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
+#                     default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
@@ -58,14 +58,14 @@ parser.add_argument('--limit_train_samples', type=int,
 
 # ----- Algorithm Parameters ---------------------------------------------#
 
-parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM' / Logistic_binary",
-                    default='Logistic_binary')
+# parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM' / Logistic_binary",
+#                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='OmConvNet')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=50)  # 50
@@ -111,8 +111,39 @@ prm.prior_log_var = -5
 prm.prior_mean = 0
 
 
+
+##-------- Binary-class MNIST --------
+# base_run_name = 'BinMNIST_5k_grid_10_reps'
+# prm.loss_type = 'Logistic_binary'
+# prm.data_source = 'binarized_MNIST'
+# samp_grid_delta = 50000
+# max_grid = 60000
+# loss_type_eval = 'Zero_One_Binary'
+# n_reps = 10
+
+
+# ##---------Multi-class MNIST  --------
+base_run_name = 'MultiMNIST_10k_grid_10_reps'
+prm.loss_type = 'CrossEntropy'
+prm.data_source = 'MNIST'
+samp_grid_delta = 10000
+max_grid = 60000
+loss_type_eval = 'Zero_One_Multi'
+n_reps = 10
+
+
+# ##---------CIFAR 10 --------
+# base_run_name = 'CIFAR10_10k_grid_TEMP'
+# prm.loss_type = 'CrossEntropy'
+# prm.data_source = 'CIFAR10'
+# samp_grid_delta = 10000
+# max_grid = 50000
+# loss_type_eval = 'Zero_One_Multi'
+# n_reps = 1
+
+
+
 root_saved_dir = 'grid_runs/'
-base_run_name = 'BinMnist_ConvNet3_10k_grid'
 file_name = 'results.pkl'
 path_to_result_dir = os.path.join(root_saved_dir, base_run_name)
 ensure_dir(path_to_result_dir)
@@ -121,11 +152,10 @@ path_to_result_file =  os.path.join(path_to_result_dir, file_name)
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
-loss_type_eval = 'Zero_One_Binary'   # Zero_One_Binary' / 'Zero_One_Multi'
-samp_grid_delta = 10000
-train_samples_vec = np.arange(1, 1 + np.floor(60000/samp_grid_delta)).astype(int) * samp_grid_delta
+train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
+
 val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
-n_reps = 1
+
 
 if run_experiments:
     # -------------------------------------------------------------------------------------------
@@ -136,9 +166,7 @@ if run_experiments:
     set_random_seed(prm.seed)
     create_result_dir(prm)
 
-    # Generate task data set:
     task_generator = data_gen.Task_Generator(prm)
-
 
     #  Create Prior
     prior_model = get_model(prm)
@@ -158,7 +186,7 @@ if run_experiments:
     for i_grid, n_train_samples in enumerate(train_samples_vec):
 
         for i_rep in range(n_reps):
-
+            # Generate task data set:
             data_loader = task_generator.get_data_loader(prm, limit_train_samples=n_train_samples)
 
             # Learn a posterior which minimizes some bound with the training loss function
@@ -207,11 +235,11 @@ for i_val_type, val_type in enumerate(val_types):
                  yerr=val_mat[i_val_type].std(axis=1),
                  label=str(val_type))
 
-plt.xticks(train_samples_vec)
+# plt.xticks(train_samples_vec)
 plt.xlabel('Number of Samples')
 plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(path_to_result_file)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-# plt.ylim([0, 0.125])
+# plt.ylim([0, 0.5])
 plt.show()

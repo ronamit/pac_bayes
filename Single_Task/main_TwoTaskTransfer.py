@@ -34,7 +34,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=200)  # 200

@@ -26,7 +26,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=128)
+                    default=512)
 
 # ----- Task Parameters ---------------------------------------------#
 
@@ -74,7 +74,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=50) # 300

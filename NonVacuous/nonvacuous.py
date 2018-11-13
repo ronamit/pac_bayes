@@ -34,7 +34,7 @@ parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
                     default=10)
@@ -43,7 +43,7 @@ parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs fo
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
-                    default='binarized_MNIST')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
@@ -55,13 +55,13 @@ parser.add_argument('--limit_train_samples', type=int,
 # ----- Algorithm Parameters ---------------------------------------------#
 
 parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM' / Logistic_binary",
-                    default='Logistic_binary')
+                    default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
                     default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=50)  # 50
@@ -116,7 +116,8 @@ create_result_dir(prm)
 
 # Generate task data set:
 task_generator = data_gen.Task_Generator(prm)
-data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
+prm.limit_train_samples = 5000  ######## DEUBUG #######################33
+data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)  ######## DEUBUG #######################33
 
 # -------------------------------------------------------------------------------------------
 #  Create Prior
@@ -170,7 +171,7 @@ elif info['type'] == 'binary_class':
 else:
     raise ValueError
 
-prt = deepcopy(prm) #  temp parameters
+prt = deepcopy(prm)  # Temp parameters
 for loss_type in losses:
     prt.loss_type = loss_type
     test_acc, test_loss = run_eval_Bayes(post_model, data_loader['test'], prt)

@@ -9,7 +9,7 @@ from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_eval_Bayes
 from Utils.complexity_terms import get_task_complexity
-from Utils.common import grad_step, correct_rate, zeros_gpu, write_to_log
+from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
 
 # -------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
             batch_size = inputs.shape[0]
 
             # Monte-Carlo iterations:
-            avg_empiric_loss = zeros_gpu(1)
+            avg_empiric_loss = torch.zeros(1, device=prm.device)
             n_MC = prm.n_MC
 
             for i_MC in range(n_MC):
@@ -89,7 +89,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
                 complexity_term = get_task_complexity(
                     prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
             else:
-                complexity_term = torch.tensor(0.0, device=prm.device)
+                complexity_term = torch.zeros(1, device=prm.device)
 
             # Total objective:
             objective = avg_empiric_loss + complexity_term

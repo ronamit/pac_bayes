@@ -34,7 +34,7 @@ parser.add_argument('--load_model_path', type=str, help='set the path to pre-tra
                     default='')
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation (how many tasks to average in final result)',
@@ -102,7 +102,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--n_meta_train_iterations', type=int, help='number of iterations in meta-training',
                     default=1000)  #  60000

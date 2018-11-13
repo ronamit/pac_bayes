@@ -9,12 +9,12 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Stochsastic_Meta_Learning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
+from PriorMetaLearning import meta_test_Bayes, meta_train_Bayes_finite_tasks, meta_train_Bayes_infinite_tasks
 from Data_Path import get_data_path
 from Models import stochastic_models, deterministic_models
 from Single_Task import learn_single_standard
 from Utils.data_gen import Task_Generator
-from Utils.common import save_model_state, load_model_state, create_result_dir, set_random_seed, zeros_gpu, write_to_log
+from Utils.common import save_model_state, load_model_state, create_result_dir, set_random_seed, write_to_log
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from Models.stochastic_layers import StochasticLayer
 
@@ -69,7 +69,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='ConvNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--num_epochs', type=int, help='number of epochs to train',
                     default=50)  # 10 / 100
@@ -81,7 +81,7 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing',
-                    default=256)
+                    default=512)
 
 parser.add_argument('--meta_batch_size', type=int, help='Maximal number of tasks in each meta-batch',
                     default=5)
@@ -165,10 +165,10 @@ if prm.mode == 'MetaTrain':
 
     for i_layer, prior_layer in enumerate(prior_layers_list):
         if hasattr(prior_layer, 'w'):
-            prior_layer.w['log_var'] = torch.nn.Parameter(zeros_gpu(1))
+            prior_layer.w['log_var'] = torch.nn.Parameter(torch.zeros(1, device=prm.device))
             prior_layer.w['mean'] = avg_model_layers_list[i_layer].weight
         if hasattr(prior_layer, 'b'):
-            prior_layer.b['log_var'] = torch.nn.Parameter(zeros_gpu(1))
+            prior_layer.b['log_var'] = torch.nn.Parameter(torch.zeros(1, device=prm.device))
             prior_layer.b['mean'] = avg_model_layers_list[i_layer].bias
 
 

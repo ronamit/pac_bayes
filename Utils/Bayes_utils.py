@@ -20,7 +20,7 @@ def run_eval_Bayes(model, loader, prm, verbose=0):
         if prm.test_type == 'Expected':
             info = run_eval_expected(model, loader, prm)
         elif prm.test_type == 'MaxPosterior':
-            info =  run_eval_max_posterior(model, loader, prm)
+            info = run_eval_max_posterior(model, loader, prm)
         elif prm.test_type == 'MajorityVote':
             info = run_eval_majority_vote(model, loader, prm, n_votes=5)
         elif prm.test_type == 'AvgVote':
@@ -97,7 +97,7 @@ def run_eval_majority_vote(model, loader, prm, n_votes=5):
         batch_size = inputs.shape[0] # min(prm.test_batch_size, n_samples)
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
-        votes = cmn.zeros_gpu((batch_size, n_labels))
+        votes = torch.zeros((batch_size, n_labels), device=prm.device)
         loss_from_batch = 0.0
         for i_vote in range(n_votes):
 
@@ -133,7 +133,7 @@ def run_eval_avg_vote(model, loader, prm, n_votes=5):
         batch_size = min(prm.test_batch_size, n_samples)
         info = data_gen.get_info(prm)
         n_labels = info['n_classes']
-        votes = cmn.zeros_gpu((batch_size, n_labels))
+        votes = torch.zeros((batch_size, n_labels), device=prm.device)
         loss_from_batch = 0.0
         for i_vote in range(n_votes):
 

@@ -8,7 +8,7 @@ import math
 from Utils import common as cmn
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticLayer
-from Utils.common import net_weights_magnitude, count_correct, zeros_gpu
+from Utils.common import net_weights_magnitude, count_correct
 # -----------------------------------------------------------------------------------------------------------#
 
 

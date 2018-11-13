@@ -36,7 +36,7 @@ parser.add_argument('--load_model_path', type=str, help='set the path to pre-tra
                     default='')
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation (how many tasks to average in final result)',
@@ -107,7 +107,7 @@ parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=256)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)

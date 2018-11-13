@@ -40,11 +40,11 @@ def set_random_seed(seed):
 def get_param_from_model(model, param_name):
     return [param for (name, param) in model.named_parameters() if name == param_name][0]
 # -----------------------------------------------------------------------------------------------------------#
-
-def zeros_gpu(size):
-    if not isinstance(size, tuple):
-        size = (size,)
-    return torch.cuda.FloatTensor(*size).fill_(0)
+#
+# def zeros_gpu(size):
+#     if not isinstance(size, tuple):
+#         size = (size,)
+#     return torch.cuda.FloatTensor(*size).fill_(0)
 # -----------------------------------------------------------------------------------------------------------#
 
 def randn_gpu(size, mean=0, std=1):
