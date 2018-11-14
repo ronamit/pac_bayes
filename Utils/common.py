@@ -125,11 +125,10 @@ def load_model_state(model, f_path):
 
 
 
-def net_weights_magnitude(model, p=2, exp_on_logs=True):
+def net_weights_magnitude(model, prm, p=2, exp_on_logs=True):
     ''' Calculates the total p-norm of the weights  |W|_p^p
         If exp_on_logs flag is on, then parameters with log_var in their name are exponented'''
-    device = torch.device('cuda')
-    total_mag = torch.zeros(1, device=device, requires_grad=True)[0]
+    total_mag = torch.zeros(1, device=prm.device, requires_grad=True)[0]
     for (param_name, param) in model.named_parameters():
         if exp_on_logs and 'log_var' in param_name:
             w = torch.exp(0.5*param)
@@ -213,6 +212,8 @@ def create_result_dir(prm):
                'Run script: ' + sys.argv[0],
                'Parameters:', str(prm), '-'*50]
     write_to_log(message, prm, mode='w') # create new log file
+    write_to_log('Results dir: ' + prm.result_dir, prm)
+    write_to_log('-'*50, prm)
     # set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)
     if not hasattr(prm, 'load_model_path') or prm.load_model_path == '':
         prm.load_model_path = os.path.join(prm.result_dir, 'model.pt')

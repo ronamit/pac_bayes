@@ -69,7 +69,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='ConvNet3')  # ConvNet3 / 'FcNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=256)
+                    default=128)
 
 parser.add_argument('--num_epochs', type=int, help='number of epochs to train',
                     default=50)  # 10 / 100

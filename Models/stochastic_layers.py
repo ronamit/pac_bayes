@@ -141,13 +141,14 @@ def make_pair(x):
 #     return nn.Parameter(randn_gpu(shape, mean, std))
 
 
-def get_randn_param(shape, mean, std):
-    if isinstance(shape, int):
-        shape = (shape,)
-    return nn.Parameter(torch.FloatTensor(*shape).normal_(mean, std))
+# def get_randn_param(shape, mean, std):
+#     if isinstance(shape, int):
+#         shape = (shape,)
+#     return nn.Parameter(torch.FloatTensor(*shape).normal_(mean, std))
 
 
 def get_param(shape):
+    # create a parameter
     if isinstance(shape, int):
         shape = (shape,)
-    return nn.Parameter(torch.FloatTensor(*shape))
+    return nn.Parameter(torch.empty(*shape))

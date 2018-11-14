@@ -61,7 +61,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=256)
+                    default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=50)  # 50
@@ -116,7 +116,7 @@ create_result_dir(prm)
 
 # Generate task data set:
 task_generator = data_gen.Task_Generator(prm)
-prm.limit_train_samples = 5000  ######## DEUBUG #######################33
+# prm.limit_train_samples = 5000  ######## DEUBUG #######################33
 data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)  ######## DEUBUG #######################33
 
 # -------------------------------------------------------------------------------------------

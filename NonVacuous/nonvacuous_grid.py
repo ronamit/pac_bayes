@@ -31,8 +31,8 @@ parser = argparse.ArgumentParser()
 
 # ----- Run Parameters ---------------------------------------------#
 
-parser.add_argument('--run-name', type=str, help='Name of dir to save results in (if empty, name by time)',
-                    default='')
+# parser.add_argument('--run-name', type=str, help='Name of dir to save results in (if empty, name by time)',
+#                     default='')
 
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
@@ -65,7 +65,7 @@ parser.add_argument('--model-name', type=str, help="Define model type (hypothesi
                     default='OmConvNet')  # OmConvNet / 'FcNet3' / 'ConvNet3'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=256)
+                    default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
                     default=50)  # 50
@@ -112,43 +112,37 @@ prm.prior_mean = 0
 
 
 
-##-------- Binary-class MNIST --------
-# base_run_name = 'BinMNIST_5k_grid_10_reps'
+# ##-------- Binary-class MNIST --------
+# run_name = 'BinMNIST_5k_grid_10_reps'
 # prm.loss_type = 'Logistic_binary'
 # prm.data_source = 'binarized_MNIST'
-# samp_grid_delta = 50000
+# samp_grid_delta = 5000
 # max_grid = 60000
 # loss_type_eval = 'Zero_One_Binary'
 # n_reps = 10
 
 
-# ##---------Multi-class MNIST  --------
-base_run_name = 'MultiMNIST_10k_grid_10_reps'
+##---------Multi-class MNIST  --------
+# run_name = 'MultiMNIST_5k_grid_10_reps'
+# prm.loss_type = 'CrossEntropy'
+# prm.data_source = 'MNIST'
+# samp_grid_delta = 5000
+# max_grid = 60000
+# loss_type_eval = 'Zero_One_Multi'
+# n_reps = 10
+
+
+# # # ##---------CIFAR 10 --------
+run_name = 'CIFAR10_5k_grid_10_reps_TEST'
 prm.loss_type = 'CrossEntropy'
-prm.data_source = 'MNIST'
-samp_grid_delta = 10000
-max_grid = 60000
+prm.data_source = 'CIFAR10'
+samp_grid_delta = 5000
+max_grid = 50000
 loss_type_eval = 'Zero_One_Multi'
 n_reps = 10
 
 
-# ##---------CIFAR 10 --------
-# base_run_name = 'CIFAR10_10k_grid_TEMP'
-# prm.loss_type = 'CrossEntropy'
-# prm.data_source = 'CIFAR10'
-# samp_grid_delta = 10000
-# max_grid = 50000
-# loss_type_eval = 'Zero_One_Multi'
-# n_reps = 1
-
-
-
-root_saved_dir = 'grid_runs/'
-file_name = 'results.pkl'
-path_to_result_dir = os.path.join(root_saved_dir, base_run_name)
-ensure_dir(path_to_result_dir)
-path_to_result_file =  os.path.join(path_to_result_dir, file_name)
-
+# Run params:
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
@@ -157,6 +151,12 @@ train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(
 val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
 
 
+file_name = 'results.pkl'
+
+prm.run_name = run_name
+create_result_dir(prm)
+path_to_result_file = os.path.join(prm.result_dir, file_name)
+
 if run_experiments:
     # -------------------------------------------------------------------------------------------
     #  Init run
@@ -164,7 +164,6 @@ if run_experiments:
 
     prm.data_path = get_data_path()
     set_random_seed(prm.seed)
-    create_result_dir(prm)
 
     task_generator = data_gen.Task_Generator(prm)
 
@@ -241,5 +240,5 @@ plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(path_to_result_file)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-# plt.ylim([0, 0.5])
+# plt.ylim([0, 0.15])
 plt.show()

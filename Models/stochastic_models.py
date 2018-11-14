@@ -80,15 +80,18 @@ def get_model(prm, model_type='Stochastic'):
     else:
         raise ValueError('Invalid model_name')
 
-    model.to(prm.device)  # GPU or CPU
-    init_layers(model, prm.log_var_init) # init model
+    # Move model to device (GPU\CPU):
+    model.to(prm.device)
+    # DEBUG check: [(x[0], x[1].device) for x in model.named_parameters()]
+
+    # init model:
+    init_layers(model, prm.log_var_init)
+
+    model.weights_count = count_weights(model)
 
     # # For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)
     # if hasattr(prm, 'override_eps_std'):
     #     model.set_eps_std(prm.override_eps_std)  # debug
-
-
-    model.weights_count = count_weights(model)
 
     return model
 

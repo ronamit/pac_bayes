@@ -21,15 +21,15 @@ def get_hyper_divergnce(prm, prior_model):
 
     if prm.divergence_type == 'W_NoSqr':
         d = prior_model.weights_count
-        hyper_D = torch.sqrt(net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
+        hyper_D = torch.sqrt(net_weights_magnitude(prior_model, prm, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2)
 
     elif prm.divergence_type == 'W_Sqr':
         d = prior_model.weights_count
-        hyper_D = net_weights_magnitude(prior_model, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
+        hyper_D = net_weights_magnitude(prior_model, prm, p=2) + d * (prm.kappa_prior - prm.kappa_post) ** 2
 
     elif prm.divergence_type == 'KL':
         # KLD between hyper-posterior and hyper-prior:
-        hyper_D = (1 / (2 * prm.kappa_prior ** 2)) * net_weights_magnitude(prior_model, p=2)
+        hyper_D = (1 / (2 * prm.kappa_prior ** 2)) * net_weights_magnitude(prior_model, prm, p=2)
     else:
         raise ValueError('Invalid prm.divergence_type')
 

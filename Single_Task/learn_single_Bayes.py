@@ -37,7 +37,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     # get model:
     if prior_model and init_from_prior:
         # init from prior model:
-        post_model = deepcopy(prior_model)
+        post_model = deepcopy(prior_model).to(prm.device)
     else:
         post_model = get_model(prm)
 

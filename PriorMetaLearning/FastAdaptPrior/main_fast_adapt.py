@@ -34,7 +34,7 @@ parser.add_argument('--load_model_path', type=str, help='set the path to pre-tra
                     default='')
 
 parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
-                    default=512)
+                    default=128)
 
 parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation (how many tasks to average in final result)',

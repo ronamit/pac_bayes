@@ -107,7 +107,7 @@ parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=256)
+                    default=128)
 
 parser.add_argument('--lr', type=float, help='initial learning rate',
                     default=1e-3)
