@@ -76,11 +76,11 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
     elif prm.complexity_type == 'McAllester':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         # complex_term = torch.sqrt((1 / (2 * (n_samples-1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
-        complex_term = torch.sqrt((1 / (2 * (n_samples - 1))) * (hyper_div + div + math.log(2 * n_samples / delta)))
+        complex_term = torch.sqrt((hyper_div + div + math.log(2 * n_samples / delta)) / (2 * (n_samples - 1)))
 
     elif prm.complexity_type == 'Seeger':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-        seeger_eps = (1 / n_samples) * (div + hyper_div + math.log(2 * math.sqrt(n_samples) / delta))
+        seeger_eps = (div + hyper_div + math.log(2 * math.sqrt(n_samples) / delta)) / n_samples
         sqrt_arg = 2 * seeger_eps * avg_empiric_loss
         # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
         complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
@@ -147,8 +147,8 @@ def div_element(post, prior, prm, noised_prior=False):
 
     post_var = torch.exp(post['log_var'])
     prior_var = torch.exp(prior_log_var)
-    post_std = torch.exp(0.5*post['log_var'])
-    prior_std = torch.exp(0.5*prior_log_var)
+    post_std = torch.exp(0.5 * post['log_var'])
+    prior_std = torch.exp(0.5 * prior_log_var)
 
     if  prm.divergence_type in ['W_Sqr', 'W_NoSqr']:
             # Wasserstein norm with p=2

@@ -21,7 +21,7 @@ def run_learning(task_data, prior_model, prm, init_from_prior=True, verbose=1):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     # Create posterior model for the new task:
     post_model = get_model(prm)

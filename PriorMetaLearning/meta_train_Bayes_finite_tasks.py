@@ -26,7 +26,7 @@ def run_meta_learning(data_loaders, prm):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     n_train_tasks = len(data_loaders)
 

@@ -7,7 +7,7 @@ import torch.optim as optim
 from copy import deepcopy
 
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, list_mult
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
@@ -43,14 +43,14 @@ parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs fo
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
-                    default='MNIST')
+                    default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
 
 parser.add_argument('--limit_train_samples', type=int,
                     help='Upper limit for the number of training samples (0 = unlimited)',
-                    default=0) # 0
+                    default=0)  # 0
 
 # ----- Algorithm Parameters ---------------------------------------------#
 
@@ -58,13 +58,13 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN / OmConvNet_NoBN_elu
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)  # 50
+                    default=100)  # 100
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -76,9 +76,10 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
-prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
+prm.log_var_init = {'mean': -5, 'std': 0.1}  # The initial value for the log-var parameter (rho) of each weight of the posteriror, in case init_from_prior==False
+
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -103,10 +104,21 @@ prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
 prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
-prm.prior_log_var = -5
-prm.prior_mean = 0
+prm.prior_log_var = {'mean': -5, 'std': 0.1}
+prm.prior_mean = {'mean': 0, 'std': 0.1}
+# TODO: maybe xavier init in prior_mean
 
-# -------------------------------------------------------------------------------------------
+prm.init_from_prior = True  # True / False  - Init posterior from prior
+
+# Logging params:
+# prm.log_figure = None
+prm.log_figure = {
+    'loss_type_eval': 'Zero_One',
+    'val_types':  [['train_loss'], ['test_loss'],
+             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]}
+
+prm.run_name = 'cifar_new'
+# ---------------------------------------------- ---------------------------------------------
 #  Init run
 # -------------------------------------------------------------------------------------------
 
@@ -117,7 +129,7 @@ create_result_dir(prm)
 # Generate task data set:
 task_generator = data_gen.Task_Generator(prm)
 # prm.limit_train_samples = 5000  ######## DEUBUG #######################33
-data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)  ######## DEUBUG #######################33
+data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
 
 # -------------------------------------------------------------------------------------------
 #  Create Prior
@@ -145,11 +157,19 @@ set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 # print('DEBUG: Divergence value analytic {}'.format(d*((m1-m2)**2 + (s1-s2)**2)))
 ####################
 
+#### DEBUG #########################3
+# count = 0
+# for (name, m) in prior_model.named_parameters():
+#     if 'log_var' not in name:
+#         count += list_mult(m.shape)
+#         print(name + ' : ' +str(m.shape))
+# print('Count: ' + str(count))
+####################
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
 # Learn a posterior which minimizes some bound with some loss function
-post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=True)
+post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=prm.init_from_prior)
 
 save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 
@@ -165,11 +185,12 @@ save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
 # Choose the appropriate loss functions for evaluation:
 info = get_info(prm)
 if info['type'] == 'multi_class':
-    losses = ['Zero_One_Multi']
+    losses = ['Zero_One']
 elif info['type'] == 'binary_class':
-    losses = ['Logistic_Binary_Clipped', 'Zero_One_Binary']
+    losses = ['Logistic_Binary_Clipped', 'Zero_One']
 else:
     raise ValueError
+
 
 prt = deepcopy(prm)  # Temp parameters
 for loss_type in losses:

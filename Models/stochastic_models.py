@@ -66,16 +66,24 @@ def get_model(prm, model_type='Stochastic'):
     elif model_name == 'ConvNet3':
         model = ConvNet3(model_type, model_name, linear_layer, conv2d_layer, task_info)
 
-    elif model_name == 'BayesDenseNet':
-        from Models.densenetBayes import get_bayes_densenet_model_class
-        densenet_model = get_bayes_densenet_model_class(prm, task_info)
-        model = densenet_model(depth=20)
+    # elif model_name == 'BayesDenseNet':
+    #     from Models.densenetBayes import get_bayes_densenet_model_class
+    #     densenet_model = get_bayes_densenet_model_class(prm, task_info)
+    #     model = densenet_model(depth=20)
 
     elif model_name == 'OmConvNet':
         model = OmConvNet(model_type, model_name, linear_layer, conv2d_layer, task_info)
 
-    elif model_name == 'OmConvNet32':
-        model = OmConvNet(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=32)
+    elif model_name == 'OmConvNet_NoBN':
+        model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info)
+
+    elif model_name == 'OmConvNet_NoBN_32':
+        model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=32)
+    elif model_name == 'OmConvNet_NoBN_16':
+        model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=16)
+    elif model_name == 'OmConvNet_NoBN_elu':
+        model = OmConvNet_NoBN_elu(model_type, model_name, linear_layer, conv2d_layer, task_info)
+
 
     else:
         raise ValueError('Invalid model_name')
@@ -234,6 +242,95 @@ class OmConvNet(general_model):
 # -------------------------------------------------------------------------------------------
 
 
+# -------------------------------------------------------------------------------------------
+#  OmConvNet
+# -------------------------------------------------------------------------------- -----------
+class OmConvNet_NoBN(general_model):
+    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=64):
+        super(OmConvNet_NoBN, self).__init__()
+        self.model_name = model_name
+        self.model_type = model_type
+        self.layers_names = ('conv1', 'conv2', 'conv3', 'FC_out')
+        input_shape = task_info['input_shape']
+        color_channels = input_shape[0]
+        output_dim = task_info['output_dim']
+        n_in_channels = input_shape[0]
+        n_filt1 = filt_size
+        n_filt2 = filt_size
+        n_filt3 = filt_size
+        self.conv1 = conv2d_layer(n_in_channels, n_filt1, kernel_size=3)
+
+        self.relu1 = nn.ReLU(inplace=True)
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=3)
+
+        self.relu2 = nn.ReLU(inplace=True)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv3 = conv2d_layer(n_filt2, n_filt3, kernel_size=3)
+
+        self.relu3 = nn.ReLU(inplace=True)
+        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
+        conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
+        self.fc_out = linear_layer(conv_out_size, output_dim)
+
+        # self._init_weights(log_var_init)  # Initialize weights
+
+
+    def _forward_conv_layers(self, x):
+        x = self.pool1(self.relu1((self.conv1(x))))
+        x = self.pool2(self.relu2((self.conv2(x))))
+        x = self.pool3(self.relu3((self.conv3(x))))
+        return x
+
+    def forward(self, x):
+        x = self._forward_conv_layers(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc_out(x)
+        return x
+# -------------------------------------------------------------------------------------------
+
+class OmConvNet_NoBN_elu(general_model):
+    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=64):
+        super(OmConvNet_NoBN_elu, self).__init__()
+        self.model_name = model_name
+        self.model_type = model_type
+        self.layers_names = ('conv1', 'conv2', 'conv3', 'FC_out')
+        input_shape = task_info['input_shape']
+        color_channels = input_shape[0]
+        output_dim = task_info['output_dim']
+        n_in_channels = input_shape[0]
+        n_filt1 = filt_size
+        n_filt2 = filt_size
+        n_filt3 = filt_size
+        self.conv1 = conv2d_layer(n_in_channels, n_filt1, kernel_size=3)
+
+        self.relu1 = nn.ELU(inplace=True)
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = conv2d_layer(n_filt1, n_filt2, kernel_size=3)
+
+        self.relu2 = nn.ELU(inplace=True)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv3 = conv2d_layer(n_filt2, n_filt3, kernel_size=3)
+
+        self.relu3 = nn.ELU(inplace=True)
+        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
+        conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
+        self.fc_out = linear_layer(conv_out_size, output_dim)
+
+        # self._init_weights(log_var_init)  # Initialize weights
+
+
+    def _forward_conv_layers(self, x):
+        x = self.pool1(self.relu1((self.conv1(x))))
+        x = self.pool2(self.relu2((self.conv2(x))))
+        x = self.pool3(self.relu3((self.conv3(x))))
+        return x
+
+    def forward(self, x):
+        x = self._forward_conv_layers(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc_out(x)
+        return x
 # # -------------------------------------------------------------------------------------------
 # class ConvNet3SemiStoch(general_model):
 #     def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info):

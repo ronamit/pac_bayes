@@ -57,7 +57,7 @@ class StochasticLayer(nn.Module):
             noise = out_mean.data.new(out_mean.size()).normal_(0, eps_std)
             # noise = eps_std * torch.randn_like(out_mean, requires_grad=False)
 
-            out_var = F.relu(out_var) # to avoid nan due to numerical errors
+            # out_var = F.relu(out_var) # to avoid nan due to numerical errors
             layer_out = out_mean + noise * torch.sqrt(out_var)
 
         return layer_out

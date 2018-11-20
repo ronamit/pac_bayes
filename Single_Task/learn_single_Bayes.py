@@ -5,13 +5,14 @@ from __future__ import absolute_import, division, print_function
 import timeit
 from copy import deepcopy
 import torch
+import numpy as np
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_eval_Bayes
 from Utils.complexity_terms import get_task_complexity
 from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
-
+import matplotlib.pyplot as plt
 # -------------------------------------------------------------------------------------------
 #  Stochastic Single-task learning
 # -------------------------------------------------------------------------------------------
@@ -27,12 +28,14 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     train_loader = data_loader['train']
     test_loader = data_loader['test']
     n_batches = len(train_loader)
     n_train_samples = data_loader['n_train_samples']
+
+    figure_flag = hasattr(prm, 'log_figure') and prm.log_figure
 
     # get model:
     if prior_model and init_from_prior:
@@ -50,19 +53,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     #  Training epoch  function
     # -------------------------------------------------------------------------------------------
 
-    def run_train_epoch(i_epoch):
-
-        # # Adjust randomness (eps_std)
-        # if hasattr(prm, 'use_randomness_schedeule') and prm.use_randomness_schedeule:
-        #     if i_epoch > prm.randomness_full_epoch:
-        #         eps_std = 1.0
-        #     elif i_epoch > prm.randomness_init_epoch:
-        #         eps_std = (i_epoch - prm.randomness_init_epoch) / (prm.randomness_full_epoch - prm.randomness_init_epoch)
-        #     else:
-        #         eps_std = 0.0  #  turn off randomness
-        #     post_model.set_eps_std(eps_std)
-
-        # post_model.set_eps_std(0.00) # debug
+    def run_train_epoch(i_epoch, log_mat):
 
         post_model.train()
 
@@ -106,7 +97,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
         # End batch loop
 
-        return
+        # save results for epochs-figure:
+        if figure_flag :
+             save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, log_mat)
+
     # End run_train_epoch()
     # -------------------------------------------------------------------------------------------
     #  Main Script
@@ -123,9 +117,14 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
     start_time = timeit.default_timer()
 
+    if figure_flag:
+        log_mat = np.zeros((len(prm.log_figure['val_types']), prm.num_epochs))
+    else:
+        log_mat = None
+
     # Run training epochs:
     for i_epoch in range(prm.num_epochs):
-         run_train_epoch(i_epoch)
+        run_train_epoch(i_epoch, log_mat)
 
     # evaluate final perfomance on train-set
     train_acc, train_loss = run_eval_Bayes(post_model, train_loader, prm)
@@ -143,7 +142,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     if verbose:
         cmn.write_final_result(test_acc, stop_time - start_time, prm)
 
-    return post_model, test_err, test_loss
+    if figure_flag:
+        plot_log(log_mat, prm)
+
+    return post_model, test_err, test_loss, log_mat
 
 
 # -------------------------------------------------------------------------------------------
@@ -151,38 +153,11 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 # -------------------------------------------------------------------------------------------
 def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None):
 
-    # # Loss criterion
-    # loss_criterion = get_loss_func(prm.loss_type)
-    #
-    # train_loader = data_loader['train']
-    # n_batches = len(train_loader)
+
     n_train_samples = data_loader['n_train_samples']
-    #
-    # post_model.eval()
-    #
-    # empiric_loss = 0.0
-    #
-    # for batch_idx, batch_data in enumerate(train_loader):
-    #
-    #     # get batch:
-    #     inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-    #     batch_size = inputs.shape[0]
-    #
-    #     # Monte-Carlo iterations:
-    #     n_MC = prm.n_MC_eval
-    #     for i_MC in range(n_MC):
-    #
-    #         # calculate loss:
-    #         outputs = post_model(inputs)
-    #         empiric_loss += (1 / n_MC) * loss_criterion(outputs, targets).item()
-    #
-    # # End batch loop
-    #
-    # avg_empiric_loss = empiric_loss / n_train_samples
 
     if not avg_empiric_loss:
         _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
-
 
     #  complexity/prior term:
     complexity_term = get_task_complexity(
@@ -193,3 +168,57 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None)
     return bound_val
 
 
+# -------------------------------------------------------------------------------------------
+
+def save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, log_mat):
+    '''save results for epochs-figure'''
+    from Utils.complexity_terms import get_net_densities_divergence
+    prm_eval = deepcopy(prm) #   parameters for evaluation
+    prm_eval.loss_type = prm.log_figure['loss_type_eval']
+    val_types = prm.log_figure['val_types']
+
+    # evaluation
+    _, train_loss = run_eval_Bayes(post_model, data_loader['train'], prm_eval)
+    _, test_loss = run_eval_Bayes(post_model, data_loader['test'], prm_eval)
+
+    for i_val_type, val_type in enumerate(val_types):
+        if val_type[0] == 'train_loss':
+            val = train_loss
+        elif val_type[0] == 'test_loss':
+            val = test_loss
+        elif val_type[0] == 'Bound':
+            prm_eval.complexity_type = val_type[1]
+            prm_eval.divergence_type = val_type[2]
+            val = eval_bound(post_model, prior_model, data_loader, prm_eval, train_loss)
+            write_to_log(str(val_type) + ' = ' + str(val), prm)
+        elif val_type[0] == 'Divergence':
+            prm_eval.divergence_type = val_type[1]
+            val = get_net_densities_divergence(prior_model, post_model, prm_eval)
+        else:
+            raise ValueError('Invalid loss_type_eval')
+
+        log_mat[i_val_type, i_epoch] = val
+    # end for val_types
+
+# -------------------------------------------------------------------------------------------
+
+def plot_log(log_mat, prm, val_types_for_show=None):
+
+    if not val_types_for_show:
+        val_types = prm.log_figure['val_types']
+
+    # Plot the analysis:
+    plt.figure()
+    for i_val_type, val_type in enumerate(val_types):
+        if val_type in val_types_for_show:
+            plt.plot(log_mat[i_val_type],
+                         label=str(val_type))
+
+    # plt.xticks(train_samples_vec)
+    plt.xlabel('Epoch')
+    plt.ylabel(prm.log_figure['loss_type_eval'])
+    plt.legend()
+    plt.title(prm.run_name)
+    # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
+    # plt.ylim([0, 0.8])
+    plt.show()

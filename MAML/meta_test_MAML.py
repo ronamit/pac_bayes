@@ -19,7 +19,7 @@ def run_learning(task_data, meta_model, prm, verbose=1):
     # -------------------------------------------------------------------------------------------
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     # Create model for task:
     task_model = get_model(prm)

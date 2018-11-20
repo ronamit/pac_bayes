@@ -31,7 +31,7 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet",
-                    default='MNIST')
+                    default='CIFAR10')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
@@ -72,7 +72,7 @@ parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SV
                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
+                    default='OmConvNet')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)

@@ -36,7 +36,7 @@ def run_eval_Bayes(model, loader, prm, verbose=0):
 def run_eval_max_posterior(model, loader, prm):
     ''' Estimates the the loss by using the mean network parameters'''
     n_samples = len(loader.dataset)
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
     model.eval()
     avg_loss = 0
     n_correct = 0
@@ -61,7 +61,7 @@ def run_eval_max_posterior(model, loader, prm):
 def run_eval_expected(model, loader, prm):
     ''' Estimates the expectation of the loss by monte-carlo averaging'''
     n_samples = len(loader.dataset)
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
     model.eval()
     avg_loss = 0.0
     n_correct = 0
@@ -85,7 +85,7 @@ def run_eval_expected(model, loader, prm):
 def run_eval_majority_vote(model, loader, prm, n_votes=5):
     ''' Estimates the the loss of the the majority votes over several draws form network's distribution'''
 
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
     n_samples = len(loader.dataset)
     n_test_batches = len(loader)
     model.eval()
@@ -121,7 +121,7 @@ def run_eval_majority_vote(model, loader, prm, n_votes=5):
 def run_eval_avg_vote(model, loader, prm, n_votes=5):
     ''' Estimates the the loss by of the average vote over several draws form network's distribution'''
 
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
     n_samples = len(loader.dataset)
     n_test_batches = len(loader)
     model.eval()
@@ -160,9 +160,19 @@ def set_model_values(model, mean, log_var):
 
     for i_layer, layer in enumerate(layers_list):
         if hasattr(layer, 'w'):
-            layer.w['log_var'].data.fill_(log_var)
-            layer.w['mean'].data.fill_(mean)
+            init_param(layer.w['log_var'], log_var)
+            init_param(layer.w['mean'], mean)
         if hasattr(layer, 'b'):
-            layer.b['log_var'].data.fill_(log_var)
-            layer.b['mean'].data.fill_(mean)
+            init_param(layer.b['log_var'], log_var)
+            init_param(layer.b['mean'], mean)
+
+
+def init_param(x, init_val):
+    if isinstance(init_val, dict):
+        # In case of a random init:
+        x.data.normal_(init_val['mean'], init_val['std'])
+    else:
+        # In case of a fixed init:
+        x.data.fill_(init_val)
+
 # -------------------------------------------------------------------------------------------

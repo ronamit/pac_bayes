@@ -74,7 +74,7 @@ def run_meta_iteration(i_iter, prior_model, task_generator, prm):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
     meta_batch_size = prm.meta_batch_size
     n_inner_steps =  prm.n_inner_steps
     n_meta_iterations = prm.n_meta_train_epochs

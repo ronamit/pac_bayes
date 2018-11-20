@@ -16,7 +16,7 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
         prm.optim_func, prm.optim_args, prm.lr_schedule
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     # The data-sets:
     train_loader = data_loader['train']
@@ -73,10 +73,11 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
 
             # get batch:
             inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+            batch_size = inputs.shape[0]
 
             # Calculate loss:
             outputs = model(inputs)
-            loss = loss_criterion(outputs, targets)
+            loss = (1 / batch_size) * loss_criterion(outputs, targets)
 
             # Take gradient step:
             grad_step(loss, optimizer, lr_schedule, prm.lr, i_epoch)

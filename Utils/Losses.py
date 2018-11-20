@@ -4,35 +4,42 @@ import torch
 from torch.nn.modules.module import Module
 import torch.nn as nn
 import math
-
+from Utils.data_gen import get_info
 # -----------------------------------------------------------------------------------------------------------#
 # Returns loss function
 # -----------------------------------------------------------------------------------------------------------#
-def get_loss_func(loss_type):
+def get_loss_func(prm):
     # Note: 1. the loss function use the un-normalized net outputs (scores, not probabilities)
     #       2. The returned loss is summed (not averaged) over samples!!!
 
+    loss_type = prm.loss_type
+    task_info = get_info(prm)
+    task_type = task_info['type']
+
     if loss_type == 'CrossEntropy':
+        assert task_type == 'multi_class'
         return nn.CrossEntropyLoss(reduction='sum')
 
     elif loss_type == 'L2_SVM':
+        assert task_type == 'multi_class'
         return nn.MultiMarginLoss(p=2, margin=1, weight=None, reduction='sum')
 
     elif loss_type == 'Logistic_binary':
+        assert task_type == 'binary_class'
         return Logistic_Binary_Loss(reduction='sum')
 
     elif loss_type == 'Logistic_Binary_Clipped':
+        assert task_type == 'binary_class'
         return Logistic_Binary_Loss_Clipped(reduction='sum')
 
 
-    elif loss_type == 'Zero_One_Binary':
-        return Zero_One_Binary(reduction='sum')
+    elif loss_type == 'Zero_One':
+        if task_type == 'binary_class':
+            return Zero_One_Binary(reduction='sum')
+        elif  task_type == 'multi_class':
+            return Zero_One_Multi(reduction='sum')
 
-    elif loss_type == 'Zero_One_Multi':
-        return Zero_One_Multi(reduction='sum')
-
-    else:
-        raise ValueError('Invalid loss_type')
+    raise ValueError('Invalid loss_type')
 
 
 
@@ -69,7 +76,7 @@ class Logistic_Binary_Loss(_Loss):
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
-        assert input.shape[1] == 1 # this loss works only for binary classification
+        # assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
         assert self.reduction == 'sum'
         # switch labels to {-1,1}
@@ -95,7 +102,7 @@ class Logistic_Binary_Loss_Clipped(_Loss):
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
-        assert input.shape[1] == 1 # this loss works only for binary classification
+        # assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
         assert self.reduction == 'sum'
         # switch labels to {-1,1}
@@ -113,7 +120,7 @@ class Zero_One_Binary(_Loss):
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
-        assert input.shape[1] == 1 # this loss works only for binary classification
+        # assert input.shape[1] == 1 # this loss works only for binary classification
         input = input[:, 0]
         assert self.reduction == 'sum'
         # switch labels to {-1,1}
@@ -130,6 +137,7 @@ class Zero_One_Multi(_Loss):
     def forward(self, input, target):
         # validity checks
         _assert_no_grad(target)
+        # assert input.shape[1] > 1  # this loss works only for multi-class classification
         label_est = input.argmax(dim=1)
         assert self.reduction == 'sum'
         loss_sum = (target != label_est).sum().float()

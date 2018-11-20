@@ -62,13 +62,13 @@ parser.add_argument('--limit_train_samples', type=int,
 #                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet')  # OmConvNet / 'FcNet3' / 'ConvNet3'
+                    default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)  # 50
+                    default=100)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=1e-3)
@@ -80,9 +80,10 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
-prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight
+prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight of the posterior, in case init_from_prior==False
+
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -107,9 +108,10 @@ prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
 prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
-prm.prior_log_var = -5
-prm.prior_mean = 0
-
+# prm.prior_log_var = -5
+# prm.prior_mean = 0
+prm.prior_log_var = {'mean': -5, 'std': 0.1}
+prm.prior_mean = {'mean': 0, 'std': 0.1}
 
 
 # ##-------- Binary-class MNIST --------
@@ -118,7 +120,7 @@ prm.prior_mean = 0
 # prm.data_source = 'binarized_MNIST'
 # samp_grid_delta = 5000
 # max_grid = 60000
-# loss_type_eval = 'Zero_One_Binary'
+# loss_type_eval = 'Zero_One'
 # n_reps = 10
 
 
@@ -128,17 +130,17 @@ prm.prior_mean = 0
 # prm.data_source = 'MNIST'
 # samp_grid_delta = 5000
 # max_grid = 60000
-# loss_type_eval = 'Zero_One_Multi'
+# loss_type_eval = 'Zero_One'
 # n_reps = 10
 
 
 # # # ##---------CIFAR 10 --------
-run_name = 'CIFAR10_5k_grid_10_reps_TEST'
+run_name = 'CIFAR10_5k_grid_10_reps_100_Epochs_NewPrior_NoBN'
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'CIFAR10'
 samp_grid_delta = 5000
 max_grid = 50000
-loss_type_eval = 'Zero_One_Multi'
+loss_type_eval = 'Zero_One'
 n_reps = 10
 
 
@@ -148,7 +150,10 @@ run_experiments = True  # True/False If false, just analyze the previously saved
 # grid parameters:
 train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
 
-val_types = [['train_loss'], ['test_loss'], ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
+val_types = [['train_loss'], ['test_loss'],
+             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
+             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
+             ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
 
 
 file_name = 'results.pkl'
@@ -189,7 +194,7 @@ if run_experiments:
             data_loader = task_generator.get_data_loader(prm, limit_train_samples=n_train_samples)
 
             # Learn a posterior which minimizes some bound with the training loss function
-            post_model, test_err, test_loss = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
+            post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
                                                                               init_from_prior=True, verbose=0)
 
             # evaluation
@@ -208,6 +213,9 @@ if run_experiments:
                     prm_eval.divergence_type = val_type[2]
                     val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm_eval, train_loss)
                     write_to_log(str(val_type)+' = '+str(val), prm)
+                elif val_type[0] == 'Divergence':
+                    prm_eval.divergence_type = val_type[1]
+                    val = get_net_densities_divergence(prior_model, post_model, prm_eval)
                 else:
                     raise ValueError('Invalid val_types')
 
@@ -226,13 +234,27 @@ else:
 # end if run_experiments
 
 
+val_types_for_show = [['train_loss'], ['test_loss'],
+             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
+             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]
+
+
+# val_types_for_show = [['train_loss'], ['test_loss'],
+#              ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
+#              ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]
+
+# val_types_for_show =  [['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
+
+# val_types_for_show =  [['Divergence', 'W_Sqr']]
+
 # Plot the analysis:
 plt.figure()
 for i_val_type, val_type in enumerate(val_types):
-    plt.errorbar(train_samples_vec,
-                 val_mat[i_val_type].mean(axis=1),
-                 yerr=val_mat[i_val_type].std(axis=1),
-                 label=str(val_type))
+    if val_type in val_types_for_show:
+        plt.errorbar(train_samples_vec,
+                     val_mat[i_val_type].mean(axis=1),
+                     yerr=val_mat[i_val_type].std(axis=1),
+                     label=str(val_type))
 
 # plt.xticks(train_samples_vec)
 plt.xlabel('Number of Samples')
@@ -240,5 +262,5 @@ plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(path_to_result_file)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-# plt.ylim([0, 0.15])
+# plt.ylim([0, 0.8])
 plt.show()

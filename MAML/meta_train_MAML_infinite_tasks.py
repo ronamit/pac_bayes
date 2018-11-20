@@ -27,7 +27,7 @@ def run_meta_learning(prm, task_generator):
     n_iterations = prm.n_meta_train_iterations
 
     # Loss criterion
-    loss_criterion = get_loss_func(prm.loss_type)
+    loss_criterion = get_loss_func(prm)
 
     # Create a 'dummy' model to generate the set of parameters of the shared initial point (theta):
     model = get_model(prm)
