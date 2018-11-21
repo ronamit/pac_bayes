@@ -7,7 +7,7 @@ import torch.optim as optim
 from copy import deepcopy
 
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, list_mult
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, list_mult, load_saved_vars
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
@@ -113,11 +113,15 @@ prm.init_from_prior = True  # True / False  - Init posterior from prior
 # Logging params:
 # prm.log_figure = None
 prm.log_figure = {
+    'interval_epochs': 2,
     'loss_type_eval': 'Zero_One',
     'val_types':  [['train_loss'], ['test_loss'],
              ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]}
 
 prm.run_name = 'cifar_new'
+
+run_experiments = True  # True/False If false, just analyze the previously saved experiments
+
 # ---------------------------------------------- ---------------------------------------------
 #  Init run
 # -------------------------------------------------------------------------------------------
@@ -168,12 +172,16 @@ set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 # -------------------------------------------------------------------------------------------
 #  Run learning
 # -------------------------------------------------------------------------------------------
-# Learn a posterior which minimizes some bound with some loss function
-post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=prm.init_from_prior)
+if run_experiments:
+    # Learn a posterior which minimizes some bound with some loss function
+    post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=prm.init_from_prior)
+    save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss, 'log_mat':log_mat, 'post_model':post_model})
+else:
+    loaded_prm, loaded_dict = load_saved_vars(prm.result_dir)
+    prm = loaded_prm
+    test_err, test_loss, log_mat, post_model = loaded_dict.values()
 
-save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss})
-
-
+learn_single_Bayes.plot_log(log_mat, prm, val_types_for_show=None)
 # -------------------------------------------------------------------------------------------
 #  Evaluate bounds
 # -------------------------------------------------------------------------------------------

@@ -256,6 +256,14 @@ def load_run_data(result_dir):
     return prm, info_dict
 
 
+def load_saved_vars(result_dir):
+    run_data_file_path = os.path.join(result_dir, 'run_data.pkl')
+    with open(run_data_file_path, 'rb') as f:
+        loaded_prm, loaded_dict = pickle.load(f)
+    return loaded_prm, loaded_dict
+
+
+
 # def save_code(setting_name, run_name):
 #     dir_name = setting_name + '_' + run_name
 #     # Create backup of code

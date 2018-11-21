@@ -98,8 +98,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         # End batch loop
 
         # save results for epochs-figure:
-        if figure_flag :
-             save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, log_mat)
+        if figure_flag and (i_epoch % prm.log_figure['interval_epochs'] == 0):
+             save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i_epoch)
+
 
     # End run_train_epoch()
     # -------------------------------------------------------------------------------------------
@@ -118,7 +119,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     start_time = timeit.default_timer()
 
     if figure_flag:
-        log_mat = np.zeros((len(prm.log_figure['val_types']), prm.num_epochs))
+        n_logs = 1 + ((prm.num_epochs-1) // prm.log_figure['interval_epochs'])
+        log_mat = np.zeros((len(prm.log_figure['val_types']), n_logs))
+
     else:
         log_mat = None
 
@@ -170,7 +173,7 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None)
 
 # -------------------------------------------------------------------------------------------
 
-def save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, log_mat):
+def save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i_epoch):
     '''save results for epochs-figure'''
     from Utils.complexity_terms import get_net_densities_divergence
     prm_eval = deepcopy(prm) #   parameters for evaluation
@@ -182,7 +185,9 @@ def save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, l
     _, test_loss = run_eval_Bayes(post_model, data_loader['test'], prm_eval)
 
     for i_val_type, val_type in enumerate(val_types):
-        if val_type[0] == 'train_loss':
+        if val_type[0] == 'i_epoch':
+            val = i_epoch
+        elif val_type[0] == 'train_loss':
             val = train_loss
         elif val_type[0] == 'test_loss':
             val = test_loss
@@ -197,28 +202,31 @@ def save_result_for_figure(post_model, prior_model, data_loader, prm, i_epoch, l
         else:
             raise ValueError('Invalid loss_type_eval')
 
-        log_mat[i_val_type, i_epoch] = val
+        log_counter = i_epoch // prm.log_figure['interval_epochs']
+        log_mat[i_val_type, log_counter] = val
     # end for val_types
 
 # -------------------------------------------------------------------------------------------
 
 def plot_log(log_mat, prm, val_types_for_show=None):
 
-    if not val_types_for_show:
-        val_types = prm.log_figure['val_types']
+    if val_types_for_show is None:
+        val_types_for_show = prm.log_figure['val_types']
+
+    x_axis = np.arange(0, prm.num_epochs, prm.log_figure['interval_epochs'])
 
     # Plot the analysis:
     plt.figure()
-    for i_val_type, val_type in enumerate(val_types):
+    for i_val_type, val_type in enumerate(val_types_for_show):
         if val_type in val_types_for_show:
-            plt.plot(log_mat[i_val_type],
+            plt.plot(x_axis, log_mat[i_val_type],
                          label=str(val_type))
 
     # plt.xticks(train_samples_vec)
     plt.xlabel('Epoch')
     plt.ylabel(prm.log_figure['loss_type_eval'])
     plt.legend()
-    plt.title(prm.run_name)
+    plt.title(prm.result_dir)
     # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-    # plt.ylim([0, 0.8])
+    plt.ylim([0, 1])
     plt.show()

@@ -135,13 +135,13 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 
 
 # # # ##---------CIFAR 10 --------
-run_name = 'CIFAR10_5k_grid_10_reps_100_Epochs_NewPrior_NoBN'
+run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'CIFAR10'
 samp_grid_delta = 5000
 max_grid = 50000
 loss_type_eval = 'Zero_One'
-n_reps = 10
+n_reps = 20
 
 
 # Run params:
@@ -151,9 +151,10 @@ run_experiments = True  # True/False If false, just analyze the previously saved
 train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
 
 val_types = [['train_loss'], ['test_loss'],
-             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
-             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
-             ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
+             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
+             # ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
+             # ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
+
 
 
 file_name = 'results.pkl'
@@ -262,5 +263,5 @@ plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(path_to_result_file)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-# plt.ylim([0, 0.8])
+plt.ylim([0, 1])
 plt.show()
