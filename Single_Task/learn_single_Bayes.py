@@ -208,7 +208,7 @@ def save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i
 
 # -------------------------------------------------------------------------------------------
 
-def plot_log(log_mat, prm, val_types_for_show=None):
+def plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=None):
 
     if val_types_for_show is None:
         val_types_for_show = prm.log_figure['val_types']
@@ -228,5 +228,7 @@ def plot_log(log_mat, prm, val_types_for_show=None):
     plt.legend()
     plt.title(prm.result_dir)
     # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-    plt.ylim([0, 1])
+    if y_axis_lim:
+        plt.ylim(y_axis_lim)
+    plt.grid()
     plt.show()

@@ -43,7 +43,7 @@ parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs fo
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
-                    default='CIFAR10')
+                    default='MNIST')
 
 parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
@@ -76,7 +76,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1}  # The initial value for the log-var parameter (rho) of each weight of the posteriror, in case init_from_prior==False
 
@@ -116,72 +116,60 @@ prm.log_figure = {
     'interval_epochs': 2,
     'loss_type_eval': 'Zero_One',
     'val_types':  [['train_loss'], ['test_loss'],
-             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]}
+             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]}
 
-prm.run_name = 'cifar_new'
+prm.run_name = 'cifarr_epochs'
 
-run_experiments = True  # True/False If false, just analyze the previously saved experiments
+run_experiments = False  # True/False If false, just analyze the previously saved experiments
 
-# ---------------------------------------------- ---------------------------------------------
+# -------------------------------------------------------------------------------------------
 #  Init run
 # -------------------------------------------------------------------------------------------
-
 prm.data_path = get_data_path()
-set_random_seed(prm.seed)
-create_result_dir(prm)
-
-# Generate task data set:
-task_generator = data_gen.Task_Generator(prm)
-# prm.limit_train_samples = 5000  ######## DEUBUG #######################33
-data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
+create_result_dir(prm, run_experiments)
 
 # -------------------------------------------------------------------------------------------
-#  Create Prior
-# ------------------------------------------------------------------------------------------
-
-# create model of the network
-prior_model = get_model(prm)
-set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
-
-#### DEBUG #########################3
-# import math
-# prt = deepcopy(prm) #  temp parameters
-# prt.divergence_type = 'W_Sqr'
-# model1 = get_model(prm)
-# m1 = 0.0
-# m2 = 0.0
-# s1 = 2.0
-# s2 = 5.0
-# d = model1.weights_count
-# set_model_values(model1, mean=m1, log_var=2*math.log(s1))
-# model2 = get_model(prm)
-# set_model_values(model2, mean=m2, log_var=2*math.log(s2))
-# div_val = get_net_densities_divergence(model1, model2, prt)
-# print('DEBUG: Divergence value computed {}'.format(div_val))
-# print('DEBUG: Divergence value analytic {}'.format(d*((m1-m2)**2 + (s1-s2)**2)))
-####################
-
-#### DEBUG #########################3
-# count = 0
-# for (name, m) in prior_model.named_parameters():
-#     if 'log_var' not in name:
-#         count += list_mult(m.shape)
-#         print(name + ' : ' +str(m.shape))
-# print('Count: ' + str(count))
-####################
+#  Run learning or load results
 # -------------------------------------------------------------------------------------------
-#  Run learning
-# -------------------------------------------------------------------------------------------
+
 if run_experiments:
+
+    set_random_seed(prm.seed)
+
+    # Generate task data set:
+    task_generator = data_gen.Task_Generator(prm)
+    data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
+
+    # create prior
+    prior_model = get_model(prm)
+    set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
+
     # Learn a posterior which minimizes some bound with some loss function
     post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model, init_from_prior=prm.init_from_prior)
     save_run_data(prm, {'test_err': test_err, 'test_loss': test_loss, 'log_mat':log_mat, 'post_model':post_model})
+
 else:
     loaded_prm, loaded_dict = load_saved_vars(prm.result_dir)
     prm = loaded_prm
+    # get learned posterior and results
     test_err, test_loss, log_mat, post_model = loaded_dict.values()
 
-learn_single_Bayes.plot_log(log_mat, prm, val_types_for_show=None)
+    set_random_seed(prm.seed)
+
+    # Generate task data set  as in saved file:
+    task_generator = data_gen.Task_Generator(prm)
+    data_loader = task_generator.get_data_loader(prm, limit_train_samples=prm.limit_train_samples)
+
+    # create prior  as in saved file
+    prior_model = get_model(prm)
+    set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
+
+# -------------------------------------------------------------------------------------------
+# Plot results
+# -------------------------------------------------------------------------------------------
+
+learn_single_Bayes.plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=[0,1])
+
 # -------------------------------------------------------------------------------------------
 #  Evaluate bounds
 # -------------------------------------------------------------------------------------------
@@ -223,4 +211,34 @@ for loss_type in losses:
 # -------------------------------------------------------------------------------------------
 # test_err, test_loss = learn_single_standard.run_learning(data_loader, prm)
 
+
+
+
+
+# DEBUG:
+# import math
+# prt = deepcopy(prm) #  temp parameters
+# prt.divergence_type = 'W_Sqr'
+# model1 = get_model(prm)
+# m1 = 0.0
+# m2 = 0.0
+# s1 = 2.0
+# s2 = 5.0
+# d = model1.weights_count
+# set_model_values(model1, mean=m1, log_var=2*math.log(s1))
+# model2 = get_model(prm)
+# set_model_values(model2, mean=m2, log_var=2*math.log(s2))
+# div_val = get_net_densities_divergence(model1, model2, prt)
+# print('DEBUG: Divergence value computed {}'.format(div_val))
+# print('DEBUG: Divergence value analytic {}'.format(d*((m1-m2)**2 + (s1-s2)**2)))
+####################
+
+#### DEBUG #########################3
+# count = 0
+# for (name, m) in prior_model.named_parameters():
+#     if 'log_var' not in name:
+#         count += list_mult(m.shape)
+#         print(name + ' : ' +str(m.shape))
+# print('Count: ' + str(count))
+####################
 

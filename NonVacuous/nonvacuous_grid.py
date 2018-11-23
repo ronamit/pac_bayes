@@ -7,11 +7,10 @@ import torch
 import torch.optim as optim
 import numpy as np
 from copy import deepcopy
-import pickle
 import matplotlib.pyplot as plt
 
 from Utils import data_gen
-from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, ensure_dir
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, ensure_dir, load_saved_vars
 from Single_Task import learn_single_Bayes, learn_single_standard
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
@@ -80,7 +79,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight of the posterior, in case init_from_prior==False
 
@@ -124,17 +123,17 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 # n_reps = 10
 
 
-##---------Multi-class MNIST  --------
-# run_name = 'MultiMNIST_5k_grid_10_reps'
+# #---------Multi-class MNIST  --------
+# run_name = 'MultiMNIST_5k_grid_20_reps'
 # prm.loss_type = 'CrossEntropy'
 # prm.data_source = 'MNIST'
 # samp_grid_delta = 5000
 # max_grid = 60000
 # loss_type_eval = 'Zero_One'
-# n_reps = 10
+# n_reps = 20
 
 
-# # # ##---------CIFAR 10 --------
+# # ##---------CIFAR 10 --------
 run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'CIFAR10'
@@ -145,7 +144,7 @@ n_reps = 20
 
 
 # Run params:
-run_experiments = True  # True/False If false, just analyze the previously saved experiments
+run_experiments = False  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
 train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
@@ -156,11 +155,10 @@ val_types = [['train_loss'], ['test_loss'],
              # ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
 
 
-
-file_name = 'results.pkl'
+file_name = 'run_data.pkl'
 
 prm.run_name = run_name
-create_result_dir(prm)
+create_result_dir(prm, run_experiments)
 path_to_result_file = os.path.join(prm.result_dir, file_name)
 
 if run_experiments:
@@ -224,13 +222,18 @@ if run_experiments:
             # end val_types loop
         # end reps loop
     # end grid loop
+
     # Saving the analysis:
-    with open(path_to_result_file, 'wb') as f:
-        pickle.dump([val_mat, prm, loss_type_eval, train_samples_vec, val_types], f)
+    save_run_data(prm, {'val_mat': val_mat, 'loss_type_eval': loss_type_eval, 'train_samples_vec': train_samples_vec, 'val_types': val_types})
+
 else:
-    with open(path_to_result_file, 'rb') as f:
-        val_mat, prm, loss_type_eval, train_samples_vec, val_types = pickle.load(f)
-        print(prm)
+    loaded_prm, loaded_dict = load_saved_vars(prm.result_dir)
+    prm = loaded_prm
+    set_random_seed(prm.seed)
+    # get learned posterior and results
+    val_mat, loss_type_eval, train_samples_vec, val_types = loaded_dict.values()
+
+
 
 # end if run_experiments
 
@@ -261,7 +264,8 @@ for i_val_type, val_type in enumerate(val_types):
 plt.xlabel('Number of Samples')
 plt.ylabel(loss_type_eval)
 plt.legend()
-plt.title(path_to_result_file)
+plt.title(prm.run_name)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
 plt.ylim([0, 1])
+plt.grid()
 plt.show()

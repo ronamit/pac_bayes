@@ -18,8 +18,8 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
     sample_count = 0
 
     # Hyper-prior term:
-    hyper_div = get_hyper_divergnce(prm, prior_model)
-    meta_complex_term = get_meta_complexity_term(hyper_div, prm, n_train_tasks)
+    hyper_dvrg = get_hyper_divergnce(prm, prior_model)
+    meta_complex_term = get_meta_complexity_term(hyper_dvrg, prm, n_train_tasks)
 
 
     avg_empiric_loss_per_task = torch.zeros(n_tasks_in_mb, device=prm.device)
@@ -67,14 +67,14 @@ def get_objective(prior_model, prm, mb_data_loaders, mb_iterators, mb_posteriors
 
             # Intra-task complexity of current task:
             # curr_complexity = get_task_complexity(prm, prior_model, post_model,
-            #     n_samples, avg_empiric_loss_curr, hyper_div, n_train_tasks=n_train_tasks, noised_prior=True)
+            #     n_samples, avg_empiric_loss_curr, hyper_dvrg, n_train_tasks=n_train_tasks, noised_prior=True)
 
             avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
             # complexity +=  (1 / n_MC) * curr_complexity
         # end Monte-Carlo loop
 
         complexity = get_task_complexity(prm, prior_model, post_model,
-                                         n_samples, avg_empiric_loss, hyper_div,
+                                         n_samples, avg_empiric_loss, hyper_dvrg,
                                          n_train_tasks=n_train_tasks, noised_prior=True)
         avg_empiric_loss_per_task[i_task] = avg_empiric_loss
         complexity_per_task[i_task] = complexity

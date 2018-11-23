@@ -200,23 +200,36 @@ def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-def create_result_dir(prm):
-    # If run_name empty, set according to time
-    time_str = datetime.now().strftime(' %Y-%m-%d %H:%M:%S')
-    if prm.run_name == '':
-        prm.run_name = time_str
-    prm.result_dir = os.path.join('saved', prm.run_name)
-    if not os.path.exists(prm.result_dir):
-        os.makedirs(prm.result_dir)
-    message = ['Log file created at ' + time_str,
-               'Run script: ' + sys.argv[0],
-               'Parameters:', str(prm), '-'*50]
-    write_to_log(message, prm, mode='w') # create new log file
-    write_to_log('Results dir: ' + prm.result_dir, prm)
-    write_to_log('-'*50, prm)
-    # set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)
-    if not hasattr(prm, 'load_model_path') or prm.load_model_path == '':
-        prm.load_model_path = os.path.join(prm.result_dir, 'model.pt')
+def create_result_dir(prm, run_experiments=True):
+
+    if run_experiments:
+        # If run_name empty, set according to time
+        time_str = datetime.now().strftime(' %Y-%m-%d %H:%M:%S')
+        if prm.run_name == '':
+            prm.run_name = time_str
+        prm.result_dir = os.path.join('saved', prm.run_name)
+        if not os.path.exists(prm.result_dir):
+            os.makedirs(prm.result_dir)
+        message = [
+                   'Run script: ' + sys.argv[0],
+                   'Log file created at ' + time_str,
+                   'Parameters:', str(prm), '-' * 70]
+        write_to_log(message, prm, mode='w') # create new log file
+        write_to_log('Results dir: ' + prm.result_dir, prm)
+        write_to_log('-'*50, prm)
+        # set the path to pre-trained model, in case it is loaded (if empty - set according to run_name)
+        if not hasattr(prm, 'load_model_path') or prm.load_model_path == '':
+            prm.load_model_path = os.path.join(prm.result_dir, 'model.pt')
+    else:
+        # In this case just check if result dir exists and print the loaded parameters
+        prm.result_dir = os.path.join('saved', prm.run_name)
+        if not os.path.exists(prm.result_dir):
+            raise ValueError('Results dir not found:  ' +  prm.result_dir)
+        else:
+            print('Run script: ' + sys.argv[0])
+            print( 'Data loaded from: ' + prm.result_dir)
+            print('-' * 70)
+
 
 
 def write_to_log(message, prm, mode='a', update_file=True):
@@ -260,6 +273,8 @@ def load_saved_vars(result_dir):
     run_data_file_path = os.path.join(result_dir, 'run_data.pkl')
     with open(run_data_file_path, 'rb') as f:
         loaded_prm, loaded_dict = pickle.load(f)
+    print('Loaded run parameters: ' + str(loaded_prm))
+    print('-' * 70)
     return loaded_prm, loaded_dict
 
 
