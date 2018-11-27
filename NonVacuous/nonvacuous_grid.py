@@ -33,6 +33,10 @@ parser = argparse.ArgumentParser()
 # parser.add_argument('--run-name', type=str, help='Name of dir to save results in (if empty, name by time)',
 #                     default='')
 
+parser.add_argument('--gpu_index', type=int,
+                    help='The index of GPU device to run on',
+                    default=0)
+
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
@@ -79,7 +83,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:" + str(prm.gpu_index) if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight of the posterior, in case init_from_prior==False
 
