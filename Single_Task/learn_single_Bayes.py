@@ -154,7 +154,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 # -------------------------------------------------------------------------------------------
 #  Bound evaluation
 # -------------------------------------------------------------------------------------------
-def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None):
+def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None, dvrg_val=None):
 
 
     n_train_samples = data_loader['n_train_samples']
@@ -162,9 +162,10 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None)
     if not avg_empiric_loss:
         _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
 
+
     #  complexity/prior term:
     complexity_term = get_task_complexity(
-        prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
+        prm, prior_model, post_model, n_train_samples, avg_empiric_loss, dvrg_val)
 
     # Total objective:
     bound_val = avg_empiric_loss + complexity_term.item()

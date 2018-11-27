@@ -76,7 +76,7 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:" + str(prm.gpu_index) if torch.cuda.is_available() else "cpu")
 
 prm.log_var_init = {'mean': -5, 'std': 0.1}  # The initial value for the log-var parameter (rho) of each weight of the posteriror, in case init_from_prior==False
 
@@ -165,13 +165,39 @@ else:
     set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 
 # -------------------------------------------------------------------------------------------
-# Plot results
+# Plot epochs figure
 # -------------------------------------------------------------------------------------------
 
 learn_single_Bayes.plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=[0,1])
 
+
+
 # -------------------------------------------------------------------------------------------
-#  Evaluate bounds
+#  Analyze the final posterior
+# -------------------------------------------------------------------------------------------
+from Utils.common import net_weights_magnitude
+weight_norm = torch.sqrt(net_weights_magnitude(post_model, prm))
+
+max_weight = 0.0
+for (param_name, param) in post_model.named_parameters():
+    max_weight = max_weight = max(max_weight, param.abs().max().item())
+
+print('Final posterior max weight: {}'.format(max_weight))
+
+avg_weight = 0.0
+for (param_name, param) in post_model.named_parameters():
+    avg_weight += param.abs().sum().item()
+avg_weight /= post_model.weights_count
+print('Final posterior avg weight: {}'.format(avg_weight))
+
+
+# Estimate the Lipschitz:
+
+
+
+
+# -------------------------------------------------------------------------------------------
+#  Evaluate bounds with final posterior
 # -------------------------------------------------------------------------------------------
 # Calculate bounds the expected risk of the learned posterior
 # Note: the bounds are evaluated using only the training data
@@ -198,13 +224,15 @@ for loss_type in losses:
 
     for divergence_type in ['KL', 'W_Sqr', 'W_NoSqr']:
         prt.divergence_type = divergence_type
-        div_val = get_net_densities_divergence(prior_model, post_model, prt)
-        write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, div_val), prm)
+        dvrg_val = get_net_densities_divergence(prior_model, post_model, prt)
+
+        write_to_log('\t--Divergence: {} = {:.4}'.format(prt.divergence_type, dvrg_val), prm)
         for complexity_type in ['McAllester', 'Seeger', 'Catoni']:
             prt.complexity_type = complexity_type
-            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt, train_loss)
+            bound_val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prt, train_loss, dvrg_val)
             write_to_log('\t\tBound: {} =  {:.4}'.
                          format(prt.complexity_type, bound_val), prm)
+
 
 # -------------------------------------------------------------------------------------------
 #  Run standard deterministic learning for comparision

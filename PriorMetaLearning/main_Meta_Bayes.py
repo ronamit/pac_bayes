@@ -42,6 +42,10 @@ parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation (how many tasks to average in final result)',
                     default=10)
 
+parser.add_argument('--gpu_index', type=int,
+                    help='The index of GPU device to run on',
+                    default=0)
+
 # ----- Task Parameters ---------------------------------------------#
 
 parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet",

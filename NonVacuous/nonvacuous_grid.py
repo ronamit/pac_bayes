@@ -114,33 +114,33 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 
 
 # ##-------- Binary-class MNIST --------
-# run_name = 'BinMNIST_5k_grid_10_reps'
+# run_name = 'BinMNIST_5k_grid_20_reps'
 # prm.loss_type = 'Logistic_binary'
 # prm.data_source = 'binarized_MNIST'
-# samp_grid_delta = 5000
-# max_grid = 60000
-# loss_type_eval = 'Zero_One'
-# n_reps = 10
-
-
-# #---------Multi-class MNIST  --------
-# run_name = 'MultiMNIST_5k_grid_20_reps'
-# prm.loss_type = 'CrossEntropy'
-# prm.data_source = 'MNIST'
 # samp_grid_delta = 5000
 # max_grid = 60000
 # loss_type_eval = 'Zero_One'
 # n_reps = 20
 
 
-# # ##---------CIFAR 10 --------
-run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
+#---------Multi-class MNIST  --------
+run_name = 'MultiMNIST_5k_grid_20_reps'
 prm.loss_type = 'CrossEntropy'
-prm.data_source = 'CIFAR10'
+prm.data_source = 'MNIST'
 samp_grid_delta = 5000
-max_grid = 50000
+max_grid = 60000
 loss_type_eval = 'Zero_One'
 n_reps = 20
+
+
+# # # ##---------CIFAR 10 --------
+# run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
+# prm.loss_type = 'CrossEntropy'
+# prm.data_source = 'CIFAR10'
+# samp_grid_delta = 5000
+# max_grid = 50000
+# loss_type_eval = 'Zero_One'
+# n_reps = 20
 
 
 # Run params:
@@ -266,6 +266,6 @@ plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(prm.run_name)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-plt.ylim([0, 1])
+plt.ylim([0, 0.2])
 plt.grid()
 plt.show()

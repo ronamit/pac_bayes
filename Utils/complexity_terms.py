@@ -63,11 +63,14 @@ def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):
 #  -------------------------------------------------------------------------------------------
 #  Intra-task complexity for posterior distribution
 # -------------------------------------------------------------------------------------------
-def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_dvrg=0, n_train_tasks=1, noised_prior=False):
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_dvrg=0, n_train_tasks=1, dvrg=None, noised_prior=False):
 
     complexity_type = prm.complexity_type
     delta = prm.delta  #  maximal probability that the bound does not hold
-    dvrg = get_net_densities_divergence(prior_model, post_model, prm, noised_prior)  # divergence between posterior and sampled prior
+
+    if not dvrg:
+        # calculate divergence between posterior and sampled prior
+        dvrg = get_net_densities_divergence(prior_model, post_model, prm, noised_prior)
 
     if complexity_type == 'NoComplexity':
         # set as zero
