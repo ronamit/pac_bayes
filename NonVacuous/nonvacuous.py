@@ -30,6 +30,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--run-name', type=str, help='Name of dir to save results in (if empty, name by time)',
                     default='')
 
+parser.add_argument('--gpu_index', type=int,
+                    help='The index of GPU device to run on',
+                    default=0)
+
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
@@ -38,7 +42,6 @@ parser.add_argument('--test-batch-size',type=int,  help='input batch size for te
 
 parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
                     default=10)
-
 
 # ----- Task Parameters ---------------------------------------------#
 

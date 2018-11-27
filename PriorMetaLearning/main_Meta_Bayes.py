@@ -26,6 +26,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--run-name', type=str, help='Name of dir to save results in (if empty, name by time)',
                     default='')
 
+parser.add_argument('--gpu_index', type=int,
+                    help='The index of GPU device to run on',
+                    default=0)
+
 parser.add_argument('--seed', type=int,  help='random seed',
                     default=1)
 
@@ -42,9 +46,6 @@ parser.add_argument('--n_test_tasks', type=int,
                     help='Number of meta-test tasks for meta-evaluation (how many tasks to average in final result)',
                     default=10)
 
-parser.add_argument('--gpu_index', type=int,
-                    help='The index of GPU device to run on',
-                    default=0)
 
 # ----- Task Parameters ---------------------------------------------#
 
