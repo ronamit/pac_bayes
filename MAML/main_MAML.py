@@ -101,7 +101,7 @@ parser.add_argument('--MAML_Use_Test_Data', type=boolean_string, help='If true M
 
 # general parameters:
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet')  # ConvNet3 / 'FcNet3' / 'OmConvNet'
+                    default='OmConvNet')  # ConvNet3 / 'FcNet3' / 'OmConvNet' / OmConvNet_NoBN
 
 parser.add_argument('--loss-type', type=str, help="Loss function",
                     default='CrossEntropy') #  'CrossEntropy' / 'L2_SVM'
@@ -114,7 +114,7 @@ parser.add_argument('--lr', type=float, help='initial learning rate',
 # -------------------------------------------------------------------------------------------
 
 prm = parser.parse_args()
-prm.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+prm.device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 prm.data_path = get_data_path()
 set_random_seed(prm.seed)
 create_result_dir(prm)

@@ -100,7 +100,7 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 prm.lr_schedule = {}  # No decay
 
 # Test type:
-prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
+prm.test_type = 'Expected'  # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
 prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
@@ -183,7 +183,7 @@ weight_norm = torch.sqrt(net_weights_magnitude(post_model, prm))
 
 max_weight = 0.0
 for (param_name, param) in post_model.named_parameters():
-    max_weight = max_weight = max(max_weight, param.abs().max().item())
+    max_weight = max(max_weight, param.abs().max().item())
 
 print('Final posterior max weight: {}'.format(max_weight))
 
@@ -193,6 +193,20 @@ for (param_name, param) in post_model.named_parameters():
 avg_weight /= post_model.weights_count
 print('Final posterior avg weight: {}'.format(avg_weight))
 
+
+# mu diff posterior -prior:
+from Models.stochastic_layers import StochasticLayer
+prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
+post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
+
+for i_layer, prior_layer in enumerate(prior_layers_list):
+    post_layer = post_layers_list[i_layer]
+    if hasattr(prior_layer, 'w'):
+        diff = (post_layer.w['mean'] - prior_layer.w['mean']).abs().mean()
+        print(diff)
+    if hasattr(prior_layer, 'b'):
+        diff = (post_layer.b['mean'] - prior_layer.b['mean']).abs().mean()
+        print(diff)
 
 # Estimate the Lipschitz:
 

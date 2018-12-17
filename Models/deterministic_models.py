@@ -28,6 +28,9 @@ def get_model(prm):
         model = ConvNet3(input_shape=input_shape, output_dim=output_dim)
     elif model_name == 'OmConvNet':
         model = OmConvNet(input_shape=input_shape, output_dim=output_dim)
+    elif model_name == 'OmConvNet_NoBN':
+        model = OmConvNet(input_shape=input_shape, output_dim=output_dim)
+
     else:
         raise ValueError('Invalid model_name')
 
@@ -66,8 +69,8 @@ def batchnorm(input, weight=None, bias=None, running_mean=None, running_var=None
     # This hack only works when momentum is 1 and avoids needing to track running stats
     # by substuting dummy variables
     in_dim = input.data.size()[1]
-    running_mean = torch.zeros(in_dim)
-    running_var = torch.ones(in_dim)
+    running_mean = torch.zeros(in_dim, device=input.get_device())
+    running_var = torch.ones(in_dim, device=input.get_device())
     return F.batch_norm(input, running_mean, running_var, weight, bias, training, momentum, eps)
 
 # -------------------------------------------------------------------------------------------
@@ -254,3 +257,57 @@ class OmConvNet(base_model):
             x = F.linear(x, weights['fc_out.weight'], weights['fc_out.bias'])
         return x
 # -------------------------------------------------------------------------------------------
+
+
+
+# -------------------------------------------------------------------------------------------
+#  OmConvNet
+# -------------------------------------------------------------------------------- -----------
+class OmConvNet_NoBN(base_model):
+    def __init__(self, input_shape, output_dim):
+        super(OmConvNet_NoBN, self).__init__()
+        self.model_name = 'OmConv'
+        n_in_channels = input_shape[0]
+        n_filt1 = 64
+        n_filt2 = 64
+        n_filt3 = 64
+        self.conv_layers = nn.Sequential(OrderedDict([
+                ('conv1',  nn.Conv2d(n_in_channels, n_filt1, kernel_size=3)),
+                ('relu1',  nn.ReLU(inplace=True)),
+                ('pool1', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('conv2', nn.Conv2d(n_filt1, n_filt2, kernel_size=3)),
+                ('relu2', nn.ReLU(inplace=True)),
+                ('pool2', nn.MaxPool2d(kernel_size=2, stride=2)),
+                ('conv3', nn.Conv2d(n_filt2, n_filt3, kernel_size=3)),
+                ('relu3', nn.ReLU(inplace=True)),
+                ('pool3', nn.MaxPool2d(kernel_size=2, stride=2)),
+                 ]))
+        conv_out_size = get_size_of_conv_output(input_shape, self._forward_conv_layers)
+        self.add_module('fc_out', nn.Linear(conv_out_size, output_dim))
+
+        # Initialize weights
+        self._init_weights()
+
+    def _forward_conv_layers(self, x, weights=None):
+        if weights is None:
+            x = self.conv_layers(x)
+        else:
+            x = F.conv2d(x, weights['conv_layers.conv1.weight'], weights['conv_layers.conv1.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.conv2d(x, weights['conv_layers.conv2.weight'], weights['conv_layers.conv2.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+            x = F.conv2d(x, weights['conv_layers.conv3.weight'], weights['conv_layers.conv3.bias'])
+            x = F.relu(x)
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+        return x
+
+    def forward(self, x, weights=None):
+        x = self._forward_conv_layers(x, weights)
+        x = x.view(x.size(0), -1)
+        if weights is None:
+            x = self.fc_out(x)
+        else:
+            x = F.linear(x, weights['fc_out.weight'], weights['fc_out.bias'])
+        return x

@@ -62,7 +62,7 @@ def run_meta_learning(prm, task_generator):
         log_interval = 5
         if (i_iter) % log_interval == 0:
             batch_acc = info['correct_count'] / info['sample_count']
-            print(cmn.status_string(i_iter, n_iterations, 1, 1, batch_acc, total_objective.data[0]))
+            print(cmn.status_string(i_iter, n_iterations, 1, 1, batch_acc, total_objective.item()))
 
 
     # end run_meta_iteration()
