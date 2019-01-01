@@ -4,8 +4,8 @@
 
 ## Prerequisites
 
-- Python 3.5
-- [PyTorch 0.3+ with CUDA](http://pytorch.org)
+- Python 3+
+- [PyTorch 1.0+ with CUDA](http://pytorch.org)
 - NumPy and Matplotlib
 
 
