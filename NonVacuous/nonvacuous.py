@@ -121,9 +121,9 @@ prm.log_figure = {
     'val_types':  [['train_loss'], ['test_loss'],
              ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]}
 
-prm.run_name = 'cifarr_epochs'
+prm.run_name = 'temp'
 
-run_experiments = False  # True/False If false, just analyze the previously saved experiments
+run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # -------------------------------------------------------------------------------------------
 #  Init run
