@@ -159,7 +159,7 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None,
 
     n_train_samples = data_loader['n_train_samples']
 
-    if not avg_empiric_loss:
+    if avg_empiric_loss is None:
         _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
 
 
