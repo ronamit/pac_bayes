@@ -165,7 +165,7 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None,
 
     #  complexity/prior term:
     complexity_term = get_task_complexity(
-        prm, prior_model, post_model, n_train_samples, avg_empiric_loss, dvrg_val)
+        prm, prior_model, post_model, n_train_samples, avg_empiric_loss, dvrg=dvrg_val)
 
     # Total objective:
     bound_val = avg_empiric_loss + complexity_term.item()
