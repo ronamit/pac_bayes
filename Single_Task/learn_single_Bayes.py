@@ -220,9 +220,8 @@ def plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=None):
     plt.figure()
     for i_val_type, val_type in enumerate(val_types_for_show):
         if val_type in val_types_for_show:
-            plt.plot(x_axis, log_mat[i_val_type],
+            plt.plot(x_axis, log_mat[ prm.log_figure['val_types'].index(val_type)],
                          label=str(val_type))
-
     # plt.xticks(train_samples_vec)
     plt.xlabel('Epoch')
     plt.ylabel(prm.log_figure['loss_type_eval'])
