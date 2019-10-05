@@ -67,7 +67,7 @@ def get_prediction(outputs):
 
 def count_correct(outputs, targets):
     pred = get_prediction(outputs)
-    return pred.eq(targets.data.view_as(pred)).cpu().sum().item()
+    return pred.eq(targets.data.view_as(pred).type(pred.dtype)).cpu().sum().item()
 # -----------------------------------------------------------------------------------------------------------#
 
 def correct_rate(outputs, targets):
