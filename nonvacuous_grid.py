@@ -66,12 +66,12 @@ parser.add_argument('--model_name', type=str, help="Define model type (hypothesi
                     default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch_size', type=int, help='input batch size for training',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--num_epochs', type=int, help='number of epochs to train, if 0 - use num_iter',
                     default=0)  # 50
 parser.add_argument('--num_iter', type=int, help='number of iterations to run, if num_epochs == 0',
-                    default=1000)  # 50
+                    default=5000)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
                     default=2e-3)
@@ -183,7 +183,6 @@ if run_experiments:
     # -------------------------------------------------------------------------------------------
     prm_eval = deepcopy(prm)  # parameters for evaluation
     prm_eval.loss_type = loss_type_eval
-
     for i_grid, n_train_samples in enumerate(train_samples_vec):
 
         for i_rep in range(n_reps):
