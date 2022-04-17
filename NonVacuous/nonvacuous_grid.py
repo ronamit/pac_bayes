@@ -128,14 +128,14 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 
 
 #---------Multi-class MNIST  --------
-run_name = 'MultiMNIST_5k_grid_20_reps'
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'MNIST'
 min_grid = 5
 samp_grid_delta = 5000
 max_grid = 60000
 loss_type_eval = 'Zero_One'
-n_reps = 20
+n_reps = 1
+run_name = f'MultiMNIST_{n_reps}_reps'
 
 
 # # # ##---------CIFAR 10 --------
