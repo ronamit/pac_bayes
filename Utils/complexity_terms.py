@@ -1,6 +1,4 @@
-
 from __future__ import absolute_import, division, print_function
-
 
 import torch
 from torch.autograd import Variable
@@ -9,17 +7,19 @@ from Utils import common as cmn
 import torch.nn.functional as F
 from Models.stochastic_layers import StochasticLayer
 from Utils.common import net_weights_magnitude, count_correct
+
+
 # -----------------------------------------------------------------------------------------------------------#
 
 
-
 # -----------------------------------------------------------------------------------------------------------#
 
-def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, dvrg=None, noised_prior=False):   # corrected
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, dvrg=None,
+                        noised_prior=False):  # corrected
     #  Intra-task complexity for posterior distribution
 
     complexity_type = prm.complexity_type
-    delta = prm.delta  #  maximal probability that the bound does not hold
+    delta = prm.delta  # maximal probability that the bound does not hold
 
     if dvrg is None:
         # calculate divergence between posterior and sampled prior
@@ -27,7 +27,7 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     if complexity_type == 'NoComplexity':
         # set as zero
-        complex_term = torch.tensor(0.,  device=prm.device)
+        complex_term = torch.tensor(0., device=prm.device)
 
     elif prm.complexity_type in {'McAllester', 'Classic_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
@@ -36,7 +36,7 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
     elif prm.complexity_type in {'New_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         kl = dvrg
-        delta_ub = delta/2
+        delta_ub = delta / 2
         classic_pb = (kl + math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
         pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
         bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
@@ -61,11 +61,12 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
         raise ValueError('Invalid complexity_type')
 
     return complex_term
+
+
 # -------------------------------------------------------------------------------------------
 
 
 def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=False):
-
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
     post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
 
@@ -81,9 +82,11 @@ def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=Fals
         total_dvrg = torch.sqrt(total_dvrg)
 
     return total_dvrg
+
+
 # -------------------------------------------------------------------------------------------
 
-def  get_dvrg_element(post, prior, prm, noised_prior=False):
+def get_dvrg_element(post, prior, prm, noised_prior=False):
     """KL divergence D_{KL}[post(x)||prior(x)] for a fully factorized Gaussian"""
 
     if noised_prior and prm.kappa_post > 0:
@@ -98,10 +101,10 @@ def  get_dvrg_element(post, prior, prm, noised_prior=False):
     post_std = torch.exp(0.5 * post['log_var'])
     prior_std = torch.exp(0.5 * prior_log_var)
 
-    if  prm.divergence_type in ['W_Sqr', 'W_NoSqr']:
-            # Wasserstein norm with p=2
-            # according to DOWSON & LANDAU 1982
-            div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
+    if prm.divergence_type in ['W_Sqr', 'W_NoSqr']:
+        # Wasserstein norm with p=2
+        # according to DOWSON & LANDAU 1982
+        div_elem = torch.sum((post['mean'] - prior_mean).pow(2) + (post_std - prior_std).pow(2))
 
     elif prm.divergence_type == 'KL':
         numerator = (post['mean'] - prior_mean).pow(2) + post_var
@@ -114,14 +117,17 @@ def  get_dvrg_element(post, prior, prm, noised_prior=False):
 
     assert div_elem >= 0
     return div_elem
+
+
 # -------------------------------------------------------------------------------------------
 
 def add_noise(param, std):
     param += torch.randn_like(param) * std
+
+
 # -------------------------------------------------------------------------------------------
 
 def add_noise_to_model(model, std):
-
     layers_list = [layer for layer in model.children() if isinstance(layer, StochasticLayer)]
 
     for i_layer, layer in enumerate(layers_list):

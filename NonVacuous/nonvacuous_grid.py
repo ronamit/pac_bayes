@@ -269,4 +269,7 @@ plt.title(prm.run_name)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
 # plt.ylim([0, 0.2])
 plt.grid()
+plt.savefig('Fig.pdf', format='pdf', bbox_inches='tight')
 plt.show()
+
+
