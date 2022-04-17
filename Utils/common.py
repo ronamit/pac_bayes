@@ -173,7 +173,7 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
 
 def status_string(i_epoch, num_epochs, batch_idx, n_batches, batch_acc, loss_data):
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * num_epochs)
-    status_str = f'{progress_per:2.1f}%)\tEpoch: {i_epoch} \t Batch: {batch_idx} \t Objective: {loss_data:.4} \t  Acc: {float(batch_acc):1.3} \t'
+    status_str = f'({progress_per:2.1f}%)\tEpoch: {i_epoch} \t Batch: {batch_idx} \t Objective: {loss_data:.4} \t  Acc: {float(batch_acc):1.3} \t'
     return progress_per, status_str
 
 def get_model_string(model):

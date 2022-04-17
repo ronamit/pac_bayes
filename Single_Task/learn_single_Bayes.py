@@ -1,4 +1,3 @@
-
 import math
 import timeit
 from copy import deepcopy
@@ -11,12 +10,68 @@ from Utils.complexity_terms import get_task_complexity, add_noise_to_model
 from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
 import matplotlib.pyplot as plt
+
+
 # -------------------------------------------------------------------------------------------
 #  Stochastic Single-task learning
 # -------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+#  Training epoch  function
+# -------------------------------------------------------------------------------------------
+
+def run_train_epoch(i_epoch, log_mat, prior_model, post_model, train_loader, prm, loss_criterion, last_progress_perc,
+                    n_train_samples, optimizer, lr_schedule, n_batches, verbose, figure_flag, data_loader):
+    post_model.train()
+
+    for batch_idx, batch_data in enumerate(train_loader):
+
+        # get batch data:
+        inputs, targets = data_gen.get_batch_vars(batch_data, prm)
+
+        batch_size = inputs.shape[0]
+
+        # Monte-Carlo iterations:
+        avg_empiric_loss = torch.zeros(1, device=prm.device)
+        n_MC = prm.n_MC
+
+        for i_MC in range(n_MC):
+            # calculate objective:
+            outputs = post_model(inputs)
+            avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
+            avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
+
+        # complexity/prior term:
+        if prior_model:
+            complexity_term = get_task_complexity(
+                prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
+        else:
+            complexity_term = torch.zeros(1, device=prm.device)
+
+        # Total objective:
+        objective = avg_empiric_loss + complexity_term
+
+        # Take gradient step:
+        grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
+
+        # Print status:
+        batch_acc = correct_rate(outputs, targets)
+        progress_perc, status_str = cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc,
+                                                      objective.item())
+        if verbose and abs(progress_perc - last_progress_perc) > 1:
+            last_progress_perc = progress_perc
+            print(f'{status_str} Loss: {avg_empiric_loss.item():.4}\t Comp.: {complexity_term.item():.4}')
+
+    # End batch loop
+
+    # save results for epochs-figure:
+    if figure_flag and (i_epoch % prm.log_figure['interval_epochs'] == 0):
+        save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i_epoch)
+
+    return post_model, last_progress_perc, log_mat
+    # End run_train_epoch()
+
 
 def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbose=1):
-
     # -------------------------------------------------------------------------------------------
     #  Setting-up
     # -------------------------------------------------------------------------------------------
@@ -54,64 +109,8 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     optimizer = optim_func(post_model.parameters(), **optim_args)
 
     # -------------------------------------------------------------------------------------------
-    #  Training epoch  function
-    # -------------------------------------------------------------------------------------------
-
-    def run_train_epoch(i_epoch, log_mat):
-
-        post_model.train()
-
-        for batch_idx, batch_data in enumerate(train_loader):
-
-            # get batch data:
-            inputs, targets = data_gen.get_batch_vars(batch_data, prm)
-
-            batch_size = inputs.shape[0]
-
-            # Monte-Carlo iterations:
-            avg_empiric_loss = torch.zeros(1, device=prm.device)
-            n_MC = prm.n_MC
-
-            for i_MC in range(n_MC):
-
-                # calculate objective:
-                outputs = post_model(inputs)
-                avg_empiric_loss_curr = (1 / batch_size) * loss_criterion(outputs, targets)
-                avg_empiric_loss += (1 / n_MC) * avg_empiric_loss_curr
-
-            # complexity/prior term:
-            if prior_model:
-                complexity_term = get_task_complexity(
-                    prm, prior_model, post_model, n_train_samples, avg_empiric_loss)
-            else:
-                complexity_term = torch.zeros(1, device=prm.device)
-
-            # Total objective:
-            objective = avg_empiric_loss + complexity_term
-
-            # Take gradient step:
-            grad_step(objective, optimizer, lr_schedule, prm.lr, i_epoch)
-
-            # Print status:
-            log_interval = 1000
-            if verbose and batch_idx % log_interval == 0:
-                batch_acc = correct_rate(outputs, targets)
-                progress_perc, status_str = cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, objective.item())
-                print(f'{status_str} Loss: {avg_empiric_loss.item():.4}\t Comp.: {complexity_term.item():.4}')
-
-
-        # End batch loop
-
-        # save results for epochs-figure:
-        if figure_flag and (i_epoch % prm.log_figure['interval_epochs'] == 0):
-             save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i_epoch)
-
-
-    # End run_train_epoch()
-    # -------------------------------------------------------------------------------------------
     #  Main Script
     # -------------------------------------------------------------------------------------------
-
 
     #  Update Log file
     if verbose:
@@ -120,19 +119,24 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
         write_to_log('Total number of steps: {}'.format(n_batches * prm.num_epochs), prm)
         write_to_log('Number of training samples: {}'.format(data_loader['n_train_samples']), prm)
 
-
     start_time = timeit.default_timer()
 
     if figure_flag:
-        n_logs = 1 + ((prm.num_epochs-1) // prm.log_figure['interval_epochs'])
+        n_logs = 1 + ((prm.num_epochs - 1) // prm.log_figure['interval_epochs'])
         log_mat = np.zeros((len(prm.log_figure['val_types']), n_logs))
 
     else:
         log_mat = None
 
     # Run training epochs:
+    last_progress_perc = 0
     for i_epoch in range(prm.num_epochs):
-        run_train_epoch(i_epoch, log_mat)
+        post_model, last_progress_perc, log_mat = run_train_epoch(i_epoch, log_mat, prior_model, post_model,
+                                                                  train_loader, prm,
+                                                                  loss_criterion, last_progress_perc,
+                                                                  n_train_samples, optimizer, lr_schedule, n_batches,
+                                                                  verbose,
+                                                                  figure_flag, data_loader)
 
     # evaluate final performance on train-set
     train_acc, train_loss = run_eval_Bayes(post_model, train_loader, prm)
@@ -143,8 +147,8 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
     # Log results
     if verbose:
-        write_to_log('>Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100*(1-train_acc), train_loss), prm)
-        write_to_log('>Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100*(test_err), test_loss), prm)
+        write_to_log('>Train-err. : {:.4}%\t Train-loss: {:.4}'.format(100 * (1 - train_acc), train_loss), prm)
+        write_to_log('>Test-err. {:1.3}%, Test-loss:  {:.4}'.format(100 * (test_err), test_loss), prm)
 
     stop_time = timeit.default_timer()
     if verbose:
@@ -160,13 +164,10 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 #  Bound evaluation
 # -------------------------------------------------------------------------------------------
 def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None, dvrg_val=None):
-
-
     n_train_samples = data_loader['n_train_samples']
 
     if avg_empiric_loss is None:
         _, avg_empiric_loss = run_eval_Bayes(post_model, data_loader['train'], prm)
-
 
     #  complexity/prior term:
     complexity_term = get_task_complexity(
@@ -182,7 +183,7 @@ def eval_bound(post_model, prior_model, data_loader, prm, avg_empiric_loss=None,
 def save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i_epoch):
     '''save results for epochs-figure'''
     from Utils.complexity_terms import get_net_densities_divergence
-    prm_eval = deepcopy(prm) #   parameters for evaluation
+    prm_eval = deepcopy(prm)  # parameters for evaluation
     prm_eval.loss_type = prm.log_figure['loss_type_eval']
     val_types = prm.log_figure['val_types']
 
@@ -212,10 +213,10 @@ def save_result_for_figure(post_model, prior_model, data_loader, prm, log_mat, i
         log_mat[i_val_type, log_counter] = val
     # end for val_types
 
+
 # -------------------------------------------------------------------------------------------
 
 def plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=None):
-
     if val_types_for_show is None:
         val_types_for_show = prm.log_figure['val_types']
 
@@ -225,8 +226,8 @@ def plot_log(log_mat, prm, val_types_for_show=None, y_axis_lim=None):
     plt.figure()
     for i_val_type, val_type in enumerate(val_types_for_show):
         if val_type in val_types_for_show:
-            plt.plot(x_axis, log_mat[ prm.log_figure['val_types'].index(val_type)],
-                         label=str(val_type))
+            plt.plot(x_axis, log_mat[prm.log_figure['val_types'].index(val_type)],
+                     label=str(val_type))
     # plt.xticks(train_samples_vec)
     plt.xlabel('Epoch')
     plt.ylabel(prm.log_figure['loss_type_eval'])

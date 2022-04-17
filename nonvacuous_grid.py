@@ -195,7 +195,7 @@ if run_experiments:
 
             # Learn a posterior which minimizes some bound with the training loss function
             post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
-                                                                                       init_from_prior=True, verbose=0)
+                                                                                       init_from_prior=True)
 
             # evaluation
             _, train_loss = run_eval_Bayes(post_model, data_loader['train'], prm_eval)
