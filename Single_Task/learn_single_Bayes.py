@@ -1,7 +1,5 @@
 
-
-from __future__ import absolute_import, division, print_function
-
+import math
 import timeit
 from copy import deepcopy
 import torch
@@ -34,6 +32,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     test_loader = data_loader['test']
     n_batches = len(train_loader)
     n_train_samples = data_loader['n_train_samples']
+
+    if prm.num_epochs == 0:
+        prm.num_epochs = math.ceil(prm.num_iter / n_batches)
 
     figure_flag = hasattr(prm, 'log_figure') and prm.log_figure
 

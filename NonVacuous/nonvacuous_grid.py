@@ -62,17 +62,19 @@ parser.add_argument('--limit_train_samples', type=int,
 # parser.add_argument('--loss-type', type=str, help="Data: 'CrossEntropy' / 'L2_SVM' / Logistic_binary",
 #                     default='CrossEntropy')
 
-parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
+parser.add_argument('--model_name', type=str, help="Define model type (hypothesis class)'",
                     default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
-parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=512)
+parser.add_argument('--batch_size', type=int, help='input batch size for training',
+                    default=128)
 
-parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=100)  # 50
+parser.add_argument('--num_epochs', type=int, help='number of epochs to train, if 0 - use num_iter',
+                    default=0)  # 50
+parser.add_argument('--num_iter', type=int, help='number of iterations to run, if num_epochs == 0',
+                    default=1000)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
-                    default=1e-3)
+                    default=2e-3)
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
@@ -105,7 +107,7 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected'  # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'New_PB'  # 'McAllester' / 'Seeger' / 'NoComplexity'
+prm.complexity_type = 'New_PB'  # 'McAllester' / 'Seeger' / 'NoComplexity' / 'New_PB'
 prm.divergence_type = 'KL'  # 'KL' / 'W_Sqr' /  'W_NoSqr' /
 prm.delta = 0.035  # maximal probability that the bound does not hold
 
