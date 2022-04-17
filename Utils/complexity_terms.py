@@ -82,9 +82,19 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
         # set as zero
         complex_term = torch.zeros(1, requires_grad=False, device=prm.device)
 
-    elif prm.complexity_type == 'McAllester':
+    elif prm.complexity_type in {'McAllester', 'Classic_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         complex_term = torch.sqrt((hyper_dvrg + dvrg + math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1)))  # corrected
+
+    elif prm.complexity_type in { 'New_PB'}:
+        # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
+        kl = hyper_dvrg + dvrg
+        classic_pb = (kl + math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
+        pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
+        bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
+        sqrt_arg = torch.minimum(classic_pb, pinsker_pb)
+        sqrt_arg = torch.minimum(sqrt_arg, bh_pb)
+        complex_term = torch.sqrt(sqrt_arg)
 
     elif prm.complexity_type == 'Seeger':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
@@ -130,7 +140,7 @@ def get_net_densities_divergence(prior_model, post_model, prm, noised_prior=Fals
     prior_layers_list = [layer for layer in prior_model.children() if isinstance(layer, StochasticLayer)]
     post_layers_list = [layer for layer in post_model.children() if isinstance(layer, StochasticLayer)]
 
-    total_dvrg = 0
+    total_dvrg = torch.tensor(0., device=prm.device)
     for i_layer, prior_layer in enumerate(prior_layers_list):
         post_layer = post_layers_list[i_layer]
         if hasattr(prior_layer, 'w'):

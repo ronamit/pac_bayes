@@ -65,7 +65,7 @@ parser.add_argument('--limit_train_samples', type=int,
 #                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
                     default=128)
@@ -131,6 +131,7 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 run_name = 'MultiMNIST_5k_grid_20_reps'
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'MNIST'
+min_grid = 5
 samp_grid_delta = 5000
 max_grid = 60000
 loss_type_eval = 'Zero_One'
@@ -148,13 +149,13 @@ n_reps = 20
 
 
 # Run params:
-run_experiments = False  # True/False If false, just analyze the previously saved experiments
+run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
-train_samples_vec = np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
+train_samples_vec = np.arange(min_grid, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
 
 val_types = [['train_loss'], ['test_loss'],
-             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr']]
+             ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL']]
              # ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
              # ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
 

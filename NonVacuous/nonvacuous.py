@@ -123,6 +123,10 @@ prm.log_figure = {
 
 prm.run_name = 'temp'
 
+prm.debug_autograd = True
+if prm.debug_autograd:
+    torch.autograd.set_detect_anomaly(True)
+
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # -------------------------------------------------------------------------------------------
