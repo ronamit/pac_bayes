@@ -60,7 +60,6 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     def run_train_epoch(i_epoch, log_mat):
 
         post_model.train()
-        last_progress_perc = 0
 
         for batch_idx, batch_data in enumerate(train_loader):
 
@@ -95,12 +94,11 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
 
             # Print status:
             log_interval = 1000
-            if batch_idx % log_interval == 0:
+            if verbose and batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
                 progress_perc, status_str = cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, objective.item())
-                if math.abs(progress_perc - last_progress_perc) > 1:
-                    print(f'{status_str} Loss: {avg_empiric_loss.item(),:.4}\t Comp.: {complexity_term.item():.4}')
-                    last_progress_perc = progress_perc
+                print(f'{status_str} Loss: {avg_empiric_loss.item():.4}\t Comp.: {complexity_term.item():.4}')
+
 
         # End batch loop
 

@@ -83,9 +83,10 @@ def run_learning(data_loader, prm, verbose=1, initial_model=None):
             grad_step(loss, optimizer, lr_schedule, prm.lr, i_epoch)
 
             # Print status:
-            if batch_idx % log_interval == 0:
+            if verbose and batch_idx % log_interval == 0:
                 batch_acc = correct_rate(outputs, targets)
-                print(cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, loss.item()))
+                progress_per, status_str = cmn.status_string(i_epoch, prm.num_epochs, batch_idx, n_batches, batch_acc, loss.item())
+                print(status_str)
 
     # -----------------------------------------------------------------------------------------------------------#
     # Update Log file

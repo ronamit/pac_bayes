@@ -172,19 +172,9 @@ def adjust_learning_rate_schedule(optimizer, epoch, initial_lr, decay_factor, de
 # -----------------------------------------------------------------------------------------------------------#
 
 def status_string(i_epoch, num_epochs, batch_idx, n_batches, batch_acc, loss_data):
-
     progress_per = 100. * (i_epoch * n_batches + batch_idx) / (n_batches * num_epochs)
-    # return ('({:2.1f}%)\tEpoch: {:3} \t Batch: {:4} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
-    #     progress_per, i_epoch, batch_idx, loss_data, batch_acc))
-    return ('({:2.1f}%)\tEpoch: {} \t Batch: {} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
-        progress_per, i_epoch, batch_idx, loss_data, float(batch_acc)))
-
-# def status_string_meta(i_epoch, prm, batch_acc, loss_data):
-#
-#     progress_per = 100. * (i_epoch ) / ( prm.num_epochs)
-#     return ('({:2.1f}%)\tEpoch: {:3} \t Objective: {:.4} \t  Acc: {:1.3}\t'.format(
-#         progress_per, i_epoch + 1, loss_data, batch_acc))
-
+    status_str = f'{progress_per:2.1f}%)\tEpoch: {i_epoch} \t Batch: {batch_idx} \t Objective: {loss_data:.4} \t  Acc: {float(batch_acc):1.3} \t'
+    return progress_per, status_str
 
 def get_model_string(model):
     return str(model.model_type) + '-' + str(model.model_name)  # + ':' + '-> '.join([m.__str__() for m in model._modules.values()])
