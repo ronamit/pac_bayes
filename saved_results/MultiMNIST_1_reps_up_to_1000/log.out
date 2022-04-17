@@ -1,7 +1,0 @@
-Run script: C:/Users/ronamit/PycharmProjects/pac_bayes/NonVacuous/nonvacuous_grid.py
-Log file created at  2022-04-17 11:15:58
-Parameters:
-Namespace(gpu_index=0, seed=1, test_batch_size=512, n_MC_eval=3, data_transform='None', limit_train_samples=0, model_name='OmConvNet_NoBN', batch_size=128, num_epochs=0, num_iter=1000, lr=0.002, device=device(type='cuda', index=0), log_var_init={'mean': -5, 'std': 0.1}, n_MC=1, optim_func=<class 'torch.optim.adam.Adam'>, optim_args={'lr': 0.002}, lr_schedule={}, test_type='Expected', complexity_type='New_PB', divergence_type='KL', delta=0.035, prior_log_var={'mean': -5, 'std': 0.1}, prior_mean={'mean': 0, 'std': 0.1}, posterior_init_noise=0.01, loss_type='CrossEntropy', data_source='MNIST', run_name='MultiMNIST_1_reps_up_to_1000', result_dir='saved\\MultiMNIST_1_reps_up_to_1000')
-----------------------------------------------------------------------
-Results dir: saved\MultiMNIST_1_reps_up_to_1000
---------------------------------------------------
