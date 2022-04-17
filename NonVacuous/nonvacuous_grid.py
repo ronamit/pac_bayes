@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function
 
 import argparse
@@ -37,27 +36,28 @@ parser.add_argument('--gpu_index', type=int,
                     help='The index of GPU device to run on',
                     default=0)
 
-parser.add_argument('--seed', type=int,  help='random seed',
+parser.add_argument('--seed', type=int, help='random seed',
                     default=1)
 
-parser.add_argument('--test-batch-size',type=int,  help='input batch size for testing (reduce if memory is limited)',
+parser.add_argument('--test-batch-size', type=int, help='input batch size for testing (reduce if memory is limited)',
                     default=512)
 
-parser.add_argument('--n_MC_eval',type=int,  help='number of monte-carlo runs for expected loss estimation and bound evaluation',
+parser.add_argument('--n_MC_eval', type=int,
+                    help='number of monte-carlo runs for expected loss estimation and bound evaluation',
                     default=3)
-
 
 # ----- Task Parameters ---------------------------------------------#
 
 # parser.add_argument('--data-source', type=str, help="Data: 'MNIST' / 'CIFAR10' / Omniglot / SmallImageNet / binarized_MNIST",
 #                     default='CIFAR10')
 
-parser.add_argument('--data-transform', type=str, help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
+parser.add_argument('--data-transform', type=str,
+                    help="Data transformation:  'None' / 'Permute_Pixels' / 'Permute_Labels'/ Shuffled_Pixels ",
                     default='None')
 
 parser.add_argument('--limit_train_samples', type=int,
                     help='Upper limit for the number of training samples (0 = unlimited)',
-                    default=0) # 0
+                    default=0)  # 0
 
 # ----- Algorithm Parameters ---------------------------------------------#
 
@@ -71,10 +71,10 @@ parser.add_argument('--batch-size', type=int, help='input batch size for trainin
                     default=512)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=50)  # 50
+                    default=100)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
-                    default=2e-3)
+                    default=1e-3)
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
@@ -85,8 +85,8 @@ parser.add_argument('--lr', type=float, help='learning rate (initial)',
 prm = parser.parse_args()
 prm.device = torch.device("cuda:" + str(prm.gpu_index) if torch.cuda.is_available() else "cpu")
 
-prm.log_var_init = {'mean': -5, 'std': 0.1} # The initial value for the log-var parameter (rho) of each weight of the posterior, in case init_from_prior==False
-
+prm.log_var_init = {'mean': -5,
+                    'std': 0.1}  # The initial value for the log-var parameter (rho) of each weight of the posterior, in case init_from_prior==False
 
 # Number of Monte-Carlo iterations (for re-parametrization trick):
 prm.n_MC = 1
@@ -96,7 +96,7 @@ prm.n_MC = 1
 # prm.randomness_full_epoch = 500000000
 
 #  Define optimizer:
-prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
+prm.optim_func, prm.optim_args = optim.Adam, {'lr': prm.lr}
 # prm.optim_func, prm.optim_args = optim.SGD, {'lr': prm.lr, 'momentum': 0.9}
 
 # Learning rate decay schedule:
@@ -104,18 +104,18 @@ prm.optim_func, prm.optim_args = optim.Adam,  {'lr': prm.lr}
 prm.lr_schedule = {}  # No decay
 
 # Test type:
-prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
+prm.test_type = 'Expected'  # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'New_PB'   # 'McAllester' / 'Seeger' / 'NoComplexity'
-prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr' /
-prm.delta = 0.035   # maximal probability that the bound does not hold
+prm.complexity_type = 'New_PB'  # 'McAllester' / 'Seeger' / 'NoComplexity'
+prm.divergence_type = 'KL'  # 'KL' / 'W_Sqr' /  'W_NoSqr' /
+prm.delta = 0.035  # maximal probability that the bound does not hold
 
 # prm.prior_log_var = -5
 # prm.prior_mean = 0
 prm.prior_log_var = {'mean': -5, 'std': 0.1}
 prm.prior_mean = {'mean': 0, 'std': 0.1}
-
+prm.posterior_init_noise = 1e-2
 
 # ##-------- Binary-class MNIST --------
 # run_name = 'BinMNIST_5k_grid_20_reps'
@@ -127,15 +127,14 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 # n_reps = 20
 
 
-#---------Multi-class MNIST  --------
+# ---------Multi-class MNIST  --------
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'MNIST'
-samp_grid_delta = 5000
-max_grid = 60000
+samp_grid_delta = 20
+max_grid = 1000
 loss_type_eval = 'Zero_One'
 n_reps = 1
-run_name = f'MultiMNIST_{n_reps}_reps'
-
+run_name = f'MultiMNIST_1_reps_up_to_1000'
 
 # # # ##---------CIFAR 10 --------
 # run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
@@ -151,12 +150,12 @@ run_name = f'MultiMNIST_{n_reps}_reps'
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
-train_samples_vec = samp_grid_delta * np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int)
+train_samples_vec = samp_grid_delta * np.arange(1, 1 + np.floor(max_grid / samp_grid_delta)).astype(int)
 
 val_types = [['train_loss'], ['test_loss'],
              ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL']]
-             # ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
-             # ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
+# ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
+# ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
 
 
 file_name = 'run_data.pkl'
@@ -175,7 +174,6 @@ if run_experiments:
 
     task_generator = data_gen.Task_Generator(prm)
 
-
     n_val_types = len(val_types)
     n_grid = len(train_samples_vec)
     val_mat = np.zeros((n_val_types, n_grid, n_reps))
@@ -183,9 +181,8 @@ if run_experiments:
     # -------------------------------------------------------------------------------------------
     #  Run grid
     # -------------------------------------------------------------------------------------------
-    prm_eval = deepcopy(prm) #   parameters for evaluation
+    prm_eval = deepcopy(prm)  # parameters for evaluation
     prm_eval.loss_type = loss_type_eval
-
 
     for i_grid, n_train_samples in enumerate(train_samples_vec):
 
@@ -199,12 +196,13 @@ if run_experiments:
 
             # Learn a posterior which minimizes some bound with the training loss function
             post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
-                                                                              init_from_prior=True, verbose=0)
+                                                                                       init_from_prior=True, verbose=0)
 
             # evaluation
             _, train_loss = run_eval_Bayes(post_model, data_loader['train'], prm_eval)
             _, test_loss = run_eval_Bayes(post_model, data_loader['test'], prm_eval)
-            write_to_log('n_samples: {}, rep: {}.  Train-loss :{:.4}, Test-loss:  {:.4}'.format(n_train_samples, i_rep, train_loss, test_loss),
+            write_to_log('n_samples: {}, rep: {}.  Train-loss :{:.4}, Test-loss:  {:.4}'.format(n_train_samples, i_rep,
+                                                                                                train_loss, test_loss),
                          prm)
 
             for i_val_type, val_type in enumerate(val_types):
@@ -216,7 +214,7 @@ if run_experiments:
                     prm_eval.complexity_type = val_type[1]
                     prm_eval.divergence_type = val_type[2]
                     val = learn_single_Bayes.eval_bound(post_model, prior_model, data_loader, prm_eval, train_loss)
-                    write_to_log(str(val_type)+' = '+str(val), prm)
+                    write_to_log(str(val_type) + ' = ' + str(val), prm)
                 elif val_type[0] == 'Divergence':
                     prm_eval.divergence_type = val_type[1]
                     val = get_net_densities_divergence(prior_model, post_model, prm_eval)
@@ -229,7 +227,8 @@ if run_experiments:
     # end grid loop
 
     # Saving the analysis:
-    save_run_data(prm, {'val_mat': val_mat, 'loss_type_eval': loss_type_eval, 'train_samples_vec': train_samples_vec, 'val_types': val_types})
+    save_run_data(prm, {'val_mat': val_mat, 'loss_type_eval': loss_type_eval, 'train_samples_vec': train_samples_vec,
+                        'val_types': val_types})
 
 else:
     loaded_prm, loaded_dict = load_saved_vars(prm.result_dir)
@@ -238,15 +237,12 @@ else:
     # get learned posterior and results
     val_mat, loss_type_eval, train_samples_vec, val_types = loaded_dict.values()
 
-
-
 # end if run_experiments
 
 
 val_types_for_show = [['train_loss'], ['test_loss'],
-             ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL'],
-             ['Bound', 'Seeger', 'KL']]
-
+                      ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL'],
+                      ['Bound', 'Seeger', 'KL']]
 
 # val_types_for_show = [['train_loss'], ['test_loss'],
 #              ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
@@ -271,6 +267,6 @@ plt.ylabel(loss_type_eval)
 plt.legend()
 plt.title(prm.run_name)
 # plt.savefig(root_saved_dir + base_run_name+'.pdf', format='pdf', bbox_inches='tight')
-plt.ylim([0, 0.2])
+# plt.ylim([0, 0.2])
 plt.grid()
 plt.show()

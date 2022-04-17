@@ -75,12 +75,11 @@ class Task_Generator(object):
         elif self.data_source == 'CIFAR10':
             train_dataset, test_dataset = load_CIFAR(final_input_trans, target_trans, prm)
 
-        elif self.data_source == 'Sinusoid':
-            pass
-            # task_param = create_sinusoid_task()
-            # train_dataset = create_sinusoid_data(task_param, n_samples=10)
-            # test_dataset = create_sinusoid_data(task_param, n_samples=100)
-
+        # elif self.data_source == 'Sinusoid':
+        #     pass
+        #     # task_param = create_sinusoid_task()
+        #     # train_dataset = create_sinusoid_data(task_param, n_samples=10)
+        #     # test_dataset = create_sinusoid_data(task_param, n_samples=100)
 
         elif self.data_source == 'SmallImageNet':
             labels_in_split = self.class_split[meta_split]  # list of chars dirs  for current meta-split
@@ -324,15 +323,20 @@ def reduce_train_set(train_dataset, limit_train_samples):
     # Limit the training samples :
     n_train_samples_orig = len(train_dataset)
     if limit_train_samples and limit_train_samples < n_train_samples_orig:
-        if isinstance(train_dataset.data, np.ndarray):
-            sampled_inds = np.random.permutation(n_train_samples_orig)[:limit_train_samples]
-            train_dataset.data = train_dataset.data[sampled_inds]
-            train_dataset.labels = np.array(train_dataset.labels)[sampled_inds]
-        else:
-            sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples]
-            train_dataset = torch.utils.data.Subset(train_dataset, sampled_inds)
-            # train_dataset.train_data = train_dataset.train_data[sampled_inds]
-            # train_dataset.train_labels = train_dataset.train_labels[sampled_inds]
+
+        indices = torch.randperm(n_train_samples_orig)[:limit_train_samples]
+        train_dataset = data_utils.Subset(train_dataset, indices)
+        print(f'Dataset reduced to {len(train_dataset)} samples')
+
+        # if isinstance(train_dataset.data, np.ndarray):
+        #     sampled_inds = np.random.permutation(n_train_samples_orig)[:limit_train_samples]
+        #     train_dataset.data = train_dataset.data[sampled_inds]
+        #     train_dataset.labels = np.array(train_dataset.labels)[sampled_inds]
+        # else:
+        #     sampled_inds = torch.randperm(n_train_samples_orig)[:limit_train_samples]
+        #     train_dataset = torch.utils.data.Subset(train_dataset, sampled_inds)
+        #     # train_dataset.train_data = train_dataset.train_data[sampled_inds]
+        #     # train_dataset.train_labels = train_dataset.train_labels[sampled_inds]
     return train_dataset
 # -----------------------------------------------------------------------------------------------------------#
 # Sinusoid Regression

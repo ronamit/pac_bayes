@@ -1,0 +1,67 @@
+Run script: C:/Users/ronamit/PycharmProjects/Meta_PyTorch/NonVacuous/nonvacuous_grid.py
+Log file created at  2022-04-17 07:16:29
+Parameters:
+Namespace(gpu_index=0, seed=1, test_batch_size=512, n_MC_eval=3, data_transform='None', limit_train_samples=0, model_name='OmConvNet_NoBN', batch_size=512, num_epochs=100, lr=0.001, device=device(type='cuda', index=0), log_var_init={'mean': -5, 'std': 0.1}, n_MC=1, optim_func=<class 'torch.optim.adam.Adam'>, optim_args={'lr': 0.001}, lr_schedule={}, test_type='Expected', complexity_type='New_PB', divergence_type='KL', delta=0.035, prior_log_var={'mean': -5, 'std': 0.1}, prior_mean={'mean': 0, 'std': 0.1}, posterior_init_noise=0.01, loss_type='CrossEntropy', data_source='MNIST', run_name='MultiMNIST_1_reps', result_dir='saved\\MultiMNIST_1_reps')
+----------------------------------------------------------------------
+Results dir: saved\MultiMNIST_1_reps
+--------------------------------------------------
+n_samples: 100, rep: 0.  Train-loss :0.65, Test-loss:  0.7244
+['Bound', 'Classic_PB', 'KL'] = 3.5791841983795165
+['Bound', 'New_PB', 'KL'] = 1.6716116905212401
+n_samples: 200, rep: 0.  Train-loss :0.5667, Test-loss:  0.5969
+['Bound', 'Classic_PB', 'KL'] = 2.7488210837046303
+['Bound', 'New_PB', 'KL'] = 1.5783371369043986
+n_samples: 300, rep: 0.  Train-loss :0.6044, Test-loss:  0.6477
+['Bound', 'Classic_PB', 'KL'] = 2.357864082124498
+['Bound', 'New_PB', 'KL'] = 1.6125630739000107
+n_samples: 400, rep: 0.  Train-loss :0.67, Test-loss:  0.701
+['Bound', 'Classic_PB', 'KL'] = 1.4216989707946777
+['Bound', 'New_PB', 'KL'] = 1.4216989707946777
+n_samples: 500, rep: 0.  Train-loss :0.6213, Test-loss:  0.6238
+['Bound', 'Classic_PB', 'KL'] = 1.3442591751416524
+['Bound', 'New_PB', 'KL'] = 1.3442591751416524
+n_samples: 600, rep: 0.  Train-loss :0.3594, Test-loss:  0.3846
+['Bound', 'Classic_PB', 'KL'] = 1.30870283153322
+['Bound', 'New_PB', 'KL'] = 1.30870283153322
+n_samples: 700, rep: 0.  Train-loss :0.3767, Test-loss:  0.3924
+['Bound', 'Classic_PB', 'KL'] = 1.2779920713106792
+['Bound', 'New_PB', 'KL'] = 1.2779920713106792
+n_samples: 800, rep: 0.  Train-loss :0.3571, Test-loss:  0.3743
+['Bound', 'Classic_PB', 'KL'] = 1.2219014890988666
+['Bound', 'New_PB', 'KL'] = 1.2219014890988666
+n_samples: 900, rep: 0.  Train-loss :0.343, Test-loss:  0.3486
+['Bound', 'Classic_PB', 'KL'] = 1.2115990346449392
+['Bound', 'New_PB', 'KL'] = 1.2115990346449392
+n_samples: 1000, rep: 0.  Train-loss :0.3737, Test-loss:  0.3602
+['Bound', 'Classic_PB', 'KL'] = 1.1593614446322122
+['Bound', 'New_PB', 'KL'] = 1.1593614446322122
+n_samples: 1100, rep: 0.  Train-loss :0.233, Test-loss:  0.2452
+['Bound', 'Classic_PB', 'KL'] = 1.0933153467467336
+['Bound', 'New_PB', 'KL'] = 1.0933153467467336
+n_samples: 1200, rep: 0.  Train-loss :0.1883, Test-loss:  0.2094
+['Bound', 'Classic_PB', 'KL'] = 1.0400436528523762
+['Bound', 'New_PB', 'KL'] = 1.0400436528523762
+n_samples: 1300, rep: 0.  Train-loss :0.1808, Test-loss:  0.2011
+['Bound', 'Classic_PB', 'KL'] = 1.0399630326491136
+['Bound', 'New_PB', 'KL'] = 1.0399630326491136
+n_samples: 1400, rep: 0.  Train-loss :0.151, Test-loss:  0.186
+['Bound', 'Classic_PB', 'KL'] = 1.0081395924659002
+['Bound', 'New_PB', 'KL'] = 1.0081395924659002
+n_samples: 1500, rep: 0.  Train-loss :0.1858, Test-loss:  0.1992
+['Bound', 'Classic_PB', 'KL'] = 0.9994082394705879
+['Bound', 'New_PB', 'KL'] = 0.9994082394705879
+n_samples: 1600, rep: 0.  Train-loss :0.1729, Test-loss:  0.1768
+['Bound', 'Classic_PB', 'KL'] = 0.9887128035227457
+['Bound', 'New_PB', 'KL'] = 0.9887128035227457
+n_samples: 1700, rep: 0.  Train-loss :0.1551, Test-loss:  0.1589
+['Bound', 'Classic_PB', 'KL'] = 0.9697901192365908
+['Bound', 'New_PB', 'KL'] = 0.9697901192365908
+n_samples: 1800, rep: 0.  Train-loss :0.1457, Test-loss:  0.1634
+['Bound', 'Classic_PB', 'KL'] = 0.9672024182920103
+['Bound', 'New_PB', 'KL'] = 0.9672024182920103
+n_samples: 1900, rep: 0.  Train-loss :0.1679, Test-loss:  0.1646
+['Bound', 'Classic_PB', 'KL'] = 0.9332378068723177
+['Bound', 'New_PB', 'KL'] = 0.9332378068723177
+n_samples: 2000, rep: 0.  Train-loss :0.1482, Test-loss:  0.1471
+['Bound', 'Classic_PB', 'KL'] = 0.9080599052111308
+['Bound', 'New_PB', 'KL'] = 0.9080599052111308

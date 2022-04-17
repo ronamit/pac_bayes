@@ -41,7 +41,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     if prior_model and init_from_prior:
         # init from prior model:
         post_model = deepcopy(prior_model).to(prm.device)
-        add_noise_to_model(post_model, 1e-4)  # ADD small NOISE SO THAT divegence wont be zero
+        add_noise_to_model(post_model, prm.posterior_init_noise)  # ADD small NOISE SO THAT divegence wont be zero
         for param in post_model.parameters():
             param.requires_grad = True
     else:

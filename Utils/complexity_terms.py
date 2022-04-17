@@ -12,43 +12,10 @@ from Utils.common import net_weights_magnitude, count_correct
 # -----------------------------------------------------------------------------------------------------------#
 
 
-def get_hyper_divergnce(prm, prior_model):   # corrected
-    ''' calculates a divergence between hyper-prior and hyper-posterior....
-     which is, in our case, just a regularization term over the prior parameters  '''
-
-    # Note:  the hyper-prior is N(0, kappa_prior^2 * I)
-    # Note:  the hyper-posterior is N(parameters-of-prior-distribution, kappa_post^2 * I)
-
-    kappa_post = prm.kappa_post
-    kappa_prior = prm.kappa_prior
-
-    if prm.divergence_type == 'KL':
-        # KLD between hyper-posterior and hyper-prior:
-        norm_sqr = net_weights_magnitude(prior_model, prm, p=2)
-        hyper_dvrg = (norm_sqr + kappa_post**2) / (2 * kappa_prior**2) + math.log(kappa_prior / kappa_post) - 1/2
-
-    elif prm.divergence_type == 'W_NoSqr':
-        d = prior_model.weights_count
-        hyper_dvrg = torch.sqrt(net_weights_magnitude(prior_model, prm, p=2) + d * (kappa_prior - kappa_post) ** 2)
-
-    elif prm.divergence_type == 'W_Sqr':
-        d = prior_model.weights_count
-        hyper_dvrg = net_weights_magnitude(prior_model, prm, p=2) + d * (kappa_prior - kappa_post) ** 2
-
-    else:
-        raise ValueError('Invalid prm.divergence_type')
-
-    assert hyper_dvrg >= 0
-    return hyper_dvrg
-
 
 # -----------------------------------------------------------------------------------------------------------#
 
-
-# -----------------------------------------------------------------------------------------------------------#
-
-
-def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, hyper_dvrg=0, n_train_tasks=1, dvrg=None, noised_prior=False):   # corrected
+def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_loss, dvrg=None, noised_prior=False):   # corrected
     #  Intra-task complexity for posterior distribution
 
     complexity_type = prm.complexity_type
@@ -64,21 +31,21 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     elif prm.complexity_type in {'McAllester', 'Classic_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-        complex_term = torch.sqrt((hyper_dvrg + dvrg + math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1)))  # corrected
+        complex_term = torch.sqrt((dvrg + math.log(2 * n_samples / delta)) / (2 * (n_samples - 1)))  # corrected
 
     elif prm.complexity_type in { 'New_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-        kl = hyper_dvrg + dvrg
-        classic_pb = (kl + math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
-        pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
-        bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples * n_train_tasks / delta)) / (2 * (n_samples - 1))
+        kl = dvrg
+        classic_pb = (kl + math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
+        pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
+        bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
         sqrt_arg = torch.minimum(classic_pb, pinsker_pb)
         sqrt_arg = torch.minimum(sqrt_arg, bh_pb)
         complex_term = torch.sqrt(sqrt_arg)
 
     elif prm.complexity_type == 'Seeger':
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-        seeger_eps = (dvrg + hyper_dvrg + math.log(2 * n_train_tasks * math.sqrt(n_samples) / delta)) / n_samples # corrected
+        seeger_eps = (dvrg + math.log(2 * math.sqrt(n_samples) / delta)) / n_samples  # corrected
 
         sqrt_arg = 2 * seeger_eps * avg_empiric_loss
         # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
@@ -87,26 +54,7 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
     elif prm.complexity_type == 'Catoni':
         # See "From PAC-Bayes Bounds to KL Regularization" Germain 2009
         # & Olivier Catoni. PAC-Bayesian surpevised classification: the thermodynamics of statistical learning
-        complex_term = avg_empiric_loss + (2 / n_samples) * (hyper_dvrg + dvrg + math.log(n_train_tasks/ delta))  # corrected
-
-
-    # elif prm.complexity_type == 'Seeger2':
-    #     # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
-    #     seeger_eps = (1 / (n_samples - 1)) * (div + hyper_dvrg + math.log(n_samples / delta))
-    #     sqrt_arg = 2 * seeger_eps * avg_empiric_loss
-    #     # sqrt_arg = F.relu(sqrt_arg)  # prevent negative values due to numerical errors
-    #     complex_term = 2 * seeger_eps + torch.sqrt(sqrt_arg)
-
-
-    elif complexity_type == 'PAC_Bayes_Pentina':
-        complex_term = math.sqrt(1 / n_samples) * dvrg + hyper_dvrg * (1 / (n_train_tasks * math.sqrt(n_samples)))
-
-    elif complexity_type == 'Variational_Bayes':
-        # Since we approximate the expectation of the likelihood of all samples,
-        # we need to multiply by the average empirical loss by total number of samples
-        # this will be done later
-        complex_term = dvrg
-
+        complex_term = avg_empiric_loss + (2 / n_samples) * (dvrg + math.log(1 / delta))  # corrected
 
     else:
         raise ValueError('Invalid complexity_type')
