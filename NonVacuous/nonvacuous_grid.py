@@ -131,10 +131,10 @@ prm.posterior_init_noise = 1e-2
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'MNIST'
 samp_grid_delta = 20
-max_grid = 1000
-loss_type_eval = 'Zero_One'
+max_grid = 500
+loss_type_eval = 'CrossEntropy'
 n_reps = 1
-run_name = f'MultiMNIST_1_reps_up_to_1000'
+run_name = f'MultiMNIST_1_reps_up_to_1000_CrossEntropy'
 
 # # # ##---------CIFAR 10 --------
 # run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
@@ -147,7 +147,7 @@ run_name = f'MultiMNIST_1_reps_up_to_1000'
 
 
 # Run params:
-run_experiments = True  # True/False If false, just analyze the previously saved experiments
+run_experiments = False  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
 train_samples_vec = samp_grid_delta * np.arange(1, 1 + np.floor(max_grid / samp_grid_delta)).astype(int)
