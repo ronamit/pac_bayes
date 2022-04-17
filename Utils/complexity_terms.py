@@ -44,27 +44,7 @@ def get_hyper_divergnce(prm, prior_model):   # corrected
 
 # -----------------------------------------------------------------------------------------------------------#
 
-def get_meta_complexity_term(hyper_kl, prm, n_train_tasks):   # corrected
-    if n_train_tasks == 0:
-        meta_complex_term = 0.0  # infinite tasks case
-    else:
-        if prm.complexity_type in {'McAllester', 'Seeger'}:
-            delta = prm.delta
-            meta_complex_term = torch.sqrt(
-                (hyper_kl + math.log(2 * n_train_tasks / delta)) / (2 * (n_train_tasks - 1)))  # corrected
 
-        elif prm.complexity_type == 'PAC_Bayes_Pentina':
-            meta_complex_term = hyper_kl / math.sqrt(n_train_tasks)
-
-        elif prm.complexity_type == 'Variational_Bayes':
-            meta_complex_term = hyper_kl
-
-        elif prm.complexity_type == 'NoComplexity':
-            meta_complex_term = 0.0
-
-        else:
-            raise ValueError('Invalid complexity_type')
-    return meta_complex_term
 # -----------------------------------------------------------------------------------------------------------#
 
 
@@ -80,7 +60,7 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
 
     if complexity_type == 'NoComplexity':
         # set as zero
-        complex_term = torch.zeros(1, requires_grad=False, device=prm.device)
+        complex_term = torch.tensor(0.,  device=prm.device)
 
     elif prm.complexity_type in {'McAllester', 'Classic_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
@@ -188,7 +168,7 @@ def  get_dvrg_element(post, prior, prm, noised_prior=False):
 # -------------------------------------------------------------------------------------------
 
 def add_noise(param, std):
-    return param + Variable(param.data.new(param.size()).normal_(0, std), requires_grad=False)
+    param += torch.randn_like(param) * std
 # -------------------------------------------------------------------------------------------
 
 def add_noise_to_model(model, std):

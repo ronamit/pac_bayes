@@ -39,7 +39,7 @@ def count_weights(model):
 #  -------------------------------------------------------------------------------------------
 #  Main function
 #  -------------------------------------------------------------------------------------------
-def get_model(prm, model_type='Stochastic'):
+def get_model(prm, model_type='Stochastic', requires_grad=True):
 
     model_name = prm.model_name
 
@@ -101,6 +101,8 @@ def get_model(prm, model_type='Stochastic'):
     # if hasattr(prm, 'override_eps_std'):
     #     model.set_eps_std(prm.override_eps_std)  # debug
 
+    for param in model.parameters():
+        param.requires_grad = requires_grad
     return model
 
 

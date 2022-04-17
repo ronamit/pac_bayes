@@ -107,7 +107,7 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger' / 'NoComplexity'
+prm.complexity_type = 'New_PB'   # 'McAllester' / 'Seeger' / 'NoComplexity'
 prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr' /
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
@@ -175,9 +175,6 @@ if run_experiments:
 
     task_generator = data_gen.Task_Generator(prm)
 
-    #  Create Prior
-    prior_model = get_model(prm)
-    set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 
     n_val_types = len(val_types)
     n_grid = len(train_samples_vec)
@@ -195,6 +192,10 @@ if run_experiments:
         for i_rep in range(n_reps):
             # Generate task data set:
             data_loader = task_generator.get_data_loader(prm, limit_train_samples=n_train_samples)
+
+            #  Create Prior
+            prior_model = get_model(prm, requires_grad=False)
+            set_model_values(prior_model, prm.prior_mean, prm.prior_log_var)
 
             # Learn a posterior which minimizes some bound with the training loss function
             post_model, test_err, test_loss, log_mat = learn_single_Bayes.run_learning(data_loader, prm, prior_model,
@@ -243,8 +244,8 @@ else:
 
 
 val_types_for_show = [['train_loss'], ['test_loss'],
-             ['Bound', 'McAllester', 'KL'], ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
-             ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]
+             ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL'],
+             ['Bound', 'Seeger', 'KL']]
 
 
 # val_types_for_show = [['train_loss'], ['test_loss'],

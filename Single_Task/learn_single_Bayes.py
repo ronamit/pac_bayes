@@ -9,7 +9,7 @@ import numpy as np
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_eval_Bayes
-from Utils.complexity_terms import get_task_complexity
+from Utils.complexity_terms import get_task_complexity, add_noise_to_model
 from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
 import matplotlib.pyplot as plt
@@ -41,6 +41,9 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     if prior_model and init_from_prior:
         # init from prior model:
         post_model = deepcopy(prior_model).to(prm.device)
+        add_noise_to_model(post_model, 1e-4)  # ADD small NOISE SO THAT divegence wont be zero
+        for param in post_model.parameters():
+            param.requires_grad = True
     else:
         post_model = get_model(prm)
 
@@ -129,7 +132,7 @@ def run_learning(data_loader, prm, prior_model=None, init_from_prior=True, verbo
     for i_epoch in range(prm.num_epochs):
         run_train_epoch(i_epoch, log_mat)
 
-    # evaluate final perfomance on train-set
+    # evaluate final performance on train-set
     train_acc, train_loss = run_eval_Bayes(post_model, train_loader, prm)
 
     # Test:
