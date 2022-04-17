@@ -65,16 +65,16 @@ parser.add_argument('--limit_train_samples', type=int,
 #                     default='CrossEntropy')
 
 parser.add_argument('--model-name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
+                    default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch-size', type=int, help='input batch size for training',
-                    default=128)
+                    default=512)
 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train',
-                    default=100)  # 50
+                    default=50)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
-                    default=1e-3)
+                    default=2e-3)
 
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
@@ -107,7 +107,7 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected' # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'NoComplexity'  # 'McAllester' / 'Seeger' / 'NoComplexity'
+prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger' / 'NoComplexity'
 prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr' /
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
