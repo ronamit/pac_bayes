@@ -118,23 +118,23 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 prm.posterior_init_noise = 1e-2
 
 ##-------- Binary-class MNIST --------
-run_name = 'BinMNIST'
-prm.loss_type = 'Logistic_binary'
-prm.data_source = 'binarized_MNIST'
-samp_grid_delta = 50
-max_grid = 500
-loss_type_eval = 'Zero_One'
-n_reps = 1
-
-
-# # ---------Multi-class MNIST  --------
-# prm.loss_type = 'CrossEntropy'
-# prm.data_source = 'MNIST'    #
-# samp_grid_delta = 20
-# max_grid = 400
+# run_name = 'BinMNIST'
+# prm.loss_type = 'Logistic_binary'
+# prm.data_source = 'binarized_MNIST'
+# samp_grid_delta = 50
+# max_grid = 500
 # loss_type_eval = 'Zero_One'
 # n_reps = 1
-# run_name = f'MultiMNIST_1_reps_up_to_400'
+
+
+# ---------Multi-class MNIST  --------
+prm.loss_type = 'CrossEntropy'
+prm.data_source = 'MNIST'    #
+samp_grid_delta = 50
+max_grid = 800
+loss_type_eval = 'Zero_One'
+n_reps = 1
+run_name = f'MultiMNIST_1_reps_up_to_800'
 
 # # # ##---------CIFAR 10 --------
 # run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
