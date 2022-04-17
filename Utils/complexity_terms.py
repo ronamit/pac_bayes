@@ -33,12 +33,13 @@ def get_task_complexity(prm, prior_model, post_model, n_samples, avg_empiric_los
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         complex_term = torch.sqrt((dvrg + math.log(2 * n_samples / delta)) / (2 * (n_samples - 1)))  # corrected
 
-    elif prm.complexity_type in { 'New_PB'}:
+    elif prm.complexity_type in {'New_PB'}:
         # According to 'Simplified PAC-Bayesian Margin Bounds', McAllester 2003
         kl = dvrg
-        classic_pb = (kl + math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
-        pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
-        bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples / delta)) / (2 * (n_samples - 1))
+        delta_ub = delta/2
+        classic_pb = (kl + math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
+        pinsker_pb = torch.sqrt(0.5 * kl) + (math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
+        bh_pb = torch.sqrt(1 - torch.exp(-kl)) + (math.log(2 * n_samples / delta_ub)) / (2 * (n_samples - 1))
         sqrt_arg = torch.minimum(classic_pb, pinsker_pb)
         sqrt_arg = torch.minimum(sqrt_arg, bh_pb)
         complex_term = torch.sqrt(sqrt_arg)
