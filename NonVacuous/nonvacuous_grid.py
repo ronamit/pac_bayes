@@ -130,7 +130,6 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 #---------Multi-class MNIST  --------
 prm.loss_type = 'CrossEntropy'
 prm.data_source = 'MNIST'
-min_grid = 5
 samp_grid_delta = 5000
 max_grid = 60000
 loss_type_eval = 'Zero_One'
@@ -152,7 +151,7 @@ run_name = f'MultiMNIST_{n_reps}_reps'
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
 
 # grid parameters:
-train_samples_vec = np.arange(min_grid, 1 + np.floor(max_grid/samp_grid_delta)).astype(int) * samp_grid_delta
+train_samples_vec = samp_grid_delta * np.arange(1, 1 + np.floor(max_grid/samp_grid_delta)).astype(int)
 
 val_types = [['train_loss'], ['test_loss'],
              ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL']]
