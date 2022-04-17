@@ -63,7 +63,7 @@ parser.add_argument('--limit_train_samples', type=int,
 #                     default='CrossEntropy')
 
 parser.add_argument('--model_name', type=str, help="Define model type (hypothesis class)'",
-                    default='OmConvNet_NoBN')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
+                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch_size', type=int, help='input batch size for training',
                     default=512)
@@ -117,24 +117,24 @@ prm.prior_log_var = {'mean': -5, 'std': 0.1}
 prm.prior_mean = {'mean': 0, 'std': 0.1}
 prm.posterior_init_noise = 1e-2
 
-# ##-------- Binary-class MNIST --------
-# run_name = 'BinMNIST_5k_grid_20_reps'
-# prm.loss_type = 'Logistic_binary'
-# prm.data_source = 'binarized_MNIST'
-# samp_grid_delta = 5000
-# max_grid = 60000
-# loss_type_eval = 'Zero_One'
-# n_reps = 20
-
-
-# ---------Multi-class MNIST  --------
-prm.loss_type = 'CrossEntropy'
-prm.data_source = 'MNIST'
-samp_grid_delta = 20
-max_grid = 400
+##-------- Binary-class MNIST --------
+run_name = 'BinMNIST'
+prm.loss_type = 'Logistic_binary'
+prm.data_source = 'binarized_MNIST'
+samp_grid_delta = 50
+max_grid = 500
 loss_type_eval = 'Zero_One'
 n_reps = 1
-run_name = f'MultiMNIST_1_reps_up_to_400'
+
+
+# # ---------Multi-class MNIST  --------
+# prm.loss_type = 'CrossEntropy'
+# prm.data_source = 'MNIST'    #
+# samp_grid_delta = 20
+# max_grid = 400
+# loss_type_eval = 'Zero_One'
+# n_reps = 1
+# run_name = f'MultiMNIST_1_reps_up_to_400'
 
 # # # ##---------CIFAR 10 --------
 # run_name = 'CIFAR10_5k_grid_20_reps_100_Epochs_NewPrior_NoBN'
