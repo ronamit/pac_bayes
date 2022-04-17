@@ -103,8 +103,8 @@ prm.lr_schedule = {}  # No decay
 prm.test_type = 'Expected'  # 'MaxPosterior' / 'MajorityVote' / 'Expected'
 
 # Learning objective parameters
-prm.complexity_type = 'McAllester'  # 'McAllester' / 'Seeger'
-prm.divergence_type = 'W_Sqr'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
+prm.complexity_type = 'NoComplexity'  # 'McAllester' / 'Seeger' / 'NoComplexity'
+prm.divergence_type = 'KL'    # 'KL' / 'W_Sqr' /  'W_NoSqr'
 prm.delta = 0.035   # maximal probability that the bound does not hold
 
 prm.prior_log_var = {'mean': -5, 'std': 0.1}
