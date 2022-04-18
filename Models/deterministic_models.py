@@ -1,15 +1,17 @@
 #
 # the code is inspired by: https://github.com/katerakelly/pytorch-maml
 
-from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from Utils import data_gen
+
 from Models.layer_inits import init_layers
+from Utils import data_gen
 from Utils.common import list_mult
+
+
 # -------------------------------------------------------------------------------------------
 # Main function
 # -------------------------------------------------------------------------------------------

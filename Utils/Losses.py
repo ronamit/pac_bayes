@@ -1,10 +1,13 @@
-from __future__ import absolute_import, division, print_function
+
+import math
 
 import torch
-from torch.nn.modules.module import Module
 import torch.nn as nn
-import math
+from torch.nn.modules.module import Module
+
 from Utils.data_gen import get_info
+
+
 # -----------------------------------------------------------------------------------------------------------#
 # Returns loss function
 # -----------------------------------------------------------------------------------------------------------#

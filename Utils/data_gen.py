@@ -1,14 +1,16 @@
 
-from __future__ import absolute_import, division, print_function
 
-import torch
-from torchvision import datasets, transforms
-import torch.utils.data as data_utils
-import os
-import numpy as np
-from Utils import omniglot
-from Utils import imagenet_data
 import multiprocessing
+import os
+
+import numpy as np
+import torch
+import torch.utils.data as data_utils
+from torchvision import datasets, transforms
+
+from Utils import imagenet_data
+from Utils import omniglot
+
 
 # -------------------------------------------------------------------------------------------
 #  Task generator class

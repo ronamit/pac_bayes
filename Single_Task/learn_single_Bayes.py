@@ -1,15 +1,17 @@
 import math
 import timeit
 from copy import deepcopy
-import torch
+
+import matplotlib.pyplot as plt
 import numpy as np
+import torch
+
 from Models.stochastic_models import get_model
 from Utils import common as cmn, data_gen
 from Utils.Bayes_utils import run_eval_Bayes
-from Utils.complexity_terms import get_task_complexity, add_noise_to_model
-from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
-import matplotlib.pyplot as plt
+from Utils.common import grad_step, correct_rate, write_to_log
+from Utils.complexity_terms import get_task_complexity, add_noise_to_model
 
 
 # -------------------------------------------------------------------------------------------

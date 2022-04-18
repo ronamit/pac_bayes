@@ -1,12 +1,11 @@
 
-from __future__ import absolute_import, division, print_function
 
 import torch
-from Utils import common as cmn, data_gen
-from Utils.common import count_correct
-from Models.stochastic_layers import StochasticLayer
-from Utils.Losses import get_loss_func
 
+from Models.stochastic_layers import StochasticLayer
+from Utils import common as cmn, data_gen
+from Utils.Losses import get_loss_func
+from Utils.common import count_correct
 
 
 # -----------------------------------------------------------------------------------------------------------#

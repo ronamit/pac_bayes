@@ -1,13 +1,14 @@
 
-from __future__ import absolute_import, division, print_function
 
 import argparse
+
 import torch
 import torch.optim as optim
+
+from Data_Path import get_data_path
+from Single_Task import learn_single_Bayes
 from Utils import data_gen
 from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log
-from Single_Task import learn_single_Bayes
-from Data_Path import get_data_path
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 

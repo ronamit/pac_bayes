@@ -1,15 +1,15 @@
-from __future__ import absolute_import, division, print_function
 
 import argparse
 from copy import deepcopy
+
 import numpy as np
 import torch
 import torch.optim as optim
 
-from Single_Task import learn_single_Bayes, learn_single_standard
-from Utils.data_gen import Task_Generator
-from Utils.common import write_to_log, set_random_seed, create_result_dir, save_run_data
 from Data_Path import get_data_path
+from Single_Task import learn_single_Bayes, learn_single_standard
+from Utils.common import write_to_log, set_random_seed, create_result_dir, save_run_data
+from Utils.data_gen import Task_Generator
 
 torch.backends.cudnn.benchmark = True # For speed improvement with convnets with fixed-length inputs - https://discuss.pytorch.org/t/pytorch-performance/3079/7
 

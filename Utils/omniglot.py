@@ -1,15 +1,15 @@
 
-from __future__ import absolute_import, division, print_function
 
+import errno
 import os
 import os.path
-import errno
 import random
-from PIL import Image
-import torch.utils.data as data
-from torchvision.transforms.functional import to_tensor
+
 import numpy as np
 import torch
+import torch.utils.data as data
+from PIL import Image
+from torchvision.transforms.functional import to_tensor
 
 
 # Based on code from:

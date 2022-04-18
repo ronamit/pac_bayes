@@ -1,18 +1,20 @@
 
 
 
-from __future__ import absolute_import, division, print_function
 
-from datetime import datetime
 import os
-import torch.nn as nn
-import torch
-import numpy as np
+import pickle
 import random
 import sys
-import pickle
-from Utils.data_gen import get_info
+from datetime import datetime
 from functools import reduce
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+from Utils.data_gen import get_info
+
 
 # -----------------------------------------------------------------------------------------------------------#
 # General auxilary functions

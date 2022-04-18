@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib.patches import Ellipse
 import torch
 import torch.optim as optim
+from matplotlib import pyplot as plt
+from matplotlib.patches import Ellipse
 
 
 def learn(data_set, complexity_type):

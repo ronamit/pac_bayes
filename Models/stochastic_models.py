@@ -1,15 +1,15 @@
 #
 # the code is inspired by: https://github.com/katerakelly/pytorch-maml
 
-from __future__ import absolute_import, division, print_function
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from Models.layer_inits import init_layers
+from Models.stochastic_layers import StochasticLinear, StochasticConv2d, StochasticLayer
 from Utils import data_gen
 from Utils.common import list_mult
-from Models.stochastic_layers import StochasticLinear, StochasticConv2d, StochasticLayer
-from Models.layer_inits import init_layers
 
 
 # -------------------------------------------------------------------------------------------

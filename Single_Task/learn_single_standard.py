@@ -1,12 +1,11 @@
 
-from __future__ import absolute_import, division, print_function
 
 import timeit
 
 from Models.deterministic_models import get_model
 from Utils import common as cmn, data_gen
-from Utils.common import count_correct, grad_step, correct_rate, write_to_log
 from Utils.Losses import get_loss_func
+from Utils.common import count_correct, grad_step, correct_rate, write_to_log
 
 
 def run_learning(data_loader, prm, verbose=1, initial_model=None):

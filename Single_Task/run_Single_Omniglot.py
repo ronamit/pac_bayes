@@ -1,7 +1,5 @@
-from subprocess import call
 import os
-
-
+from subprocess import call
 
 call(['python', 'main_single_standard.py',
       '--run-name', 'Omniglot_single',

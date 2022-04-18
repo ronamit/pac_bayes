@@ -1,10 +1,11 @@
-from __future__ import absolute_import, division, print_function
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from Models.stochastic_inits import init_stochastic_conv2d, init_stochastic_linear
 from Utils.common import list_mult
+
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic linear layer

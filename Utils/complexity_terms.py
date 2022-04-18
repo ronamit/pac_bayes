@@ -1,11 +1,12 @@
-from __future__ import absolute_import, division, print_function
+
+import math
 
 import torch
-from torch.autograd import Variable
-import math
-from Utils import common as cmn
 import torch.nn.functional as F
+from torch.autograd import Variable
+
 from Models.stochastic_layers import StochasticLayer
+from Utils import common as cmn
 from Utils.common import net_weights_magnitude, count_correct
 
 

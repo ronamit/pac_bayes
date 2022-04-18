@@ -1,9 +1,9 @@
-from __future__ import absolute_import, division, print_function
 
-import numpy as np
 import matplotlib
+import numpy as np
 from matplotlib import pyplot as plt
-from Utils.common import  set_random_seed
+
+from Utils.common import set_random_seed
 
 matplotlib.rcParams.update({'font.size': 10})
 matplotlib.rcParams.update({'lines.linewidth': 2})

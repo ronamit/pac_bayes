@@ -1,14 +1,15 @@
 
-from __future__ import absolute_import, division, print_function
 
 import argparse
 import os
+
 import torch
 import torch.optim as optim
+
+from Data_Path import get_data_path
+from Single_Task import learn_single_standard
 from Utils import data_gen
 from Utils.common import set_random_seed, save_model_state, create_result_dir, save_run_data
-from Single_Task import learn_single_standard
-from Data_Path import get_data_path
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 # -------------------------------------------------------------------------------------------
