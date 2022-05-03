@@ -64,7 +64,7 @@ parser.add_argument('--limit_train_samples', type=int,
 #                     default='CrossEntropy')
 
 parser.add_argument('--model_name', type=str, help="Define model type (hypothesis class)'",
-                    default='ConvNet3')  # OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
+                    default='LinearBinary')  # LinearBinary/ OmConvNet / 'FcNet3' / 'ConvNet3' / OmConvNet_NoBN
 
 parser.add_argument('--batch_size', type=int, help='input batch size for training',
                     default=512)

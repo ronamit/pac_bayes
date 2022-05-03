@@ -60,30 +60,22 @@ def get_model(prm, model_type='Stochastic', requires_grad=True):
             return StochasticConv2d(in_channels, out_channels, kernel_size, prm, use_bias, stride, padding, dilation)
 
     #  Return selected model:
-    if model_name == 'FcNet3':
-        model = FcNet3(model_type, model_name, linear_layer, conv2d_layer, task_info)
-
+    if model_name == 'LinearBinary':
+        model = LinearBinary(model_type, model_name, linear_layer, task_info)
+    elif model_name == 'FcNet3':
+        model = FcNet3(model_type, model_name, linear_layer, task_info)
     elif model_name == 'ConvNet3':
         model = ConvNet3(model_type, model_name, linear_layer, conv2d_layer, task_info)
-
-    # elif model_name == 'BayesDenseNet':
-    #     from Models.densenetBayes import get_bayes_densenet_model_class
-    #     densenet_model = get_bayes_densenet_model_class(prm, task_info)
-    #     model = densenet_model(depth=20)
-
     elif model_name == 'OmConvNet':
         model = OmConvNet(model_type, model_name, linear_layer, conv2d_layer, task_info)
-
     elif model_name == 'OmConvNet_NoBN':
         model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info)
-
     elif model_name == 'OmConvNet_NoBN_32':
         model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=32)
     elif model_name == 'OmConvNet_NoBN_16':
         model = OmConvNet_NoBN(model_type, model_name, linear_layer, conv2d_layer, task_info, filt_size=16)
     elif model_name == 'OmConvNet_NoBN_elu':
         model = OmConvNet_NoBN_elu(model_type, model_name, linear_layer, conv2d_layer, task_info)
-
 
     else:
         raise ValueError('Invalid model_name')
@@ -127,11 +119,35 @@ class general_model(nn.Module):
 # -------------------------------------------------------------------------------------------
 # Models collection
 # -------------------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------------------
+#
+# -------------------------------------------------------------------------------------------
+class LinearBinary(general_model):
+    def __init__(self, model_type, model_name, linear_layer, task_info):
+        super(LinearBinary, self).__init__()
+        self.model_type = model_type
+        self.model_name = model_name
+        self.layers_names = ('fc_out')
+        input_shape = task_info['input_shape']
+        output_dim = task_info['output_dim']
+        input_size = input_shape[0] * input_shape[1] * input_shape[2]
+
+        self.input_size = input_size
+        self.fc_out = linear_layer(input_size, output_dim)
+        # self._init_weights(log_var_init)  # Initialize weights
+
+    def forward(self, x):
+        x = x.view(-1, self.input_size)  # flatten image
+        x = self.fc_out(x)
+        return x
+
+
 # -------------------------------------------------------------------------------------------
 #  3-hidden-layer Fully-Connected Net
 # -------------------------------------------------------------------------------------------
 class FcNet3(general_model):
-    def __init__(self, model_type, model_name, linear_layer, conv2d_layer, task_info):
+    def __init__(self, model_type, model_name, linear_layer, task_info):
         super(FcNet3, self).__init__()
         self.model_type = model_type
         self.model_name = model_name
