@@ -191,7 +191,7 @@ def get_info(prm):
 
     elif prm.data_source in BINARY_DATASETS:
         # See https://papers.nips.cc/paper/2021/file/0415740eaa4d9decbc8da001d3fd805f-Supplemental.pdf
-        info = {'n_classes': 2, 'type': 'binary_class'}
+        info = {'input_shape': BINARY_DATASETS_DIM[prm.data_source], 'n_classes': 2, 'type': 'binary_class'}
         # note: since we have two classes, we can have one output
 
     else:
