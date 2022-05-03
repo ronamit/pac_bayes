@@ -122,7 +122,7 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 prm.posterior_init_noise = 1e-2
 
 prm.loss_type = 'Logistic_binary'
-prm.data_source = 'CODRNA'    # binarized_MNIST | MUSHROOMS | CODRNA
+prm.data_source = 'MUSHROOMS'    # binarized_MNIST | MUSHROOMS | CODRNA
 samp_grid_delta = 50
 max_grid = 500
 loss_type_eval = 'Zero_One'
