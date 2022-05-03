@@ -43,7 +43,7 @@ parser.add_argument('--test-batch-size', type=int, help='input batch size for te
 
 parser.add_argument('--n_MC_eval', type=int,
                     help='number of monte-carlo runs for expected loss estimation and bound evaluation',
-                    default=3)
+                    default=5)
 
 # ----- Task Parameters ---------------------------------------------#
 
