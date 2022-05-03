@@ -123,8 +123,8 @@ prm.posterior_init_noise = 1e-2
 
 prm.loss_type = 'Logistic_binary'
 prm.data_source = 'MUSHROOMS'    # binarized_MNIST | MUSHROOMS | CODRNA
-samp_grid_delta = 50
-max_grid = 500
+samp_grid_delta = 1000
+max_grid = 1e5
 loss_type_eval = 'Zero_One'
 n_reps = 1
 run_name = f'Linear_Binary_Classification'
