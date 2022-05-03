@@ -1,7 +1,7 @@
 #
 # the code is inspired by: https://github.com/katerakelly/pytorch-maml
 
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -131,7 +131,7 @@ class LinearBinary(general_model):
         self.layers_names = ('fc_out')
         input_shape = task_info['input_shape']
         output_dim = task_info['output_dim']
-        input_size = input_shape[0] * input_shape[1] * input_shape[2]
+        input_size = np.prod(input_shape)
 
         self.input_size = input_size
         self.fc_out = linear_layer(input_size, output_dim)
