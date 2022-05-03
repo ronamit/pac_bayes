@@ -118,13 +118,12 @@ prm.prior_mean = {'mean': 0, 'std': 0.1}
 prm.posterior_init_noise = 1e-2
 
 prm.loss_type = 'Logistic_binary'
-prm.data_source = 'MUSHROOMS'    #
+prm.data_source = 'CODRNA'    # binarized_MNIST | MUSHROOMS | CODRNA
 samp_grid_delta = 50
 max_grid = 500
 loss_type_eval = 'Zero_One'
 n_reps = 1
 run_name = f'Linear_Binary_Classification'
-
 
 # Run params:
 run_experiments = True  # True/False If false, just analyze the previously saved experiments
@@ -134,9 +133,6 @@ train_samples_vec = samp_grid_delta * np.arange(1, 1 + np.floor(max_grid / samp_
 
 val_types = [['train_loss'], ['test_loss'],
              ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL']]
-# ['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
-# ['Bound', 'Seeger', 'KL'], ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr'],
-
 
 file_name = 'run_data.pkl'
 
@@ -222,14 +218,6 @@ else:
 val_types_for_show = [['train_loss'], ['test_loss'],
                       ['Bound', 'Classic_PB', 'KL'], ['Bound', 'New_PB', 'KL'],
                       ['Bound', 'Seeger', 'KL']]
-
-# val_types_for_show = [['train_loss'], ['test_loss'],
-#              ['Bound', 'McAllester', 'W_Sqr'], ['Bound', 'McAllester', 'W_NoSqr'],
-#              ['Bound', 'Seeger', 'W_Sqr'], ['Bound', 'Seeger', 'W_NoSqr']]
-
-# val_types_for_show =  [['Divergence', 'KL'], ['Divergence', 'W_Sqr']]
-
-# val_types_for_show =  [['Divergence', 'W_Sqr']]
 
 # Plot the analysis:
 plt.figure()

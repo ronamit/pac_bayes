@@ -1,26 +1,34 @@
 import os
-
+from pathlib import Path
 import numpy as np
 import torch
 import torch.utils.data as data_utils
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset
 from torchvision import datasets, transforms
 
-from Utils import imagenet_data
-from Utils import omniglot
 from Utils.real_datasets import fetch_MUSHROOMS, fetch_TICTACTOE, fetch_HABERMAN, fetch_PHISHING, fetch_ADULT, \
     fetch_CODRNA, fetch_SVMGUIDE1
 
+
+# See https://papers.nips.cc/paper/2021/file/0415740eaa4d9decbc8da001d3fd805f-Supplemental.pdf
 BINARY_DATASETS = {
-    'MUSH': fetch_MUSHROOMS,
-    'TTT': fetch_TICTACTOE,
-    'HABER': fetch_HABERMAN,
-    'PHIS': fetch_PHISHING,
+    'MUSHROOMS': fetch_MUSHROOMS,
+    'TICTACTOE': fetch_TICTACTOE,
+    'HABERMAN': fetch_HABERMAN,
+    'PHISHING': fetch_PHISHING,
     'ADULT': fetch_ADULT,
     'CODRNA': fetch_CODRNA,
     'SVMGUIDE': fetch_SVMGUIDE1
 }
-
+BINARY_DATASETS_DIM = {
+    'MUSHROOMS': 22,
+    'TICTACTOE': 9,
+    'HABERMAN': 3,
+    'PHISHING': 68,
+    'ADULT': 123,
+    'CODRNA': 8,
+    'SVMGUIDE': 4
+}
 # -------------------------------------------------------------------------------------------
 #  Task generator class
 # -------------------------------------------------------------------------------------------
@@ -33,95 +41,53 @@ class Task_Generator(object):
         self.data_transform = prm.data_transform
         self.data_path = prm.data_path
 
-        if self.data_source == 'Omniglot':
-            # Randomly split the characters to meta-train and meta-test
-            # Later, tasks will be generated using this characters
-            self.chars_splits = omniglot.split_chars(prm.data_path, prm.chars_split_type, prm.n_meta_train_chars)
-
-        elif self.data_source == 'SmallImageNet':
-            self.class_split = imagenet_data.split_classes(prm)
-
-
-    def create_meta_batch(self, prm, n_tasks, meta_split='meta_train', limit_train_samples=None):
-        ''' generate a meta-batch of tasks'''
-        data_loaders = [self.get_data_loader(prm, meta_split, limit_train_samples) for i_task in range(n_tasks)]
-        return data_loaders
-
-
-    def get_data_loader(self, prm, meta_split='meta_train', limit_train_samples=None):
+    def get_data_loader(self, prm, limit_train_samples=None):
 
         # Set data transformation function:
         if self.data_transform == 'Permute_Pixels':
             # Create a fixed random pixels permutation, applied to all images
             final_input_trans = [create_pixel_permute_trans(prm)]
             target_trans = []
-
         elif self.data_transform == 'Shuffled_Pixels':
             # Create a fixed random pixels permutation, applied to all images
             final_input_trans = [create_limited_pixel_permute_trans(prm)]
             target_trans = []
-
-
         elif self.data_transform == 'Permute_Labels':
             # Create a fixed random label permutation, applied to all images
             target_trans = [create_label_permute_trans(prm)]
             final_input_trans = None
-
         elif self.data_transform == 'Rotate90':
             # all images in task are rotated by some random angle from [0,90,180,270]
             final_input_trans = [create_rotation_trans()]
             target_trans = []
-
         elif self.data_transform == 'None':
             final_input_trans = None
             target_trans = []
-
         else:
             raise ValueError('Unrecognized data_transform')
-
         # Get dataset:
         if self.data_source == 'MNIST':
             train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
-
         elif self.data_source == 'CIFAR10':
             train_dataset, test_dataset = load_CIFAR(final_input_trans, target_trans, prm)
-
-        # elif self.data_source == 'Sinusoid':
-        #     pass
-        #     # task_param = create_sinusoid_task()
-        #     # train_dataset = create_sinusoid_data(task_param, n_samples=10)
-        #     # test_dataset = create_sinusoid_data(task_param, n_samples=100)
-
-        elif self.data_source == 'SmallImageNet':
-            labels_in_split = self.class_split[meta_split]  # list of chars dirs  for current meta-split
-            if meta_split == 'meta_test':
-                k_train_shot = prm.K_Shot_MetaTest
-            else:
-                k_train_shot = prm.K_Shot_MetaTrain
-            train_dataset, test_dataset = imagenet_data.get_task(labels_in_split, prm.N_Way, k_train_shot, prm)
-
-
-        elif self.data_source == 'Omniglot':
-            chars = self.chars_splits[meta_split]  # list of chars dirs  for current meta-split
-            if meta_split == 'meta_test':
-                k_train_shot = prm.K_Shot_MetaTest
-            else:
-                k_train_shot = prm.K_Shot_MetaTrain
-            train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
-                n_labels=prm.N_Way, k_train_shot=k_train_shot,
-                final_input_trans=final_input_trans, target_transform=target_trans)
-
-        elif  self.data_source == 'binarized_MNIST':
-            assert not target_trans # make sure no transformations
+        elif self.data_source == 'binarized_MNIST':
+            assert not target_trans  # make sure no transformations
             target_trans = [create_label_binarize(prm, thresh=5)]
             train_dataset, test_dataset = load_MNIST(final_input_trans, target_trans, prm)
-
+        elif self.data_source in BINARY_DATASETS:
+            fetch_fn = BINARY_DATASETS[self.data_source]
+            path = Path(prm.data_path) / self.data_source
+            data_dict = fetch_fn(path, valid_size=0., test_size=0.2, seed=prm.seed)
+            train_dataset = TensorDataset(torch.Tensor(data_dict['X_train']),
+                                          torch.Tensor(data_dict['y_train']))
+            test_dataset = TensorDataset(torch.Tensor(data_dict['X_test']),
+                                         torch.Tensor(data_dict['y_test']))
         else:
             raise ValueError('Invalid data_source')
 
 
         # Limit the training samples :
-        if limit_train_samples: # if not none/zero
+        if limit_train_samples:  # if not none/zero
             train_dataset = reduce_train_set(train_dataset, limit_train_samples)
 
         # Create data loaders:
@@ -141,16 +107,6 @@ class Task_Generator(object):
 
 # -------------------------------------------------------------------------------------------
 #  MNIST  Data set
-# -------------------------------------------------------------------------------------------
-
-def x_y_to_dataset(X, Y):
-    inps = torch.Tensor(X)
-    tgts = torch.Tensor(Y)
-
-    my_dataset = TensorDataset(inps , tgts )
-    my_dataloader = DataLoader(my_dataset)
-
-    return train_dataset, test_dataset
 # -------------------------------------------------------------------------------------------
 
 def load_MNIST(final_input_trans, target_trans, prm):
@@ -232,6 +188,12 @@ def get_info(prm):
     elif prm.data_source == 'binarized_MNIST':
         info = {'input_shape': (1, 28, 28),  'n_classes': 2, 'type': 'binary_class'}
         # note: since we have two classes, we can have one output
+
+    elif prm.data_source in BINARY_DATASETS:
+        # See https://papers.nips.cc/paper/2021/file/0415740eaa4d9decbc8da001d3fd805f-Supplemental.pdf
+        info = {'n_classes': 2, 'type': 'binary_class'}
+        # note: since we have two classes, we can have one output
+
     else:
         raise ValueError('Invalid data_source')
 
@@ -358,23 +320,3 @@ def reduce_train_set(train_dataset, limit_train_samples):
         #     # train_dataset.train_data = train_dataset.train_data[sampled_inds]
         #     # train_dataset.train_labels = train_dataset.train_labels[sampled_inds]
     return train_dataset
-# -----------------------------------------------------------------------------------------------------------#
-# Sinusoid Regression
-# -----------------------------------------------------------------------------------------------------------#
-# def create_sinusoid_task():
-#     task_param = {'phase':np.random.uniform(0, np.pi),
-#                   'amplitude':np.random.uniform(0.1, 5.0),
-#                   'freq': 5.0,
-#                   'input_range': [-0.5, 0.5]}
-#     return task_param
-#
-# def create_sinusoid_data(task_param, n_samples):
-#     amplitude = task_param['amplitude']
-#     phase = task_param['phase']
-#     freq = task_param['freq']
-#     input_range = task_param['input_range']
-#     y = np.ndarray(shape=(n_samples, 1), dtype=np.float32)
-#     x = np.random.uniform(input_range[0], input_range[1], n_samples)
-#     y = amplitude * np.sin(phase + 2 * np.pi * freq * x)
-#     return x,
-y
