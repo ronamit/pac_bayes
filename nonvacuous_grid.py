@@ -15,7 +15,11 @@ from Utils.Bayes_utils import set_model_values, run_eval_Bayes
 from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, load_saved_vars
 from Utils.complexity_terms import get_net_densities_divergence
 
-torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
+from torch import autograd
+autograd.set_detect_anomaly(True)
+
+
+# torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = '0'
