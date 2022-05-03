@@ -1,16 +1,25 @@
-
-import multiprocessing
 import os
 
 import numpy as np
 import torch
 import torch.utils.data as data_utils
+from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
 
 from Utils import imagenet_data
 from Utils import omniglot
+from Utils.real_datasets import fetch_MUSHROOMS, fetch_TICTACTOE, fetch_HABERMAN, fetch_PHISHING, fetch_ADULT, \
+    fetch_CODRNA, fetch_SVMGUIDE1
 
-from torch.utils.data import TensorDataset, DataLoader
+BINARY_DATASETS = {
+    'MUSH': fetch_MUSHROOMS,
+    'TTT': fetch_TICTACTOE,
+    'HABER': fetch_HABERMAN,
+    'PHIS': fetch_PHISHING,
+    'ADULT': fetch_ADULT,
+    'CODRNA': fetch_CODRNA,
+    'SVMGUIDE': fetch_SVMGUIDE1
+}
 
 # -------------------------------------------------------------------------------------------
 #  Task generator class
@@ -135,11 +144,11 @@ class Task_Generator(object):
 # -------------------------------------------------------------------------------------------
 
 def x_y_to_dataset(X, Y):
-    tensor_x = torch.Tensor(X) # transform to torch tensor
-    tensor_y = torch.Tensor(Y)
+    inps = torch.Tensor(X)
+    tgts = torch.Tensor(Y)
 
-    my_dataset = TensorDataset(tensor_x ,tensor_y) # create your datset
-    my_dataloader = DataLoader(my_dataset) # create your dataloader
+    my_dataset = TensorDataset(inps , tgts )
+    my_dataloader = DataLoader(my_dataset)
 
     return train_dataset, test_dataset
 # -------------------------------------------------------------------------------------------

@@ -2,12 +2,13 @@
 Code source: https://github.com/vzantedeschi/StocMV
 '''
 
-import numpy as np
 import bz2
-import requests
 import os
 
+import numpy as np
+import requests
 from sklearn.model_selection import train_test_split
+
 
 def get_validation_set(X_train, y_train, valid_size, seed):
 

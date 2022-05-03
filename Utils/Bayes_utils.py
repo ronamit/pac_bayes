@@ -3,7 +3,7 @@
 import torch
 
 from Models.stochastic_layers import StochasticLayer
-from Utils import common as cmn, data_gen
+from Utils import data_gen
 from Utils.Losses import get_loss_func
 from Utils.common import count_correct
 

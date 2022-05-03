@@ -2,26 +2,18 @@
 Code source: https://github.com/vzantedeschi/StocMV
 '''
 
-import numpy as np
 import gzip
-import shutil
-import tarfile
-import os
-import pandas as pd
-
-import warnings
-
 from pathlib import Path
 
-from sklearn.datasets import load_svmlight_file
+import numpy as np
+import pandas as pd
+from category_encoders.ordinal import OrdinalEncoder
 from sklearn.model_selection import train_test_split
 
-from category_encoders import LeaveOneOutEncoder
-from category_encoders.ordinal import OrdinalEncoder
-
 from Utils.real_datasets_utils import get_validation_set, download, read_idx_file
-# BINARY CLASSIFICATION
 
+
+# BINARY CLASSIFICATION
 def fetch_SVMGUIDE1(path, valid_size=0.2, test_size=0.2, seed=None):
 
     path = Path(path)

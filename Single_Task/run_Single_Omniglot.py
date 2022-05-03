@@ -1,4 +1,3 @@
-import os
 from subprocess import call
 
 call(['python', 'main_single_standard.py',

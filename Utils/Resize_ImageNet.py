@@ -20,7 +20,6 @@ run this script which:
 
 
 """
-import csv
 import glob
 import os
 

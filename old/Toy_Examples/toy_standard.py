@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 from matplotlib import pyplot as plt
-from matplotlib.patches import Ellipse
 
 
 # -------------------------------------------------------------------------------------------

@@ -9,12 +9,11 @@ import torch.optim as optim
 
 from Data_Path import get_data_path
 from Models.stochastic_models import get_model
-from Single_Task import learn_single_Bayes, learn_single_standard
+from Single_Task import learn_single_Bayes
 from Utils import data_gen
 from Utils.Bayes_utils import set_model_values, run_eval_Bayes
-from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, ensure_dir, load_saved_vars
+from Utils.common import set_random_seed, create_result_dir, save_run_data, write_to_log, load_saved_vars
 from Utils.complexity_terms import get_net_densities_divergence
-from Utils.data_gen import get_info
 
 torch.backends.cudnn.benchmark = True  # For speed improvement with models with fixed-length inputs
 
