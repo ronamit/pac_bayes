@@ -1,5 +1,4 @@
 
-
 import multiprocessing
 import os
 
@@ -11,6 +10,7 @@ from torchvision import datasets, transforms
 from Utils import imagenet_data
 from Utils import omniglot
 
+from torch.utils.data import TensorDataset, DataLoader
 
 # -------------------------------------------------------------------------------------------
 #  Task generator class
@@ -93,7 +93,7 @@ class Task_Generator(object):
 
 
         elif self.data_source == 'Omniglot':
-            chars = self.chars_splits[meta_split] #   list of chars dirs  for current meta-split
+            chars = self.chars_splits[meta_split]  # list of chars dirs  for current meta-split
             if meta_split == 'meta_test':
                 k_train_shot = prm.K_Shot_MetaTest
             else:
@@ -101,7 +101,6 @@ class Task_Generator(object):
             train_dataset, test_dataset = omniglot.get_task(chars, prm.data_path,
                 n_labels=prm.N_Way, k_train_shot=k_train_shot,
                 final_input_trans=final_input_trans, target_transform=target_trans)
-
 
         elif  self.data_source == 'binarized_MNIST':
             assert not target_trans # make sure no transformations
@@ -133,6 +132,16 @@ class Task_Generator(object):
 
 # -------------------------------------------------------------------------------------------
 #  MNIST  Data set
+# -------------------------------------------------------------------------------------------
+
+def x_y_to_dataset(X, Y):
+    tensor_x = torch.Tensor(X) # transform to torch tensor
+    tensor_y = torch.Tensor(Y)
+
+    my_dataset = TensorDataset(tensor_x ,tensor_y) # create your datset
+    my_dataloader = DataLoader(my_dataset) # create your dataloader
+
+    return train_dataset, test_dataset
 # -------------------------------------------------------------------------------------------
 
 def load_MNIST(final_input_trans, target_trans, prm):
@@ -175,7 +184,7 @@ def load_CIFAR(final_input_trans, target_trans, prm):
 
     # Normalize values:
     # Note: original values  in the range [0,1]
-    transform += [transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))]  # transform to [-1,1]
+    transform += [transforms.Normalize((0.5 ,0.5 ,0.5), (0.5 ,0.5 ,0.5))]  # transform to [-1,1]
 
     if final_input_trans:
         transform += final_input_trans
@@ -358,4 +367,5 @@ def reduce_train_set(train_dataset, limit_train_samples):
 #     y = np.ndarray(shape=(n_samples, 1), dtype=np.float32)
 #     x = np.random.uniform(input_range[0], input_range[1], n_samples)
 #     y = amplitude * np.sin(phase + 2 * np.pi * freq * x)
-#     return x, y
+#     return x,
+y
