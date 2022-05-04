@@ -78,10 +78,12 @@ class Task_Generator(object):
             fetch_fn = BINARY_DATASETS[self.data_source]
             path = Path(prm.data_path) / self.data_source
             data_dict = fetch_fn(path, valid_size=0., test_size=0.2, seed=prm.seed)
-            train_dataset = TensorDataset(torch.Tensor(data_dict['X_train']),
-                                          torch.Tensor(data_dict['y_train']))
-            test_dataset = TensorDataset(torch.Tensor(data_dict['X_test']),
-                                         torch.Tensor(data_dict['y_test']))
+            X_train = torch.Tensor(data_dict['X_train'])
+            y_train = torch.Tensor(data_dict['y_train']) > 0
+            train_dataset = TensorDataset(X_train, y_train)
+            X_test = torch.Tensor(data_dict['X_test'])
+            y_test = torch.Tensor(data_dict['y_test']) > 0
+            test_dataset = TensorDataset(X_test, y_test)
         else:
             raise ValueError('Invalid data_source')
 

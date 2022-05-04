@@ -12,7 +12,7 @@ from Utils.Bayes_utils import run_eval_Bayes
 from Utils.Losses import get_loss_func
 from Utils.common import grad_step, correct_rate, write_to_log
 from Utils.complexity_terms import get_task_complexity, add_noise_to_model
-
+from Utils.common import count_correct
 
 # -------------------------------------------------------------------------------------------
 #  Stochastic Single-task learning

@@ -78,8 +78,8 @@ parser.add_argument('--num_iter', type=int, help='number of iterations to run, i
                     default=5000)  # 50
 
 parser.add_argument('--lr', type=float, help='learning rate (initial)',
-                    default=2e-3)
-
+                    default=1e-2)
+2
 # parser.add_argument('--override_eps_std', type=float,
 #                     help='For debug: set the STD of epsilon variable for re-parametrization trick (default=1.0)',
 #                     default=1.0)
